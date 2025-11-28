@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4893D23B2ED9771B0018D43A /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23A2ED9771B0018D43A /* KakaoSDKAuth */; };
+		4893D23D2ED9771B0018D43A /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23C2ED9771B0018D43A /* KakaoSDKCommon */; };
+		4893D23F2ED9771B0018D43A /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23E2ED9771B0018D43A /* KakaoSDKUser */; };
+		4893D2452ED985650018D43A /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2442ED985650018D43A /* RxCocoa */; };
+		4893D2472ED985650018D43A /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2462ED985650018D43A /* RxSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		4893D1EC2ED6E2AE0018D43A /* HaruUp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HaruUp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +44,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4893D23D2ED9771B0018D43A /* KakaoSDKCommon in Frameworks */,
+				4893D23B2ED9771B0018D43A /* KakaoSDKAuth in Frameworks */,
+				4893D2472ED985650018D43A /* RxSwift in Frameworks */,
+				4893D2452ED985650018D43A /* RxCocoa in Frameworks */,
+				4893D23F2ED9771B0018D43A /* KakaoSDKUser in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +91,11 @@
 			);
 			name = HaruUp;
 			packageProductDependencies = (
+				4893D23A2ED9771B0018D43A /* KakaoSDKAuth */,
+				4893D23C2ED9771B0018D43A /* KakaoSDKCommon */,
+				4893D23E2ED9771B0018D43A /* KakaoSDKUser */,
+				4893D2442ED985650018D43A /* RxCocoa */,
+				4893D2462ED985650018D43A /* RxSwift */,
 			);
 			productName = HaruUp;
 			productReference = 4893D1EC2ED6E2AE0018D43A /* HaruUp.app */;
@@ -107,6 +125,10 @@
 			);
 			mainGroup = 4893D1E32ED6E2AE0018D43A;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4893D2392ED9771B0018D43A /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
+				4893D2432ED985650018D43A /* XCRemoteSwiftPackageReference "RxSwift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4893D1ED2ED6E2AE0018D43A /* Products */;
 			projectDirPath = "";
@@ -150,8 +172,9 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -181,8 +204,9 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -341,6 +365,53 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4893D2392ED9771B0018D43A /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.26.0;
+			};
+		};
+		4893D2432ED985650018D43A /* XCRemoteSwiftPackageReference "RxSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactiveX/RxSwift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.9.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4893D23A2ED9771B0018D43A /* KakaoSDKAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4893D2392ED9771B0018D43A /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKAuth;
+		};
+		4893D23C2ED9771B0018D43A /* KakaoSDKCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4893D2392ED9771B0018D43A /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKCommon;
+		};
+		4893D23E2ED9771B0018D43A /* KakaoSDKUser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4893D2392ED9771B0018D43A /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKUser;
+		};
+		4893D2442ED985650018D43A /* RxCocoa */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4893D2432ED985650018D43A /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxCocoa;
+		};
+		4893D2462ED985650018D43A /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4893D2432ED985650018D43A /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4893D1E42ED6E2AE0018D43A /* Project object */;
 }
