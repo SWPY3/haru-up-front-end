@@ -7,7 +7,7 @@
 
 import UIKit
 
-class RegistrationViewController: UIViewController {
+class HomeViewController: UIViewController {
     // MARK: - Properties
     
     
@@ -24,6 +24,6 @@ class RegistrationViewController: UIViewController {
     
     // MARK: - Helpers
     func configureUI() {
-        
+        view.backgroundColor = .brown
     }
 }
