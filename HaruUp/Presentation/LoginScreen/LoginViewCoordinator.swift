@@ -20,7 +20,9 @@ final class LoginCoordinator: Coordinator {
     
     func start() {
         // TODO: 나중에 ViewModel, AuthService 적용
-        let loginVC = LoginViewController()
+        let authService = AuthService()
+        let loginVM = LoginViewModel(authService: authService)
+        let loginVC = LoginViewController(viewModel: loginVM)
         navigationController.setViewControllers([loginVC], animated: false)
         navigationController.setNavigationBarHidden(true, animated: false)
     }
