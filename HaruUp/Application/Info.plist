@@ -16,6 +16,8 @@
 		</dict>
 		<dict/>
 	</array>
+	<key>KAKAO_NATIVE_APP_KEY</key>
+	<string>a22a879bcb46586d971ca49f32388b20</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>kakaolink</string>
@@ -34,8 +36,6 @@
 					<string>Default Configuration</string>
 					<key>UISceneDelegateClassName</key>
 					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
-					<key>UISceneStoryboardFile</key>
-					<string>Main</string>
 				</dict>
 			</array>
 		</dict>

@@ -11,13 +11,19 @@ import KakaoSDKAuth
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-
+    var appCoordinator: AppCoordinator?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let scene = (scene as? UIWindowScene) else { return }
-        window = UIWindow(windowScene: scene)
-        window?.rootViewController = UINavigationController(rootViewController: LoginViewController())
+        self.window = UIWindow(windowScene: scene)
+        
+        let navigationController = UINavigationController() // 공용으로 사용할 NavigationController
+        
+        window?.rootViewController = navigationController
         window?.makeKeyAndVisible()
+        
+        let appCoordinator = AppCoordinator(navigationController: navigationController)
+        appCoordinator.start()
     }
     
     // iOS 13+: Kakao Login callback 처리

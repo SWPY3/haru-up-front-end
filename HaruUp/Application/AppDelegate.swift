@@ -14,17 +14,18 @@ import KakaoSDKAuth
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // 네이티브 앱 키로 Kakao SDK 초기화
-        KakaoSDK.initSDK(appKey: "a22a879bcb46586d971ca49f32388b20")
+        guard let appKey = Bundle.main.object(forInfoDictionaryKey: "KAKAO_NATIVE_APP_KEY") as? String else { // KaKao native app key를 Info에 저장하여 구현
+            return true
+        }
+        
+        KakaoSDK.initSDK(appKey: appKey)
         
         return true
     }
 
     // MARK: UISceneSession Lifecycle
-
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         // Called when a new scene session is being created.
         // Use this method to select a configuration to create the new scene with.
