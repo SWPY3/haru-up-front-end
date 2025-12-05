@@ -42,6 +42,18 @@ class LoginViewController: UIViewController {
         
     }()
     
+    private lazy var naverLoginButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setBackgroundImage(UIImage(named: "btnG_완성형"), for: .normal)
+        button.contentMode = .scaleAspectFit
+        button.tintColor = .clear
+        button.backgroundColor = .clear
+        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        return button
+    }()
+    
+    
+    
     private var indicatorView: UIActivityIndicatorView = UIActivityIndicatorView(style: .medium)
     
     init(viewModel: LoginViewModel) {
@@ -73,7 +85,7 @@ class LoginViewController: UIViewController {
         logoImageView.centerX(inView: view, topAnchor: view.safeAreaLayoutGuide.topAnchor)
         logoImageView.setDimensions(width: 150, height: 150)
         
-        let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, appleLoginButton])
+        let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, appleLoginButton, naverLoginButton])
         stack.axis = .vertical
         stack.spacing = 10
         
@@ -82,12 +94,16 @@ class LoginViewController: UIViewController {
     
 
     }
+    func setupNaverLoginButton() {
+        
+    }
     
     // MARK: - bind
     private func bind() {
         let input = LoginViewModel.Input(
             kakaoLoginTapped: kakaoLoginButton.rx.tap.asObservable(),
             appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable()
+            
         )
         
         let output = viewModel.transform(input)
@@ -115,16 +131,5 @@ class LoginViewController: UIViewController {
                 print("로그인 성공!")
             })
             .disposed(by: disposeBag)
-    }
-    
-    // MARK: - Navigation
-    private func goToHome() {
-        let homeVC = HomeViewController()
-        let nav = UINavigationController(rootViewController: homeVC)
-        
-        guard let window = view.window else { return }
-        window.rootViewController = nav
-        window.makeKeyAndVisible()
-        
     }
 }

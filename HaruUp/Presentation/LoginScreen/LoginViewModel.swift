@@ -18,6 +18,7 @@ final class LoginViewModel {
     struct Input {
         let kakaoLoginTapped: Observable<Void>
         let appleLoginTapped: Observable<Void>
+//        let naverLoginTapped: Observable<Void>
     }
     
     struct Output {

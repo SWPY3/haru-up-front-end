@@ -8,21 +8,34 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.swyp.HaruUp.kakao</string>
+			<string>com.swyp.HaruUp.kakaoLogin</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>a22a879bcb46586d971ca49f32388b20</string>
+				<string>kakao${KAKAO_NATIVE_APP_KEY}</string>
 			</array>
 		</dict>
-		<dict/>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.swyp.HaruUp.naverLogin</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>naver${NAVER_CLIENT_ID}</string>
+			</array>
+		</dict>
 	</array>
 	<key>KAKAO_NATIVE_APP_KEY</key>
 	<string>a22a879bcb46586d971ca49f32388b20</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
+		<string>naversearchthirdlogin</string>
+		<string>naversearchapp</string>
 		<string>kakaolink</string>
 		<string>kakaokompassauth</string>
 	</array>
+	<key>NAVER_CLIENT_ID</key>
+	<string>8N9gaq5jOl22B_gCpZlu</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
