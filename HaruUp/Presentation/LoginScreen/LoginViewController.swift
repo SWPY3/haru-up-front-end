@@ -18,6 +18,8 @@ class LoginViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel: LoginViewModel
     
+    var onFinish: (() -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
+    
     private let logoImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
@@ -39,7 +41,15 @@ class LoginViewController: UIViewController {
         button.cornerRadius = 8
         button.heightAnchor.constraint(equalToConstant: 50).isActive = true
         return button
+    }()
+    
+    // MARK: 로그인 완료 후 온보딩으로 넘어가는 onFinish 클로저 작동용 버튼
+    private let nextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("onboarding", for: .normal)
+        button.backgroundColor = .green
         
+        return button
     }()
     
     private lazy var naverLoginButton: UIButton = {
@@ -91,8 +101,19 @@ class LoginViewController: UIViewController {
         
         view.addSubview(stack)
         stack.anchor(top: logoImageView.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 100, paddingLeft: 28, paddingRight: 28)
+        
+        // MARK: test Button 배치
+        configureNextButton()
+    }
     
-
+    private func configureNextButton() {
+        view.addSubview(nextButton)
+        nextButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
+            nextButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
     }
     func setupNaverLoginButton() {
         
@@ -131,5 +152,12 @@ class LoginViewController: UIViewController {
                 print("로그인 성공!")
             })
             .disposed(by: disposeBag)
+        
+        nextButton.rx.tap
+            .bind { [weak self] in
+                guard let self else { return }
+                print("온보딩 화면 이동")
+                self.onFinish?()
+            }.disposed(by: disposeBag)
     }
 }
