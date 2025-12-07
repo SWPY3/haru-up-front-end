@@ -43,6 +43,15 @@ class LoginViewController: UIViewController {
         return button
     }()
     
+    private let naverLoginButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setBackgroundImage(UIImage(named: "btnG_완성형"), for: .normal)
+        button.tintColor = .clear
+        button.backgroundColor = .clear
+        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        return button
+    }()
+    
     // MARK: 로그인 완료 후 온보딩으로 넘어가는 onFinish 클로저 작동용 버튼
     private let nextButton: UIButton = {
         let button = UIButton()
@@ -51,16 +60,7 @@ class LoginViewController: UIViewController {
         
         return button
     }()
-    
-    private lazy var naverLoginButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setBackgroundImage(UIImage(named: "btnG_완성형"), for: .normal)
-        button.contentMode = .scaleAspectFit
-        button.tintColor = .clear
-        button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        return button
-    }()
+
     
     
     
@@ -115,15 +115,13 @@ class LoginViewController: UIViewController {
             nextButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
     }
-    func setupNaverLoginButton() {
-        
-    }
     
     // MARK: - bind
     private func bind() {
         let input = LoginViewModel.Input(
             kakaoLoginTapped: kakaoLoginButton.rx.tap.asObservable(),
-            appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable()
+            appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable(),
+            naverLoginTapped: naverLoginButton.rx.tap.asObservable()
             
         )
         

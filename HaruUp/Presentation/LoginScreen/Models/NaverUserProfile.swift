@@ -10,8 +10,8 @@ import Foundation
 
 struct NaverUserProfile {
     let id: String
-    let name: String
-    let email: String
+    let name: String?
+    let email: String?
     
     
     init?(dictionary: [String: String]) {

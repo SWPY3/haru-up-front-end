@@ -13,6 +13,8 @@ import KakaoSDKUser
 import AuthenticationServices
 import CryptoKit
 
+import NidThirdPartyLogin
+
 final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     
     // for Apple Login
@@ -225,6 +227,65 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
     }
     
     // MARK: - Naver Login
+    func loginWithNaver() -> Single<Bool> {
+        return loginAndFetchProfile()
+            .flatMap { profile -> Single<Bool> in
+                
+                // TODO: 여기서 서버 로그인/회원가입 API 호출
+                // return apiClient.loginWithSocial(profile)
+                //     .map { $0.success }
+                
+                // 지금은 네이버 로그인 + 프로필 조회 성공만으로 true
+                return .just(true)
+            }
+    }
     
+    // 1) 네이버 로그인 (토큰 발급)
+    func login() -> Single<LoginResult> {
+        return Single.create { single in
+            NidOAuth.shared.requestLogin { result in
+                switch result {
+                case .success(let loginResult):
+                    single(.success(loginResult))
+                case .failure(let error):
+                    single(.failure(error))
+                }
+            }
+            return Disposables.create()
+        }
+    }
+    
+    
+
+    
+    // 2) 프로필 조회
+    func fetchProfile(accessToken: String) -> Single<NaverUserProfile> {
+        return Single.create { single in
+            NidOAuth.shared.getUserProfile(accessToken: accessToken) { result in
+                switch result {
+                case .success(let dict):
+                    if let profile = NaverUserProfile(dictionary: dict) {
+                        single(.success(profile))
+                    } else {
+                        single(.failure(LoginError.invalidProfile))
+                    }
+                case .failure(let error):
+                    single(.failure(error))
+                }
+            }
+            return Disposables.create()
+        }
+    }
+    
+    // 3) 로그인 + 프로필 한 번에
+    func loginAndFetchProfile() -> Single<NaverUserProfile> {
+        return login()
+            .flatMap { [weak self] loginResult -> Single<NaverUserProfile> in
+                guard let self = self else { return .never() }
+
+                let accessToken = loginResult.accessToken.tokenString
+                return self.fetchProfile(accessToken: accessToken)
+            }
+    }
     
 }

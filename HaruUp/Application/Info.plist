@@ -21,7 +21,7 @@
 			<string>com.swyp.HaruUp.naverLogin</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>naver${NAVER_CLIENT_ID}</string>
+				<string>com.swyp.haruup.naverlogin</string>
 			</array>
 		</dict>
 	</array>
@@ -34,8 +34,6 @@
 		<string>kakaolink</string>
 		<string>kakaokompassauth</string>
 	</array>
-	<key>NAVER_CLIENT_ID</key>
-	<string>8N9gaq5jOl22B_gCpZlu</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
