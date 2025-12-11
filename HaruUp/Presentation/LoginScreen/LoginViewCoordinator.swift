@@ -14,7 +14,7 @@ final class LoginCoordinator: Coordinator {
     // child는 기본적으로 빈 배열로 시작
     var childCoordinators: [any Coordinator] = []
     
-    var onFinish: (() -> Void)? // 로그인 완료 후 화면 이동
+    var onFinish: ((SocialLoginResult) -> Void)? // 로그인 완료 후 화면 이동
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -25,8 +25,8 @@ final class LoginCoordinator: Coordinator {
         let loginVM = LoginViewModel(authService: authService)
         let loginVC = LoginViewController(viewModel: loginVM)
         
-        loginVC.onFinish = { [weak self] in
-            self?.onFinish?()
+        loginVC.onFinish = { [weak self] result in
+            self?.onFinish?(result)
         }
         
         navigationController.setViewControllers([loginVC], animated: false)

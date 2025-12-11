@@ -16,6 +16,8 @@ protocol Coordinator: AnyObject {
 final class AppCoordinator: Coordinator {
     let navigationController: UINavigationController
     var childCoordinators: [Coordinator] = []
+    
+    private let tokenStorage = TokenStorageService.shared
 
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -24,15 +26,43 @@ final class AppCoordinator: Coordinator {
     func start() {
         // TODO: 토큰 유무에 따라 Login 및 Home에 따라 분기 처리 - (token 서버에서 나오는 token)
         /// 분기처리 구분
+        // 토큰 유효성 체크
+        if tokenStorage.isTokenValid() {
+            if tokenStorage.isOnboardingCompleted() {
+                showMainTabFlow()
+            }
+            else {
+                showOnboardingFlow()
+            }
+        }
+        else {
+            showLoginFlow()
+        }
         /// 1. 로그인여부
         /// 2. 온보딩여부
-        showLoginFlow()
     }
 
     private func showLoginFlow() {
         let loginCoordinator = LoginCoordinator(navigationController: navigationController)
-        loginCoordinator.onFinish = { [weak self] in
+        loginCoordinator.onFinish = { [weak self] loginResult in
             guard let self else { return }
+            
+            if let onboardingCompleted = loginResult.onboardingCompleted {
+                if onboardingCompleted {
+                    // 이미 온보딩 완료라면 홈 화면 이동
+                    self.showMainTabFlow()
+                } else {
+                    // 온보딩 미완료라면 온보딩 화면 이동
+                    self.showOnboardingFlow()
+                }
+            }
+            else if let onboardingRequired = loginResult.onboardingRequired, onboardingRequired {
+                // 온보딩 첫 화면으로 이동
+                self.showOnboardingFlow()
+            }
+            else {
+                self.showOnboardingFlow()
+            }
             
             self.showOnboardingFlow()
         }
@@ -46,6 +76,8 @@ final class AppCoordinator: Coordinator {
         onboardingCoordinator.onFinish = { [weak self] in
             guard let self else { return }
             
+            // 온보딩 완료시 저장
+            TokenStorageService.shared.saveOnboardingCompleted(true)
             self.showMainTabFlow()
         }
         

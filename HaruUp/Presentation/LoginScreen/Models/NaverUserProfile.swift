@@ -18,7 +18,7 @@ struct NaverUserProfile {
         // id는 항상 있어야 함
         guard let id = dictionary["id"] else { return nil }
         self.id = id
-        self.name = dictionary["name"] ?? ""
-        self.email = dictionary["email"] ?? ""
+        self.name = dictionary["name"]?.isEmpty == false ? dictionary["name"] : nil
+        self.email = dictionary["email"]?.isEmpty == false ? dictionary["email"] : nil
     }
 }
