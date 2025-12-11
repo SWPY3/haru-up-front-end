@@ -12,6 +12,8 @@ protocol AuthAPIProtocol {
     func socialLogin(request: SocialLoginRequest) -> Single<SocialLoginResponse>
 }
 
+struct EmptyResponseData: Codable {}
+
 final class AuthAPI: AuthAPIProtocol {
     private let apiClient: APIClient
     
@@ -49,6 +51,16 @@ final class AuthAPI: AuthAPIProtocol {
             endpoint: "/member/auth/sns-login",
             method: .POST,
             parameters: parameters
+        )
+    }
+    
+    func logout(refreshToken: String) -> Single<GenericResponse<EmptyResponseData>> {
+        let headers = ["jwt-token": refreshToken]
+        return apiClient.request(
+            endpoint: "/member/auth/logout",
+            method: .POST,
+            parameters: nil,
+            headers: headers
         )
     }
 }
