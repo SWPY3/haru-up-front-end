@@ -9,12 +9,14 @@ import Foundation
 import RxSwift
 import Alamofire
 
-protocol MissionServiceType {
+protocol MissionServiceProtocol {
     // Home에서 미션 선택창을 띄워야하는지 여부
     func needShowTodayMissionFlow() -> Single<Bool>
+    // 미션 선택 완료
+    func markTodayMissionSelected()
 }
 
-final class MissionService: MissionServiceType {
+final class MissionService: MissionServiceProtocol {
     private let defaults = UserDefaults.standard
 }
 

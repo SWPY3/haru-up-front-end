@@ -17,9 +17,9 @@ final class HomeViewModel {
         let showTodayMissionFlow: Observable<Void>
     }
     
-    private let missionService: MissionServiceType
+    private let missionService: MissionServiceProtocol
     
-    init(missionService: MissionServiceType) {
+    init(missionService: MissionServiceProtocol) {
         self.missionService = missionService
     }
     

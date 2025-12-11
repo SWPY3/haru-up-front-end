@@ -13,8 +13,11 @@ final class TodayMissionCoordinator: Coordinator {
     
     var onFinish: (() -> Void)? // 미션 선택 완료 후 동작
     
-    init(navigationController: UINavigationController) {
+    private let missionService: MissionServiceProtocol
+    
+    init(navigationController: UINavigationController, missionService: MissionServiceProtocol) {
         self.navigationController = navigationController
+        self.missionService = missionService
     }
     
     func start() {
@@ -22,30 +25,25 @@ final class TodayMissionCoordinator: Coordinator {
     }
     
     private func showIntro() {
-        let vm = TodayMissionIntroViewModel()
-        let vc = TodayMissionIntroViewController(viewModel: vm)
+        let viewModel = TodayMissionIntroViewModel()
+        let viewcController = TodayMissionIntroViewController(viewModel: viewModel)
+        viewcController.isModalInPresentation = true
         
-        // 스와이프로 내려서 닫기 방지 (무조건 진행하게)
-        vc.isModalInPresentation = true
+        viewcController.onSelectMissionTap = { [weak self] in
+            self?.showMissionList()
+        }
         
-//        vc.onSelectMissionTap = { [weak self] in
-//            self?.showMissionList()
-//        }
-        
-        navigationController.setViewControllers([vc], animated: false)
+        navigationController.setViewControllers([viewcController], animated: false)
     }
     
     private func showMissionList() {
-        let vm = TodayMissionListViewModel()
-        let vc = TodayMissionListViewController(viewModel: vm)
+        let viewModel = TodayMissionListViewModel(missionService: missionService)
+        let viewController = TodayMissionListViewController(viewModel: viewModel)
         
-//        vc.onComplete = { [weak self] selectedMissions in
-//            // 1) 오늘 미션 저장
-//            self?.missionService.saveTodayMissions(selectedMissions)
-//            // 2) 부모에 종료 알림
-//            self?.onFinish?()
-//        }
+        viewController.onComplete = { [weak self] in
+            self?.onFinish?()
+        }
         
-        navigationController.pushViewController(vc, animated: true)
+        navigationController.pushViewController(viewController, animated: true)
     }
 }

@@ -11,7 +11,7 @@ final class HomeCoordinator: Coordinator {
     let navigationController: UINavigationController
     var childCoordinators: [any Coordinator] = []
     
-    private let missionService: MissionServiceType = MissionService()
+    private let missionService: MissionServiceProtocol = MissionService()
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -32,9 +32,10 @@ final class HomeCoordinator: Coordinator {
         let modalNavigationController = UINavigationController()
         modalNavigationController.modalPresentationStyle = .overFullScreen
 
-        let coordinator = TodayMissionCoordinator(navigationController: modalNavigationController)
+        let coordinator = TodayMissionCoordinator(navigationController: modalNavigationController, missionService: missionService)
 
         coordinator.onFinish = { [weak self, weak modalNavigationController, weak coordinator] in
+            print("창 종료")
             modalNavigationController?.dismiss(animated: true)
             
             if let coordinator = coordinator {
