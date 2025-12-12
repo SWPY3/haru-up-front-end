@@ -9,7 +9,7 @@ import UIKit
 
 class SplashViewController: UIViewController {
     
-    let splashVM: SplashViewModel
+    let viewModel: SplashViewModel
     
     let mainLogoLabel: UILabel = {
         let label = UILabel()
@@ -19,8 +19,8 @@ class SplashViewController: UIViewController {
         return label
     }()
     
-    init(splashVM: SplashViewModel) {
-        self.splashVM = splashVM
+    init(viewModel: SplashViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .fullScreen
     }
