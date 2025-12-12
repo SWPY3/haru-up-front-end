@@ -10,11 +10,25 @@ import CoreData
 import KakaoSDKCommon
 import KakaoSDKAuth
 
+import NidThirdPartyLogin
+
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        
+        // Naver 로그인 초기화
+        NidOAuth.shared.initialize(
+            appName: NaverLoginConfig.appName,
+            clientId: NaverLoginConfig.clientId,
+            clientSecret: NaverLoginConfig.clientSecret,
+            urlScheme: NaverLoginConfig.urlScheme
+        )
+        
+        NidOAuth.shared.setLoginBehavior(.appPreferredWithInAppBrowserFallback)
+        
+        
         // 네이티브 앱 키로 Kakao SDK 초기화
         guard let appKey = Bundle.main.object(forInfoDictionaryKey: "KAKAO_NATIVE_APP_KEY") as? String else { // KaKao native app key를 Info에 저장하여 구현
             return true
