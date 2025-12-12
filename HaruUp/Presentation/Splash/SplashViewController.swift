@@ -8,7 +8,9 @@
 import UIKit
 
 class SplashViewController: UIViewController {
-
+    
+    let splashVM: SplashViewModel
+    
     let mainLogoLabel: UILabel = {
         let label = UILabel()
         label.text = "어플 로고 자리입니다~"
@@ -17,11 +19,22 @@ class SplashViewController: UIViewController {
         return label
     }()
     
+    init(splashVM: SplashViewModel) {
+        self.splashVM = splashVM
+        super.init(nibName: nil, bundle: nil)
+        modalPresentationStyle = .fullScreen
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         view.addSubview(mainLogoLabel)
+        configureMainLogo()
     }
     
     func configureMainLogo() {
