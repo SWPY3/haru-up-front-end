@@ -18,7 +18,9 @@ class LoginViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel: LoginViewModel
     
-    var onFinish: (() -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
+    let naverLoginButton = NaverLoginButton()
+    
+    var onFinish: ((SocialLoginResult) -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
     
     private let logoImageView: UIImageView = {
         let iv = UIImageView()
@@ -43,6 +45,15 @@ class LoginViewController: UIViewController {
         return button
     }()
     
+//    private let naverLoginButton: UIButton = {
+//            let button = UIButton(type: .system)
+//            button.setBackgroundImage(UIImage(named: "btnG_완성형"), for: .normal)
+//            button.tintColor = .clear
+//            button.backgroundColor = .clear
+//            button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+//            return button
+//        }()
+    
     // MARK: 로그인 완료 후 온보딩으로 넘어가는 onFinish 클로저 작동용 버튼
     private let nextButton: UIButton = {
         let button = UIButton()
@@ -51,6 +62,9 @@ class LoginViewController: UIViewController {
         
         return button
     }()
+
+    
+    
     
     private var indicatorView: UIActivityIndicatorView = UIActivityIndicatorView(style: .medium)
     
@@ -83,7 +97,7 @@ class LoginViewController: UIViewController {
         logoImageView.centerX(inView: view, topAnchor: view.safeAreaLayoutGuide.topAnchor)
         logoImageView.setDimensions(width: 150, height: 150)
         
-        let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, appleLoginButton])
+        let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, appleLoginButton, naverLoginButton])
         stack.axis = .vertical
         stack.spacing = 10
         
@@ -108,7 +122,9 @@ class LoginViewController: UIViewController {
     private func bind() {
         let input = LoginViewModel.Input(
             kakaoLoginTapped: kakaoLoginButton.rx.tap.asObservable(),
-            appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable()
+            appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable(),
+            naverLoginTapped: naverLoginButton.rx.tap.asObservable()
+            
         )
         
         let output = viewModel.transform(input)
@@ -131,9 +147,10 @@ class LoginViewController: UIViewController {
             .disposed(by: disposeBag)
         
         output.loginSuccess
-            .emit(onNext: { [weak self] _ in
+            .emit(onNext: { [weak self] result in
                 // TODO: 온보딩 화면 이동
-                print("로그인 성공!")
+                print("로그인 성공! onboardingCompleted: \(result.onboardingCompleted ?? false), onboardingRequired: \(result.onboardingRequired ?? false)")
+                self?.onFinish?(result)
             })
             .disposed(by: disposeBag)
         
@@ -141,18 +158,7 @@ class LoginViewController: UIViewController {
             .bind { [weak self] in
                 guard let self else { return }
                 print("온보딩 화면 이동")
-                self.onFinish?()
+//                self.onFinish?()
             }.disposed(by: disposeBag)
     }
-    
-    // MARK: - Navigation
-//    private func goToHome() {
-//        let homeVC = HomeViewController()
-//        let nav = UINavigationController(rootViewController: homeVC)
-//        
-//        guard let window = view.window else { return }
-//        window.rootViewController = nav
-//        window.makeKeyAndVisible()
-//        
-//    }
 }
