@@ -394,6 +394,8 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                     accessToken: data.accessToken,
                     refreshToken: data.refreshToken
                 )
+                
+                print("백엔드로부터 발급받은 토큰: \(authToken)")
 
                 self?.tokenStorage.saveToken(authToken)
                 

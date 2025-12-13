@@ -27,7 +27,7 @@ final class TodayMissionListViewModel {
     private let disposeBag = DisposeBag()
     
     // TODO: test용
-    private let userId: Int = 1
+    private let userId: Int = 4639152463
     private let interests: [InterestDTO] = [.init(seqNo: 1, mainCategory: "운동", middleCategory: "헬스", subCategory: "근력키우기", difficulty: 1)]
     
     init(missionService: MissionServiceProtocol) {

@@ -21,7 +21,7 @@ protocol MissionServiceProtocol {
 final class MissionService: MissionServiceProtocol {
     private let defaults = UserDefaults.standard
     
-    func request<T: Decodable, B: Encodable>(_ url: String, method: HTTPMethod, header: HTTPHeaders, body: B) -> Single<T> {
+    func request<T: Decodable, B: Encodable>(_ url: String, method: Alamofire.HTTPMethod, header: HTTPHeaders, body: B) -> Single<T> {
         
         return Single.create { single in
             let req = AF.request(url, method: method, parameters: body, encoder: JSONParameterEncoder.default, headers: header)
@@ -43,11 +43,12 @@ final class MissionService: MissionServiceProtocol {
         
         var headers: HTTPHeaders = ["Content-Type": "application/json"]
         headers["Accept"] = "application/json"
-        headers["Authorization"] = "Bearer" // accessToken
+
+        headers["Authorization"] = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwibmFtZSI6IiIsInR5cGUiOiJBQ0NFU1MiLCJpYXQiOjE3NjU2MjI1NjAsImV4cCI6MTc2NTcwODk2MH0.ADT_YfMws-Ux7m-golQSeSUMsQfQRTJMdyIP9VQAIcI"
         
         let body: MissionRecommendRequestDTO = .init(userId: userId, interests: interests)
         
-        return request(url, method: .post, header: headers, body: body)
+        return request(url, method: Alamofire.HTTPMethod.post, header: headers, body: body)
     }
 }
 
