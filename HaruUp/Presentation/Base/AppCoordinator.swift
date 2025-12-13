@@ -33,6 +33,7 @@ final class AppCoordinator: Coordinator {
             guard let self = self else { return }
             
             
+            // SplashCoordinator 메모리 정리
             if let splash = splashCoordinator, let index = self.childCoordinators.firstIndex(where: { $0 === splash }) {
                 self.childCoordinators.remove(at: index)
             }
@@ -56,12 +57,13 @@ final class AppCoordinator: Coordinator {
         loginCoordinator.onFinish = { [weak self, weak loginCoordinator] loginResult in
             guard let self else { return }
             
-            // 메모리 정리
+            // LoginCoordinator 메모리 정리
             if let coordinator = loginCoordinator,
                let index = self.childCoordinators.firstIndex(where: { $0 === coordinator }) {
                 self.childCoordinators.remove(at: index)
             }
             
+            // 로그인 완료 후 온보딩 여부 확인
             if let onboardingCompleted = loginResult.onboardingCompleted, onboardingCompleted {
                 self.showMainTabFlow()
             }
@@ -76,8 +78,15 @@ final class AppCoordinator: Coordinator {
     
     private func showOnboardingFlow() {
         let onboardingCoordinator = OnboardingCoordinator(navigationController: navigationController)
-        onboardingCoordinator.onFinish = { [weak self] in
-            guard let self else { return }
+        onboardingCoordinator.onFinish = { [weak self, weak onboardingCoordinator] in
+            guard let self = self else { return }
+            
+            
+            if let coordinator = onboardingCoordinator,
+               let index = self.childCoordinators.firstIndex(where: {$0 === coordinator}) {
+                self.childCoordinators.remove(at: index)
+            }
+            
             
             // 온보딩 완료시 저장
             TokenStorageService.shared.saveOnboardingCompleted(true)
