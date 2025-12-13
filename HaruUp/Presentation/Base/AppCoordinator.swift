@@ -53,27 +53,21 @@ final class AppCoordinator: Coordinator {
 
     private func showLoginFlow() {
         let loginCoordinator = LoginCoordinator(navigationController: navigationController)
-        loginCoordinator.onFinish = { [weak self] loginResult in
+        loginCoordinator.onFinish = { [weak self, weak loginCoordinator] loginResult in
             guard let self else { return }
             
-            if let onboardingCompleted = loginResult.onboardingCompleted {
-                if onboardingCompleted {
-                    // 이미 온보딩 완료라면 홈 화면 이동
-                    self.showMainTabFlow()
-                } else {
-                    // 온보딩 미완료라면 온보딩 화면 이동
-                    self.showOnboardingFlow()
-                }
-            }
-            else if let onboardingRequired = loginResult.onboardingRequired, onboardingRequired {
-                // 온보딩 첫 화면으로 이동
-                self.showOnboardingFlow()
-            }
-            else {
-                self.showOnboardingFlow()
+            // 메모리 정리
+            if let coordinator = loginCoordinator,
+               let index = self.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self.childCoordinators.remove(at: index)
             }
             
-            self.showOnboardingFlow()
+            if let onboardingCompleted = loginResult.onboardingCompleted, onboardingCompleted {
+                self.showMainTabFlow()
+            }
+            if let onboardingRequired = loginResult.onboardingRequired, onboardingRequired {
+                self.showOnboardingFlow()
+            }
         }
         
         childCoordinators.append(loginCoordinator)
