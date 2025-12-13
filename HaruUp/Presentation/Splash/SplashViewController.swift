@@ -11,12 +11,11 @@ class SplashViewController: UIViewController {
     
     let viewModel: SplashViewModel
     
-    let mainLogoLabel: UILabel = {
-        let label = UILabel()
-        label.text = "어플 로고 자리입니다~"
-        label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 16)
-        return label
+    let mainLogoImage: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(named: "ex_logo")
+        iv.contentMode = .scaleAspectFit
+        return iv
     }()
     
     init(viewModel: SplashViewModel) {
@@ -33,13 +32,18 @@ class SplashViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.addSubview(mainLogoLabel)
+        view.addSubview(mainLogoImage)
         configureMainLogo()
+        view.backgroundColor = .white
     }
     
     func configureMainLogo() {
-        mainLogoLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
-        mainLogoLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        mainLogoImage.translatesAutoresizingMaskIntoConstraints = false
+
+        mainLogoImage.widthAnchor.constraint(equalToConstant: 200).isActive = true
+        mainLogoImage.heightAnchor.constraint(equalToConstant: 200).isActive = true
+        mainLogoImage.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        mainLogoImage.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
     }
 
 }

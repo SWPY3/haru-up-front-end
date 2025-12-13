@@ -25,22 +25,31 @@ final class AppCoordinator: Coordinator {
 
     func start() {
         // TODO: 토큰 유무에 따라 Login 및 Home에 따라 분기 처리 - (token 서버에서 나오는 token)
-        /// 분기처리 구분
-        // 토큰 유효성 체크
-        if tokenStorage.isTokenValid() {
-            if tokenStorage.isOnboardingCompleted() {
+        
+        let splashCoordinator = SplashCoordinator(navigationController: navigationController)
+        childCoordinators.append(splashCoordinator)
+        
+        splashCoordinator.onFinish = { [weak self, weak splashCoordinator] result in
+            guard let self = self else { return }
+            
+            
+            if let splash = splashCoordinator, let index = self.childCoordinators.firstIndex(where: { $0 === splash }) {
+                self.childCoordinators.remove(at: index)
+            }
+            // 분기처리 구분
+            switch result {
+            case .needLogin:
+                showLoginFlow()
+            case .onboardingRequired:
+                showOnboardingFlow()
+            case .onboardingCompleted:
                 showMainTabFlow()
             }
-            else {
-                showOnboardingFlow()
-            }
         }
-        else {
-            showLoginFlow()
-        }
-        /// 1. 로그인여부
-        /// 2. 온보딩여부
+        splashCoordinator.start()
     }
+        
+        
 
     private func showLoginFlow() {
         let loginCoordinator = LoginCoordinator(navigationController: navigationController)
