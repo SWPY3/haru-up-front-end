@@ -6,10 +6,15 @@
 //
 
 import UIKit
+import RxSwift
 
 class SplashViewController: UIViewController {
     
     let viewModel: SplashViewModel
+    private let disposeBag = DisposeBag()
+    
+    // coordinator에게 결과 전달
+    var onAuthCheckCompleted: ((SplashResult) -> Void)?
     
     let mainLogoImage: UIImageView = {
         let iv = UIImageView()
@@ -36,6 +41,20 @@ class SplashViewController: UIViewController {
         configureMainLogo()
         view.backgroundColor = .white
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // 인증 상태 확인
+        viewModel.checkAuthStatus()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] result in
+                self?.onAuthCheckCompleted?(result)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    
     
     func configureMainLogo() {
         mainLogoImage.translatesAutoresizingMaskIntoConstraints = false
