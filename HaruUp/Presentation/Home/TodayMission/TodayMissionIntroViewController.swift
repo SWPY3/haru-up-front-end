@@ -15,6 +15,31 @@ class TodayMissionIntroViewController: UIViewController {
     private let viewModel: TodayMissionIntroViewModel
     var onSelectMissionTap: (() -> Void)?
     
+    private let stackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 20
+        
+        return stackView
+    }()
+    
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Today Mission"
+        label.textAlignment = .center
+        
+        return label
+    }()
+    
+    private let characterImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "circle.fill")
+        imageView.tintColor = .white
+        imageView.contentMode = .scaleAspectFit
+        
+        return imageView
+    }()
+    
     private let nextButton: UIButton = {
         let button = UIButton()
         button.setTitle("list", for: .normal)
@@ -35,18 +60,32 @@ class TodayMissionIntroViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .gray
-        configureNextButton()
+        setupView()
         bind()
     }
     
-    private func configureNextButton() {
-        view.addSubview(nextButton)
-        nextButton.translatesAutoresizingMaskIntoConstraints = false
+    private func setupView() {
+        configureBackground()
+        configureUI()
+    }
+    
+    private func configureBackground() {
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        
+    }
+    
+    private func configureUI() {
+        view.addSubview(stackView)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        [titleLabel, characterImageView, nextButton].forEach {
+            stackView.addArrangedSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
         
         NSLayoutConstraint.activate([
-            nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
-            nextButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
     
