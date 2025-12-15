@@ -97,7 +97,7 @@ class LoginViewController: UIViewController {
         logoImageView.centerX(inView: view, topAnchor: view.safeAreaLayoutGuide.topAnchor)
         logoImageView.setDimensions(width: 150, height: 150)
         
-        let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, appleLoginButton, naverLoginButton])
+        let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, naverLoginButton, appleLoginButton])
         stack.axis = .vertical
         stack.spacing = 10
         
