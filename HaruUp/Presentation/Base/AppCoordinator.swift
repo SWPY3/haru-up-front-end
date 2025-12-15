@@ -49,9 +49,9 @@ final class AppCoordinator: Coordinator {
         }
         splashCoordinator.start()
     }
-        
-        
-
+    
+    
+    
     private func showLoginFlow() {
         let loginCoordinator = LoginCoordinator(navigationController: navigationController)
         loginCoordinator.onFinish = { [weak self, weak loginCoordinator] loginResult in
@@ -62,14 +62,24 @@ final class AppCoordinator: Coordinator {
                let index = self.childCoordinators.firstIndex(where: { $0 === coordinator }) {
                 self.childCoordinators.remove(at: index)
             }
+            // 로그인 완료 후 분기 처리 개선
+            print("onboardingCompleted: \(loginResult.onboardingCompleted ?? false)")
+            print("onboardingRequired: \(loginResult.onboardingRequired ?? false)")
+            
             
             // 로그인 완료 후 온보딩 여부 확인
             if let onboardingCompleted = loginResult.onboardingCompleted, onboardingCompleted {
+                print("-> 홈 화면으로 이동")
                 self.showMainTabFlow()
-            }
-            if let onboardingRequired = loginResult.onboardingRequired, onboardingRequired {
+            } else if let onboardingRequired = loginResult.onboardingRequired, onboardingRequired {
+                print("-> 온보딩 화면으로 이동")
+                self.showOnboardingFlow()
+            } else {
+                // ⭐️ 둘 다 false인 경우 기본 동작 (서버 응답 이상)
+                print("⚠️ 온보딩 상태 불명확 - 기본적으로 온보딩 화면으로 이동")
                 self.showOnboardingFlow()
             }
+            
         }
         
         childCoordinators.append(loginCoordinator)

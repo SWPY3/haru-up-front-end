@@ -50,16 +50,30 @@ final class OnboardingViewModel {
     
     private func setupBindings() {
         // 다음 버튼 탭
+        //        nextButtonTapped
+        //            .withLatestFrom(currentPage)
+        //            .subscribe(onNext: { [weak self] page in
+        //                guard let self = self else { return }
+        //
+        //                if page < self.totalPages - 1 {
+        //                    // 다음 페이지 이동
+        //                    self.currentPage.accept(page + 1)
+        //                }else {
+        //                    // 마지막 페이지 -> 완료
+        //                    self.shouldComplete.onNext(())
+        //                }
+        //            })
+        //            .disposed(by: disposeBag)
         nextButtonTapped
+            .do(onNext: { print("👉 VM next tapped") })
             .withLatestFrom(currentPage)
+            .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] page in
                 guard let self = self else { return }
-                
+                print("👉 VM currentPage before: \(page)")
                 if page < self.totalPages - 1 {
-                    // 다음 페이지 이동
                     self.currentPage.accept(page + 1)
-                }else {
-                    // 마지막 페이지 -> 완료
+                } else {
                     self.shouldComplete.onNext(())
                 }
             })

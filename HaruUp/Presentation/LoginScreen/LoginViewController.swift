@@ -148,9 +148,14 @@ class LoginViewController: UIViewController {
         
         output.loginSuccess
             .emit(onNext: { [weak self] result in
-                // TODO: 온보딩 화면 이동
-                print("로그인 성공! onboardingCompleted: \(result.onboardingCompleted ?? false), onboardingRequired: \(result.onboardingRequired ?? false)")
+                print("🟢 로그인 성공!")
+                print("   onboardingCompleted: \(result.onboardingCompleted ?? false)")
+                print("   onboardingRequired: \(result.onboardingRequired ?? false)")
+                print("   onFinish 클로저 존재 여부: \(self?.onFinish != nil)")
+                
+                // ⭐️ onFinish 호출
                 self?.onFinish?(result)
+                print("   onFinish 호출 완료")
             })
             .disposed(by: disposeBag)
         

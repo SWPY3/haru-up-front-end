@@ -8,6 +8,8 @@
 import Foundation
 
 
+
+
 final class TokenStorageService {
     static let shared = TokenStorageService()
     
@@ -56,9 +58,25 @@ final class TokenStorageService {
         return UserDefaults.standard.bool(forKey: onboardingCompletedKey)
     }
     
+    /// 모든 온보딩 관련 데이터 초기화 (테스트용)
+    func resetOnboardingStatus() {
+        UserDefaults.standard.removeObject(forKey: "onboardingRequired")
+        UserDefaults.standard.removeObject(forKey: "onboardingCompleted")
+    }
+    
     func clearTokens() {
         UserDefaults.standard.removeObject(forKey: accessTokenKey)
         UserDefaults.standard.removeObject(forKey: refreshTokenKey)
         UserDefaults.standard.removeObject(forKey: tokenExpiresAtKey)
     }
+    
+#if DEBUG
+    func printCurrentStatus() {
+        print("=== Token Status ===")
+        print("Access Token: \(getAccessToken() ?? "nil")")
+        print("Token Valid: \(isTokenValid())")
+        print("Onboarding Completed: \(isOnboardingCompleted())")
+        print("===================")
+    }
+#endif
 }
