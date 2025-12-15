@@ -104,18 +104,6 @@ class LoginViewController: UIViewController {
         view.addSubview(stack)
         stack.anchor(top: logoImageView.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 100, paddingLeft: 28, paddingRight: 28)
         
-        // MARK: test Button 배치
-        configureNextButton()
-    }
-    
-    private func configureNextButton() {
-        view.addSubview(nextButton)
-        nextButton.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
-            nextButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
-        ])
     }
     
     // MARK: - bind
@@ -153,17 +141,9 @@ class LoginViewController: UIViewController {
                 print("   onboardingRequired: \(result.onboardingRequired ?? false)")
                 print("   onFinish 클로저 존재 여부: \(self?.onFinish != nil)")
                 
-                // ⭐️ onFinish 호출
                 self?.onFinish?(result)
                 print("   onFinish 호출 완료")
             })
             .disposed(by: disposeBag)
-        
-        nextButton.rx.tap
-            .bind { [weak self] in
-                guard let self else { return }
-                print("온보딩 화면 이동")
-//                self.onFinish?()
-            }.disposed(by: disposeBag)
     }
 }
