@@ -29,6 +29,11 @@ final class TodayMissionListViewModel {
     // TODO: test용
     private let userId: Int = 4639152463
     private let interests: [InterestDTO] = [.init(seqNo: 1, mainCategory: "운동", middleCategory: "헬스", subCategory: "근력키우기", difficulty: 1)]
+    private let dummyMissions: [RecommendedMissionDTO] = [
+        .init(seqNo: 1, content: "스쿼트 20회", relatedInterest: "근력키우기", difficulty: 1),
+        .init(seqNo: 2, content: "플랭크 1분", relatedInterest: "근력키우기", difficulty: 2),
+        .init(seqNo: 3, content: "달리기 20분", relatedInterest: "유산소", difficulty: 3)
+    ]
     
     init(missionService: MissionServiceProtocol) {
         self.missionService = missionService
@@ -47,14 +52,18 @@ final class TodayMissionListViewModel {
             .flatMapLatest { [weak self] _ -> Observable<[RecommendedMissionDTO]> in
                 guard let self = self else { return .empty() }
                 
-                return self.missionService
-                    .fetchRecommendedMissions(userId: userId, interests: interests)
-                    .asObservable()
-                    .map { $0.missions }
-                    .do(onError: { error in
-                        errorSubject.onNext(error.localizedDescription)
-                    })
-                    .catch { _ in .empty() }
+                // MARK: TEST
+                return Observable.just(dummyMissions)
+                
+                // MARK: API
+//                return self.missionService
+//                    .fetchRecommendedMissions(userId: userId, interests: interests)
+//                    .asObservable()
+//                    .map { $0.missions }
+//                    .do(onError: { error in
+//                        errorSubject.onNext(error.localizedDescription)
+//                    })
+//                    .catch { _ in .empty() }
             }
             .do(onNext: { _ in loadingSubject.onNext(false) },
                 onError: { _ in loadingSubject.onNext(false) })
