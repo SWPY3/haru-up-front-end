@@ -21,8 +21,9 @@ class JobSelectViewController: UIViewController {
     
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 0.15
+        progressBar.progress = 1.0 / 7.0
         progressBar.tintColor = .blue
+        progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
     }()
 
@@ -33,6 +34,7 @@ class JobSelectViewController: UIViewController {
         label.textAlignment = .left
         label.numberOfLines = 0
         label.textColor = .black
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -42,6 +44,7 @@ class JobSelectViewController: UIViewController {
         label.font = .systemFont(ofSize: 15, weight: .regular)
         label.textAlignment = .left
         label.textColor = .gray
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
