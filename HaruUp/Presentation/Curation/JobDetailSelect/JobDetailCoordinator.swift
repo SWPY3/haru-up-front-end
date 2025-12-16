@@ -13,14 +13,29 @@ final class JobDetailSelectCoordinator: Coordinator {
     
     var childCoordinators: [any Coordinator] = []
     
-    init(navigationController: UINavigationController) {
+    private let selectedJob: String
+    
+    init(navigationController: UINavigationController, selectedJob: String) {
         self.navigationController = navigationController
+        self.selectedJob = selectedJob
     }
     
     func start() {
-        let jobDetailSelectVM = JobDetailSelectViewModel()
+        print("🟡 JobDetailSelectCoordinator start() 호출됨")
+        print("🟡 선택된 직업: \(selectedJob)")
+        let jobDetailSelectVM = JobDetailSelectViewModel(
+            coordinator: self,
+            selectedJob: selectedJob
+        )
         let jobDetailSelectVC = JobDetailSelectViewController(viewModel: jobDetailSelectVM)
         
-        navigationController.setViewControllers([jobDetailSelectVC], animated: false)
+        print("🟡 JobDetailSelectViewController 생성 완료")
+        print("🟡 push 시작")
+        navigationController.pushViewController(jobDetailSelectVC, animated: true)
+    }
+    
+    // 다음 화면으로 이동
+    func showNextScreen(selectedJobDetail: String) {
+        print("선택된 직업: \(selectedJob), 선택된 세부 직무: \(selectedJobDetail)")
     }
 }

@@ -17,7 +17,7 @@ class JobSelectViewController: UIViewController {
     
     private let jobSelectedSubject = PublishSubject<String>()
     private var jobButtons: [JobSelectButton] = []
-    
+    private var jobs: [String] = []
     
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
@@ -167,13 +167,15 @@ class JobSelectViewController: UIViewController {
     // MARK: - Binding ViewModel
     private func bindViewModel() {
         let input = JobSelectViewModel.Input(
-            jobSelected: jobSelectedSubject.asObservable()
+            jobSelected: jobSelectedSubject.asObservable(),
+            nextButtonTapped: nextButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
         
         // 직업 목록 받아 버튼 생성
         output.jobs
             .drive(onNext: { [weak self] jobs in
+                self?.jobs = jobs
                 self?.createJobButtons(with: jobs)
             })
             .disposed(by: disposeBag)
@@ -181,12 +183,20 @@ class JobSelectViewController: UIViewController {
         // 선택된 직업 처리
         output.selectedJob
             .drive(onNext: {[weak self] selectedJob in
-                self?.updateButtonSelection(selectedJob: selectedJob)
+                guard let self = self else { return }
+                
+                self.jobButtons.enumerated().forEach { index, button in
+                    let isSelected = self.jobs[index] == selectedJob
+                    button.setSelected(isSelected)
+                }
             })
             .disposed(by: disposeBag)
     }
     
     private func createJobButtons(with jobs: [String]) {
+        jobButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+                jobButtons.removeAll()
+        
         jobs.forEach { job in
             let button = JobSelectButton()
             button.setTitle(job, for: .normal)

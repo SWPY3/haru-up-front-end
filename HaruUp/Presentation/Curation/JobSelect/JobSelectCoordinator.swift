@@ -18,9 +18,20 @@ final class JobSelectCoordinator: Coordinator {
     }
     
     func start() {
-        let jobSelectVM = JobSelectViewModel()
+        let jobSelectVM = JobSelectViewModel(coordinator: self)
         let jobSelectVC = JobSelectViewController(viewModel: jobSelectVM)
         
         navigationController.setViewControllers([jobSelectVC], animated: false)
+    }
+    
+    func showjobDetailFlow(selectedJob: String) {
+        print("🟢 showJobDetailSelect 호출됨")
+            print("🟢 선택된 직업: \(selectedJob)")
+        let jobDetailCoordinator = JobDetailSelectCoordinator(
+            navigationController: navigationController,
+            selectedJob: selectedJob
+        )
+        childCoordinators.append(jobDetailCoordinator)
+        jobDetailCoordinator.start()
     }
 }
