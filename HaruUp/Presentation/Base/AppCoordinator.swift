@@ -88,6 +88,8 @@ final class AppCoordinator: Coordinator {
     
     private func showOnboardingFlow() {
         let onboardingCoordinator = OnboardingCoordinator(navigationController: navigationController)
+        
+        
         onboardingCoordinator.onFinish = { [weak self, weak onboardingCoordinator] in
             guard let self = self else { return }
             
@@ -98,14 +100,42 @@ final class AppCoordinator: Coordinator {
             }
             
             
-            // 온보딩 완료시 저장
-            TokenStorageService.shared.saveOnboardingCompleted(true)
-            self.showMainTabFlow()
+            
+//            // 🛑 온보딩 완료시 저장
+//            TokenStorageService.shared.saveOnboardingCompleted(true)
+//            self.showMainTabFlow()
+            self.createProfileFlow()
         }
         
         childCoordinators.append(onboardingCoordinator)
         onboardingCoordinator.start()
     }
+    
+    private func createProfileFlow() {
+        let createProfileCoordinator = CreateProfileCoordinator(navigationController: navigationController)
+        
+        createProfileCoordinator.onFinish = { [weak self, weak createProfileCoordinator] in
+            guard let self = self else { return }
+            
+            if let coordinator = createProfileCoordinator,
+               let index = self.childCoordinators.firstIndex(where: {$0 === coordinator}) {
+                self.childCoordinators.remove(at: index)
+            }
+            
+            self.showJobSelectFlow()
+        }
+        
+        childCoordinators.append(createProfileCoordinator)
+        createProfileCoordinator.start()
+    }
+    
+    private func showJobSelectFlow() {
+        let jobSelectCoordinator = JobSelectCoordinator(navigationController: navigationController)
+        childCoordinators.append(jobSelectCoordinator)
+        
+        jobSelectCoordinator.start()
+    }
+    
     
     private func showMainTabFlow() {
         let mainTabCoordinator = MainTabBarCoordinator(navigationController: navigationController)

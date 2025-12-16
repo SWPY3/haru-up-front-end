@@ -17,6 +17,7 @@ final class TokenStorageService {
     private let refreshTokenKey = "HaruUp_RefreshToken"
     private let tokenExpiresAtKey = "HaruUp_TokenExpiresAt"
     private let onboardingCompletedKey = "HaruUp_OnboardingCompleted"
+    private let memberIdKey = "HaruUp_MemberId"
     
     private init() {}
     
@@ -28,6 +29,14 @@ final class TokenStorageService {
         if let expiresAt = token.expiresAt {
             UserDefaults.standard.set(expiresAt, forKey: tokenExpiresAtKey)
         }
+    }
+    
+    func saveMemberId(_ id: String) {
+        UserDefaults.standard.set(id, forKey: memberIdKey)
+    }
+    
+    func getMemberId() -> String? {
+        return UserDefaults.standard.string(forKey: memberIdKey)
     }
     
     func getAccessToken() -> String? {
@@ -68,6 +77,7 @@ final class TokenStorageService {
         UserDefaults.standard.removeObject(forKey: accessTokenKey)
         UserDefaults.standard.removeObject(forKey: refreshTokenKey)
         UserDefaults.standard.removeObject(forKey: tokenExpiresAtKey)
+        UserDefaults.standard.removeObject(forKey: onboardingCompletedKey)
     }
     
 #if DEBUG

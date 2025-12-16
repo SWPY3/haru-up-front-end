@@ -386,6 +386,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             .map { [weak self] response in
                 guard response.success,
                       let data = response.data else {
+                    print("❌ 로그인 실패: response.success = false 또는 data 없음")
                     return SocialLoginResult(success: false)
                 }
                 
@@ -394,14 +395,27 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                     accessToken: data.accessToken,
                     refreshToken: data.refreshToken
                 )
-
-                self?.tokenStorage.saveToken(authToken)
                 
+                self?.tokenStorage.saveToken(authToken)
+                print("✅ 토큰 저장 완료")
+                
+                if let memberInfo = data.memberInfo {
+                    print("✅ MemberInfo 받음: id=\(memberInfo.id), name=\(memberInfo.name ?? "nil")")
+                    self?.tokenStorage.saveMemberId(memberInfo.id)
+                    print("✅ MemberId 저장: \(memberInfo.id)")
+                } else {
+                    print("⚠️ MemberInfo가 nil입니다!")
+                }
+                    
                 // onboardingCompleted/onboardingRequired 저장
                 if let onboardingCompleted = data.onboardingCompleted {
+                    print("✅ onboardingCompleted: \(onboardingCompleted)")
                     self?.tokenStorage.saveOnboardingCompleted(onboardingCompleted)
                 } else if let onboardingRequired = data.onboardingRequired, onboardingRequired {
+                    print("✅ onboardingRequired: \(onboardingRequired)")
                     self?.tokenStorage.saveOnboardingCompleted(false)
+                }else {
+                    print("⚠️ onboarding 상태가 없습니다. (둘 다 nil)")
                 }
                 
                 // 화면 분기를 위한 결과 반환

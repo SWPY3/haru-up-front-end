@@ -104,7 +104,7 @@ class OnboardingViewController: UIViewController {
         view.addSubview(pageControl)
         view.addSubview(nextButton)
         
-        // Skip Button (우측 상단)
+
         skipButton.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
             right: view.rightAnchor,
@@ -112,7 +112,7 @@ class OnboardingViewController: UIViewController {
             paddingRight: 20,
             height: 44
         )
-        // ScrollView (중앙 영역)
+        
         scrollView.anchor(
             top: skipButton.bottomAnchor,
             left: view.leftAnchor,
@@ -122,7 +122,6 @@ class OnboardingViewController: UIViewController {
             paddingBottom: 20
         )
         
-        // PageControl (하단 중앙)
         pageControl.centerX(inView: view)
         pageControl.anchor(
             bottom: nextButton.topAnchor,
@@ -130,7 +129,6 @@ class OnboardingViewController: UIViewController {
             height: 20
         )
         
-        // Next Button (하단 고정)
         nextButton.anchor(
             left: view.leftAnchor,
             bottom: view.safeAreaLayoutGuide.bottomAnchor,

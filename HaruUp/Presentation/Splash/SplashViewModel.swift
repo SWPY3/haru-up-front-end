@@ -36,15 +36,13 @@ final class SplashViewModel {
         // 로컬 토큰 검사 (동기)
         let result : SplashResult = {
             guard tokenStorage.isTokenValid() else { return .needLogin }
-            //            return tokenStorage.isOnboardingCompleted() ?  .onboardingCompleted : .onboardingRequired
-            
             
             let onboardingDone = tokenStorage.isOnboardingCompleted()
             if onboardingDone {
-                print("-> 결과: onboardingCompleted")  // ⭐️
+                print("-> 결과: onboardingCompleted")
                 return .onboardingCompleted
             } else {
-                print("-> 결과: onboardingRequired")  // ⭐️
+                print("-> 결과: onboardingRequired") 
                 return .onboardingRequired
             }
         }()
