@@ -87,13 +87,8 @@ class JobSelectViewController: UIViewController {
     
     
     
-    
-    
-    
-    
-    
-    
-    
+
+    // MARK: - Init
     
     init(viewModel: JobSelectViewModel) {
         self.viewModel = viewModel
@@ -133,7 +128,7 @@ class JobSelectViewController: UIViewController {
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 80,
+            paddingTop: 50,
             paddingLeft: 30,
             paddingRight: 30
         )
@@ -205,9 +200,12 @@ class JobSelectViewController: UIViewController {
         }
     }
     
-     private func updateButtonSelection(selectedJob: String) {
+     private func updateButtonSelection(selectedJob: String?) {
+         print("=== 선택된 직업: \(selectedJob ?? "없음") ===")
          jobButtons.forEach { button in
-             let isSelected = button.titleLabel?.text == selectedJob
+             let buttonTitle = button.titleLabel?.text
+             let isSelected = buttonTitle == selectedJob
+             print("버튼 '\(buttonTitle ?? "")' -> \(isSelected ? "선택" : "해제")")
              button.setSelected(isSelected)
          }
     }

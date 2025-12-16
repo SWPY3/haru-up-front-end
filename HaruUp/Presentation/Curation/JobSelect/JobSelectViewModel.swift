@@ -19,7 +19,7 @@ final class JobSelectViewModel {
     // Output
     struct Output {
         let jobs: Driver<[String]>
-        let selectedJob: Driver<String>
+        let selectedJob: Driver<String?>
     }
     
     private let disposeBag = DisposeBag()
@@ -32,12 +32,16 @@ final class JobSelectViewModel {
         "취준생"
     ])
     
+    private let currentSelectedJob = BehaviorRelay<String?>(value: nil)
+    
     func transform(input: Input) -> Output {
-        let selectedJob = input.jobSelected
-            .asDriver(onErrorJustReturn: "")
+        input.jobSelected
+            .bind(to: currentSelectedJob)
+            .disposed(by: disposeBag)
         
         return Output(
-            jobs: jobList.asDriver(), selectedJob: selectedJob
+            jobs: jobList.asDriver(),
+            selectedJob: currentSelectedJob.asDriver()
             )
     }
 }

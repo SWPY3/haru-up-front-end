@@ -11,6 +11,7 @@ class JobSelectButton: UIButton {
     
     private var isJobSelected: Bool = false {
         didSet {
+            print("버튼: \(self.titleLabel?.text ?? ""), 선택 상태: \(isJobSelected)")
             updateAppearance()
         }
     }
@@ -38,7 +39,13 @@ class JobSelectButton: UIButton {
         
         var configuration = Configuration.plain()
         configuration.titleAlignment = .leading
-        configuration.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 0)
+        configuration.contentInsets = NSDirectionalEdgeInsets(
+            top: 16,
+            leading: 20,
+            bottom: 16,
+            trailing: 20
+        )
+        contentHorizontalAlignment = .left
         self.configuration = configuration
     }
     
@@ -51,6 +58,10 @@ class JobSelectButton: UIButton {
                 layer.borderColor = UIColor.systemBlue.cgColor
                 layer.borderWidth = 2
                 backgroundColor = UIColor.systemBlue.withAlphaComponent(0.05)
+            } else {
+                layer.borderColor = nil
+                layer.borderWidth = 0
+                backgroundColor = .systemGray6
             }
         }
 }
