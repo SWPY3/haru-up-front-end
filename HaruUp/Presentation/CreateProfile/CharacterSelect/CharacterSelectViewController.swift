@@ -75,7 +75,7 @@ class CharacterSelectViewController: UIViewController {
     private let nextButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("다음", for: .normal)
-        btn.backgroundColor = .black
+        btn.backgroundColor = .systemBlue
         btn.setTitleColor(.white, for: .normal)
         btn.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         btn.layer.cornerRadius = 8

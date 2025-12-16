@@ -21,7 +21,7 @@ class JobDetailSelectViewController: UIViewController {
     private let progressBar: UIProgressView = {
             let progressBar = UIProgressView(progressViewStyle: .default)
             progressBar.progress = 2.0 / 7.0  // 2번째 화면이므로 2/7
-            progressBar.tintColor = .blue
+            progressBar.tintColor = .systemBlue
             progressBar.translatesAutoresizingMaskIntoConstraints = false
             return progressBar
         }()
