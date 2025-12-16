@@ -58,7 +58,7 @@ final class JobDetailSelectViewModel {
                     return
                 }
                 // Coordinator를 통해 다음 화면으로 이동
-                self?.coordinator?.showNextScreen(selectedJobDetail: selectedJobDetail)
+                self?.coordinator?.showGenderSelectFlow(selectedJobDetail: selectedJobDetail)
             })
             .disposed(by: disposeBag)
         

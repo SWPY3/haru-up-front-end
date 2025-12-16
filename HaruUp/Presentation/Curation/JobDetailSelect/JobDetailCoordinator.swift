@@ -35,7 +35,7 @@ final class JobDetailSelectCoordinator: Coordinator {
     }
     
     // 다음 화면으로 이동
-    func showNextScreen(selectedJobDetail: String) {
+    func showGenderSelectFlow(selectedJobDetail: String) {
         print("선택된 직업: \(selectedJob), 선택된 세부 직무: \(selectedJobDetail)")
     }
 }
