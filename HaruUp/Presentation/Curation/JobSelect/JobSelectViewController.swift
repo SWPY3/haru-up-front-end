@@ -16,7 +16,7 @@ class JobSelectViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     private let jobSelectedSubject = PublishSubject<String>()
-    private var jobButtons: [JobSelectButton] = []
+    private var jobButtons: [SelectButton] = []
     private var jobs: [String] = []
     
     private let progressBar: UIProgressView = {
@@ -41,7 +41,7 @@ class JobSelectViewController: UIViewController {
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.text = "적절한 관심사를 추천하기 위해 필요해요."
-        label.font = .systemFont(ofSize: 15, weight: .regular)
+        label.font = .systemFont(ofSize: 14, weight: .regular)
         label.textAlignment = .left
         label.textColor = .gray
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -198,7 +198,7 @@ class JobSelectViewController: UIViewController {
                 jobButtons.removeAll()
         
         jobs.forEach { job in
-            let button = JobSelectButton()
+            let button = SelectButton()
             button.setTitle(job, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
@@ -212,15 +212,15 @@ class JobSelectViewController: UIViewController {
             jobButtonsStackView.addArrangedSubview(button)
         }
     }
-    
-     private func updateButtonSelection(selectedJob: String?) {
-         print("=== 선택된 직업: \(selectedJob ?? "없음") ===")
-         jobButtons.forEach { button in
-             let buttonTitle = button.titleLabel?.text
-             let isSelected = buttonTitle == selectedJob
-             print("버튼 '\(buttonTitle ?? "")' -> \(isSelected ? "선택" : "해제")")
-             button.setSelected(isSelected)
-         }
-    }
+//    
+//     private func updateButtonSelection(selectedJob: String?) {
+//         print("=== 선택된 직업: \(selectedJob ?? "없음") ===")
+//         jobButtons.forEach { button in
+//             let buttonTitle = button.titleLabel?.text
+//             let isSelected = buttonTitle == selectedJob
+//             print("버튼 '\(buttonTitle ?? "")' -> \(isSelected ? "선택" : "해제")")
+//             button.setSelected(isSelected)
+//         }
+//    }
     
 }

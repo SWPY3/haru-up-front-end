@@ -1,5 +1,5 @@
 //
-//  JobSelectButton.swift
+//  SelectButton.swift
 //  HaruUp
 //
 //  Created by 하다현 on 12/16/25.
@@ -7,11 +7,11 @@
 
 import UIKit
 
-class JobSelectButton: UIButton {
+class SelectButton: UIButton {
     
-    private var isJobSelected: Bool = false {
+    private var buttonIsSelected: Bool = false {
         didSet {
-            print("버튼: \(self.titleLabel?.text ?? ""), 선택 상태: \(isJobSelected)")
+            print("버튼: \(self.titleLabel?.text ?? ""), 선택 상태: \(isSelected)")
             updateAppearance()
         }
     }
@@ -50,11 +50,11 @@ class JobSelectButton: UIButton {
     }
     
     func setSelected(_ selected: Bool) {
-        isJobSelected = selected
+        buttonIsSelected = selected
     }
     
     private func updateAppearance() {
-            if isJobSelected {
+            if buttonIsSelected {
                 layer.borderColor = UIColor.systemBlue.cgColor
                 layer.borderWidth = 2
                 backgroundColor = UIColor.systemBlue.withAlphaComponent(0.05)

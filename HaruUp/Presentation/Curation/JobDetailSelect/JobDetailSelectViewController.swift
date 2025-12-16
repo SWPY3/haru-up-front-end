@@ -15,7 +15,7 @@ class JobDetailSelectViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     private let jobDetailSelectedSubject = PublishSubject<String>()
-    private var jobDetailButtons: [JobSelectButton] = []
+    private var jobDetailButtons: [SelectButton] = []
     private var jobDetails: [String] = []
     
     private let progressBar: UIProgressView = {
@@ -40,7 +40,7 @@ class JobDetailSelectViewController: UIViewController {
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.text = "적절한 관심사를 추천하기 위해 필요해요."
-        label.font = .systemFont(ofSize: 15, weight: .regular)
+        label.font = .systemFont(ofSize: 14, weight: .regular)
         label.textAlignment = .left
         label.textColor = .gray
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -224,7 +224,7 @@ class JobDetailSelectViewController: UIViewController {
         jobDetailButtons.removeAll()
         
         jobDetails.forEach { jobDetail in
-            let button = JobSelectButton()
+            let button = SelectButton()
             button.setTitle(jobDetail, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true

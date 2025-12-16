@@ -20,8 +20,12 @@ final class GenderSelectCoordinator: Coordinator {
     
     
     func start() {
-        let genderSelectVM = GenderSelectViewModel()
+        let genderSelectVM = GenderSelectViewModel(coordinator: self)
         let genderSelectVC = GenderSelectViewController(viewModel: genderSelectVM)
         navigationController.pushViewController(genderSelectVC, animated: true)
+    }
+    
+    func showNextFlow(selectedGender: String) {
+        print("선택된 성별\(selectedGender)")
     }
 }
