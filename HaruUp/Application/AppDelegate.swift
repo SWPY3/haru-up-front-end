@@ -18,6 +18,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
+        // ⭐️ 테스트용: 온보딩 상태 초기화 (한 번만 실행)
+#if DEBUG
+        TokenStorageService.shared.clearTokens()
+        print("✅ 온보딩 상태 초기화 완료")
+#endif
+        
+        
         // Naver 로그인 초기화
         NidOAuth.shared.initialize(
             appName: NaverLoginConfig.appName,
