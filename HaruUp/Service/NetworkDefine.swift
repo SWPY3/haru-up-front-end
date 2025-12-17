@@ -12,6 +12,24 @@ enum NetworkDefine {
         static let baseURL = "http://223.130.141.179:8080/"
     }
     
+    enum AuthAPI {
+        case snsLogin
+        case logout
+        
+        var path: String {
+            switch self {
+            case .snsLogin:
+                return "api/member/auth/sns-login"
+            case .logout:
+                return "api/member/auth/logout"
+            }
+        }
+        
+        var url: String {
+            return APIEnvironment.baseURL + self.path
+        }
+    }
+    
     enum MissionAPI {
         case recommend
         
