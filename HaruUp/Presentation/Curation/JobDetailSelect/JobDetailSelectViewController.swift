@@ -18,6 +18,14 @@ class JobDetailSelectViewController: UIViewController {
     private var jobDetailButtons: [SelectButton] = []
     private var jobDetails: [String] = []
     
+    private let backButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        button.tintColor = .black
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
         progressBar.progress = 2.0 / 7.0
@@ -77,6 +85,8 @@ class JobDetailSelectViewController: UIViewController {
         button.layer.cornerRadius = 12
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.isEnabled = false
+        button.alpha = 0.5
         return button
     }()
     
@@ -86,7 +96,7 @@ class JobDetailSelectViewController: UIViewController {
         sv.axis = .vertical
         sv.alignment = .fill
         sv.distribution = .equalSpacing
-        sv.spacing = 20
+        sv.spacing = 35
         return sv
     }()
     
@@ -96,7 +106,7 @@ class JobDetailSelectViewController: UIViewController {
         sv.axis = .vertical
         sv.alignment = .fill
         sv.distribution = .equalSpacing
-        sv.spacing = 4
+        sv.spacing = 12
         return sv
     }()
     
@@ -120,6 +130,7 @@ class JobDetailSelectViewController: UIViewController {
     
     private func setupUI() {
         view.backgroundColor = .white
+        view.addSubview(backButton)
         view.addSubview(stackView)
         view.addSubview(titleLabelStackView)
         view.addSubview(scrollView)
@@ -133,6 +144,16 @@ class JobDetailSelectViewController: UIViewController {
         stackView.addArrangedSubview(titleLabelStackView)
         scrollView.addSubview(contentView)
         contentView.addSubview(jobDetailButtonsStackView)
+        
+        
+        backButton.anchor(
+            top: view.safeAreaLayoutGuide.topAnchor,
+            left: view.leftAnchor,
+            paddingTop: 5,
+            paddingLeft: 15,
+            width: 47,
+            height: 47
+        )
         
         stackView.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
@@ -192,6 +213,12 @@ class JobDetailSelectViewController: UIViewController {
     }
     
     private func bindViewModel() {
+        backButton.rx.tap
+            .subscribe(onNext: { [ weak self ] in
+                self?.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
+        
         let input = JobDetailSelectViewModel.Input(
             jobDetailSelected: jobDetailSelectedSubject.asObservable(),
             nextButtonTapped: nextButton.rx.tap.asObservable()
@@ -216,6 +243,15 @@ class JobDetailSelectViewController: UIViewController {
                     let isSelected = self.jobDetails[index] == selectedJobDetail
                     button.setSelected(isSelected)
                 }
+            })
+            .disposed(by: disposeBag)
+        
+        // 다음 버튼 활성화
+        output.selectedJobDetail
+            .map{ $0 != nil }
+            .drive(onNext: { [weak self] isEnabled in
+                self?.nextButton.isEnabled = isEnabled
+                self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
             })
             .disposed(by: disposeBag)
     }

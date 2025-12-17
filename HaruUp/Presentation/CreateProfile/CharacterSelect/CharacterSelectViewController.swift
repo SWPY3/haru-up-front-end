@@ -148,7 +148,7 @@ class CharacterSelectViewController: UIViewController {
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 40,
+            paddingTop: 60,
             paddingLeft: 30,
             paddingRight: 30
         )
@@ -157,7 +157,7 @@ class CharacterSelectViewController: UIViewController {
             top: titleLabel.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 30,
+            paddingTop: 50,
             paddingLeft: 30,
             paddingRight: 30
         )

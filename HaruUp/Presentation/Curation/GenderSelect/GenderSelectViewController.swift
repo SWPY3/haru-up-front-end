@@ -20,6 +20,16 @@ class GenderSelectViewController: UIViewController {
     private var genderButtons: [SelectButton] = []
     private var genders: [String] = []
     
+    private let backButton: UIButton = {
+            let button = UIButton()
+            button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+            button.tintColor = .black
+            button.translatesAutoresizingMaskIntoConstraints = false
+            return button
+        }()
+    
+    
+    
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
         progressBar.progress = 3.0 / 7.0
@@ -67,6 +77,8 @@ class GenderSelectViewController: UIViewController {
         button.layer.cornerRadius = 12
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.isEnabled = false
+        button.alpha = 0.5
         return button
     }()
     
@@ -76,7 +88,7 @@ class GenderSelectViewController: UIViewController {
         sv.axis = .vertical
         sv.alignment = .fill
         sv.distribution = .equalSpacing
-        sv.spacing = 20
+        sv.spacing = 35
         return sv
     }()
     
@@ -86,7 +98,7 @@ class GenderSelectViewController: UIViewController {
         sv.axis = .vertical
         sv.alignment = .fill
         sv.distribution = .equalSpacing
-        sv.spacing = 4
+        sv.spacing = 12
         return sv
     }()
     
@@ -113,6 +125,7 @@ class GenderSelectViewController: UIViewController {
     // MARK: - setupUI
     private func setupUI() {
         view.backgroundColor = .white
+        view.addSubview(backButton)
         view.addSubview(stackView)
         view.addSubview(titleLabelStackView)
         view.addSubview(genderButtonStackView)
@@ -125,6 +138,14 @@ class GenderSelectViewController: UIViewController {
         
         stackView.addArrangedSubview(titleLabelStackView)
         
+        backButton.anchor(
+            top: view.safeAreaLayoutGuide.topAnchor,
+            left: view.leftAnchor,
+            paddingTop: 5,
+            paddingLeft: 15,
+            width: 47,
+            height: 47
+        )
         
         stackView.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
@@ -163,6 +184,14 @@ class GenderSelectViewController: UIViewController {
     }
     // MARK: - Binding ViewModel
     private func bindViewModel() {
+        
+        backButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
+        
+        
         let input = GenderSelectViewModel.Input(
             genderSelected: genderSelectedSubject.asObservable(),
             nextButtonTapped: nextButton.rx.tap.asObservable()
@@ -188,6 +217,14 @@ class GenderSelectViewController: UIViewController {
                     let isSelected = self.genders[index] == selectedGender
                     button.setSelected(isSelected)
                 }
+            })
+            .disposed(by: disposeBag)
+        
+        output.selectedGender
+            .map{ $0 != nil }
+            .drive(onNext: { [weak self] isEnabled in
+                self?.nextButton.isEnabled = isEnabled
+                self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
             })
             .disposed(by: disposeBag)
 

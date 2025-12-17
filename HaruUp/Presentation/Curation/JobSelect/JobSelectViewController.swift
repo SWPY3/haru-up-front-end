@@ -26,7 +26,7 @@ class JobSelectViewController: UIViewController {
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
     }()
-
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "현재 어떤 일을 하고 계신가요?"
@@ -49,24 +49,26 @@ class JobSelectViewController: UIViewController {
     }()
     
     private let jobButtonsStackView: UIStackView = {
-            let sv = UIStackView()
-            sv.translatesAutoresizingMaskIntoConstraints = false
-            sv.axis = .vertical
-            sv.alignment = .fill
-            sv.distribution = .fill
-            sv.spacing = 12
-            return sv
-        }()
-        
-        private let nextButton: UIButton = {
-            let button = UIButton()
-            button.setTitle("다음", for: .normal)
-            button.backgroundColor = .systemBlue
-            button.layer.cornerRadius = 12
-            button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-            button.translatesAutoresizingMaskIntoConstraints = false
-            return button
-        }()
+        let sv = UIStackView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .fill
+        sv.spacing = 12
+        return sv
+    }()
+    
+    private let nextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("다음", for: .normal)
+        button.backgroundColor = .systemBlue
+        button.layer.cornerRadius = 12
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isEnabled = false
+        button.alpha = 0.5
+        return button
+    }()
     
     private let stackView: UIStackView = {
         let sv = UIStackView()
@@ -74,23 +76,23 @@ class JobSelectViewController: UIViewController {
         sv.axis = .vertical
         sv.alignment = .fill
         sv.distribution = .equalSpacing
-        sv.spacing = 20
+        sv.spacing = 35
         return sv
     }()
     
     private let titleLabelStackView: UIStackView = {
-       let sv = UIStackView()
+        let sv = UIStackView()
         sv.translatesAutoresizingMaskIntoConstraints = false
         sv.axis = .vertical
         sv.alignment = .fill
         sv.distribution = .equalSpacing
-        sv.spacing = 4
+        sv.spacing = 12
         return sv
     }()
     
     
     
-
+    
     // MARK: - Init
     
     init(viewModel: JobSelectViewModel) {
@@ -106,13 +108,13 @@ class JobSelectViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         view.backgroundColor = .white
         setupUI()
         bindViewModel()
     }
     
-
+    
     // MARK: - Setup UI
     func setupUI() {
         view.addSubview(stackView)
@@ -191,11 +193,19 @@ class JobSelectViewController: UIViewController {
                 }
             })
             .disposed(by: disposeBag)
+        
+        output.selectedJob
+            .map { $0 != nil }
+            .drive(onNext: { [weak self] isEnabled in
+                self?.nextButton.isEnabled = isEnabled
+                self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
+            })
+            .disposed(by: disposeBag)
     }
     
     private func createJobButtons(with jobs: [String]) {
         jobButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-                jobButtons.removeAll()
+        jobButtons.removeAll()
         
         jobs.forEach { job in
             let button = SelectButton()
@@ -212,15 +222,15 @@ class JobSelectViewController: UIViewController {
             jobButtonsStackView.addArrangedSubview(button)
         }
     }
-//    
-//     private func updateButtonSelection(selectedJob: String?) {
-//         print("=== 선택된 직업: \(selectedJob ?? "없음") ===")
-//         jobButtons.forEach { button in
-//             let buttonTitle = button.titleLabel?.text
-//             let isSelected = buttonTitle == selectedJob
-//             print("버튼 '\(buttonTitle ?? "")' -> \(isSelected ? "선택" : "해제")")
-//             button.setSelected(isSelected)
-//         }
-//    }
+    //
+    //     private func updateButtonSelection(selectedJob: String?) {
+    //         print("=== 선택된 직업: \(selectedJob ?? "없음") ===")
+    //         jobButtons.forEach { button in
+    //             let buttonTitle = button.titleLabel?.text
+    //             let isSelected = buttonTitle == selectedJob
+    //             print("버튼 '\(buttonTitle ?? "")' -> \(isSelected ? "선택" : "해제")")
+    //             button.setSelected(isSelected)
+    //         }
+    //    }
     
 }
