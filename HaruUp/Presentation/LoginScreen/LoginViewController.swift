@@ -22,6 +22,9 @@ class LoginViewController: UIViewController {
     
     var onFinish: ((SocialLoginResult) -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
     
+    // MARK: Home 화면으로 이동하는 코드 Devlop Merge할 때 삭제
+    var goToHome: (() -> Void)?
+    
     private let logoImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
@@ -83,6 +86,18 @@ class LoginViewController: UIViewController {
         
         configureUI()
         bind()
+        
+        configureNextButton()
+    }
+    
+    private func configureNextButton() {
+        view.addSubview(nextButton)
+        nextButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
+            nextButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
     }
     
     // MARK: - Selectors
@@ -114,6 +129,12 @@ class LoginViewController: UIViewController {
             naverLoginTapped: naverLoginButton.rx.tap.asObservable()
             
         )
+        
+        nextButton.rx.tap
+            .bind { [weak self] in
+                guard let self else { return }
+                self.goToHome?()
+            }.disposed(by: disposeBag)
         
         let output = viewModel.transform(input)
         

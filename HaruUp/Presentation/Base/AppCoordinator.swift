@@ -82,6 +82,12 @@ final class AppCoordinator: Coordinator {
             
         }
         
+        loginCoordinator.gotoHome = { [weak self] in
+            guard let self else { return }
+            
+            self.showMainTabFlow()
+        }
+        
         childCoordinators.append(loginCoordinator)
         loginCoordinator.start()
     }
