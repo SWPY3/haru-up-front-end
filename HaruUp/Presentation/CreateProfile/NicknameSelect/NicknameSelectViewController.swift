@@ -20,6 +20,9 @@ class NicknameSelectViewController: UIViewController {
     
     var onFinish: ((Int, String) -> Void)? // 캐릭터 인덱스, 닉네임
     
+    private var currentNickname: String = ""
+    
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "닉네임을 지어주세요"
@@ -167,6 +170,14 @@ class NicknameSelectViewController: UIViewController {
     // MARK: - Bind UI
     
     private func bindUI() {
+        
+        // 현재 닉네임 저장
+        textField.rx.text.orEmpty
+            .subscribe(onNext: { [weak self] text in
+                self?.currentNickname = text.trimmingCharacters(in: .whitespaces)
+            })
+            .disposed(by: disposeBag)
+        
         // 글자 수 표시
         textField.rx.text.orEmpty
             .map { "\($0.count)/10" }
@@ -204,6 +215,8 @@ class NicknameSelectViewController: UIViewController {
             .filter { $0.count >= 2 }
             .subscribe(onNext: { [weak self] nickname in
                 guard let self = self else { return }
+                self.onFinish?(self.selectedCharacter, nickname)
+                
                 self.viewModel.submitProfile(characterIndex: self.selectedCharacter, nickname: nickname)
             })
             .disposed(by: disposeBag)
@@ -239,7 +252,7 @@ class NicknameSelectViewController: UIViewController {
         viewModel.shouldComplete
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] in
-                self?.onFinish?(self?.selectedCharacter ?? 0, "")
+                print("shouldComplete 호출됨")
             })
             .disposed(by: disposeBag)
     }

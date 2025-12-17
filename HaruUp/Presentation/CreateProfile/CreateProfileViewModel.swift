@@ -14,6 +14,7 @@ final class CreateProfileViewModel {
     // Input
     let characterSelected = BehaviorRelay<Int>(value: 0) // 선택된 캐릭터 인덱스 (0 or 1)
     let nextButtonTapped = PublishSubject<Void>()
+
     
     // Output
     let shouldMoveToNickname = PublishSubject<Int>() // 선택된 캐릭터 인덱스와 함께 이동

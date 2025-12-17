@@ -13,8 +13,11 @@ final class JobSelectCoordinator: Coordinator {
     
     var childCoordinators: [any Coordinator] = []
     
-    init(navigationController: UINavigationController) {
+    private var curationData: CurationData
+    
+    init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
+        self.curationData = curationData
     }
     
     func start() {
@@ -29,8 +32,12 @@ final class JobSelectCoordinator: Coordinator {
             print("🟢 선택된 직업: \(selectedJob)")
         let jobDetailCoordinator = JobDetailSelectCoordinator(
             navigationController: navigationController,
-            selectedJob: selectedJob
+            selectedJob: selectedJob,
+            curationData: curationData
         )
+        curationData.job = selectedJob
+        print("📦 저장된 데이터 - 직업: \(selectedJob)")
+        
         childCoordinators.append(jobDetailCoordinator)
         jobDetailCoordinator.start()
     }

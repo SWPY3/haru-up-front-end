@@ -13,11 +13,13 @@ final class JobDetailSelectCoordinator: Coordinator {
     
     var childCoordinators: [any Coordinator] = []
     
+    private var curationData: CurationData
     private let selectedJob: String
     
-    init(navigationController: UINavigationController, selectedJob: String) {
+    init(navigationController: UINavigationController, selectedJob: String, curationData: CurationData) {
         self.navigationController = navigationController
         self.selectedJob = selectedJob
+        self.curationData = curationData
     }
     
     func start() {
@@ -37,8 +39,12 @@ final class JobDetailSelectCoordinator: Coordinator {
     // 다음 화면으로 이동
     func showGenderSelectFlow(selectedJobDetail: String) {
         print("선택된 직업: \(selectedJob), 선택된 세부 직무: \(selectedJobDetail)")
-        let genderSelectCoordinator = GenderSelectCoordinator(navigationController: navigationController)
+        let genderSelectCoordinator = GenderSelectCoordinator(
+            navigationController: navigationController,
+            curationData: curationData)
         
+        curationData.jobDetail = selectedJobDetail
+        print("📦 저장된 데이터 - 상세직업: \(selectedJobDetail)")
         childCoordinators.append(genderSelectCoordinator)
         
         genderSelectCoordinator.start()
