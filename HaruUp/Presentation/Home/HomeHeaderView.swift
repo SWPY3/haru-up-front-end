@@ -9,6 +9,9 @@ import UIKit
 
 final class HomeHeaderView: UIView {
     
+    /// background Image의 사이즈를 비율에 따라 맞춰서 정하기 위해 구현
+    private var backgroundAspectConstraint: NSLayoutConstraint?
+    
     private let backgroundImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
@@ -221,6 +224,19 @@ final class HomeHeaderView: UIView {
         configureBubbleView()
         configureCharacter()
         configureCharacterInfo()
+        
+        applyBackgroundAspect()
+    }
+
+    private func applyBackgroundAspect() {
+        guard let backgroundImage = backgroundImageView.image else { return }
+        let ratio = backgroundImage.size.height / backgroundImage.size.width
+
+        /// 기존의 제약 조건 비활성화 후, 다시 생성 후 적용
+        backgroundAspectConstraint?.isActive = false
+        backgroundAspectConstraint = heightAnchor.constraint(equalTo: widthAnchor, multiplier: ratio)
+        backgroundAspectConstraint?.priority = .required
+        backgroundAspectConstraint?.isActive = true
     }
     
     private func configureBackground() {
@@ -231,7 +247,7 @@ final class HomeHeaderView: UIView {
             backgroundImageView.topAnchor.constraint(equalTo: self.topAnchor),
             backgroundImageView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             backgroundImageView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-//            backgroundImageView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
+            backgroundImageView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
         ])
     }
     
@@ -243,7 +259,7 @@ final class HomeHeaderView: UIView {
             stackView.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor),
             stackView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             stackView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-//            stackView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
+            stackView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
         ])
     }
     

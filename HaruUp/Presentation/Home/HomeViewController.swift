@@ -62,6 +62,11 @@ class HomeViewController: UIViewController {
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateTableHeaderHeight()
+    }
+    
     private func setupView() {
         view.backgroundColor = .neutral10
         
@@ -81,6 +86,22 @@ class HomeViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
+    }
+    
+    private func updateTableHeaderHeight() {
+        guard let header = tableView.tableHeaderView else { return }
+
+        let targetSize = CGSize(width: tableView.bounds.width, height: 0)
+        /// systemLayoutSizeFitting를 통해 뷰 내부의 제약 조건 확인 후 설정
+        let height = header.systemLayoutSizeFitting(targetSize, withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel).height
+
+        if header.frame.height != height {
+            var frame = header.frame
+            frame.size.height = height
+            header.frame = frame // 헤더 뷰의 프레임 수정
+            
+            tableView.tableHeaderView = header // 테이블뷰로 다시 할당
+        }
     }
     
     private func bind() {
