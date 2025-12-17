@@ -382,12 +382,17 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
     // MARK:  공통 백엔드 API 호출
     private func sendSocialLoginToServer(request: SocialLoginRequest) -> Single<SocialLoginResult> {
         print("백엔드 호출 요청: \(request)")
+        
         return authAPI.socialLogin(request: request)
-            .map { [weak self] response in
-                print("🔥 sns-loginAPI response: \(response)")
-                guard response.success,
-                      let data = response.data else {
+            .map { [weak self] responseDTO in
+                print("🔥 sns-loginAPI response: \(responseDTO)")
+                
+                guard responseDTO.success,
+                      let data = responseDTO.data else {
                     print("❌ 로그인 실패: response.success = false 또는 data 없음")
+                    if let errorMessage = responseDTO.errorMessage {
+                        print("❌ 에러 메시지: \(errorMessage)")
+                    }
                     return SocialLoginResult(success: false)
                 }
                 
@@ -400,30 +405,25 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                 self?.tokenStorage.saveToken(authToken)
                 print("✅ 토큰 저장 완료")
                 
-                if let memberInfo = data.memberInfo {
-                    print("✅ MemberInfo 받음: id=\(memberInfo.id), name=\(memberInfo.name ?? "nil")")
-                    self?.tokenStorage.saveMemberId(memberInfo.id)
-                    print("✅ MemberId 저장: \(memberInfo.id)")
-                } else {
-                    print("⚠️ MemberInfo가 nil입니다!")
-                }
-                    
-                // onboardingCompleted/onboardingRequired 저장
-                if let onboardingCompleted = data.onboardingCompleted {
-                    print("✅ onboardingCompleted: \(onboardingCompleted)")
-                    self?.tokenStorage.saveOnboardingCompleted(onboardingCompleted)
-                } else if let onboardingRequired = data.onboardingRequired, onboardingRequired {
-                    print("✅ onboardingRequired: \(onboardingRequired)")
+                self?.tokenStorage.saveMemberId(String(data.id))
+                print("✅ MemberId 저장: \(data.id)")
+                
+        
+                let isNewUser = true // TODO: - 백엔드 응답에 따라 수정
+                
+                if isNewUser {
                     self?.tokenStorage.saveOnboardingCompleted(false)
-                }else {
-                    print("⚠️ onboarding 상태가 없습니다. (둘 다 nil)")
+                    print("✅ 신규 회원: 온보딩 필요")
+                } else {
+                    self?.tokenStorage.saveOnboardingCompleted(true)
+                    print("✅ 기존 회원: 온보딩 완료")
                 }
                 
                 // 화면 분기를 위한 결과 반환
                 return SocialLoginResult(
                     success: true,
-                    onboardingCompleted: data.onboardingCompleted,
-                    onboardingRequired: data.onboardingRequired
+                    onboardingCompleted: !isNewUser,
+                    onboardingRequired: isNewUser
                 )
             }
     }
