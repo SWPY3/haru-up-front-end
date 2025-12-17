@@ -384,6 +384,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         print("백엔드 호출 요청: \(request)")
         return authAPI.socialLogin(request: request)
             .map { [weak self] response in
+                print("🔥 sns-loginAPI response: \(response)")
                 guard response.success,
                       let data = response.data else {
                     print("❌ 로그인 실패: response.success = false 또는 data 없음")

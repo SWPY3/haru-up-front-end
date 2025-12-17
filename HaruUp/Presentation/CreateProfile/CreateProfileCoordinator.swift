@@ -16,30 +16,35 @@ final class CreateProfileCoordinator: Coordinator {
     
     var childCoordinators: [any Coordinator] = []
     
+    private var curationData: CurationData
+    
     var onFinish: (() -> Void)?
     
     private let viewModel = CreateProfileViewModel()
     private let disposeBag = DisposeBag()
     
-    init(navigationController: UINavigationController) {
+    init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
+        self.curationData = curationData
     }
     
     func start() {
-        showCharacterSelection()
+        showCharacterSelectFlow()
     }
     
-    private func showCharacterSelection() {
+    private func showCharacterSelectFlow() {
         let vc = CharacterSelectViewController(viewModel: viewModel)
         
         vc.onNext = { [weak self] selectedCharacter in
-            self?.showNicknameInput(selectedCharacter: selectedCharacter)
+            self?.curationData.characterId = selectedCharacter
+            print("📦 저장된 데이터 - 캐릭터: \(selectedCharacter)")
+            self?.showNicknameSelectFlow(selectedCharacter: selectedCharacter)
         }
         
         navigationController.setViewControllers([vc], animated: true)
     }
     
-    private func showNicknameInput(selectedCharacter: Int) {
+    private func showNicknameSelectFlow(selectedCharacter: Int) {
         let vc = NicknameSelectViewController(selectedCharacter: selectedCharacter, viewModel: viewModel)
         
         vc.onFinish = { [weak self] character, nickname in
@@ -47,6 +52,9 @@ final class CreateProfileCoordinator: Coordinator {
             print("🎉 프로필 생성 완료")
             print("   캐릭터: \(character)")
             print("   닉네임: \(nickname)")
+            
+            self?.curationData.nickname = nickname
+            print("📦 저장된 데이터 - 닉네임: \(nickname)")
             
             // 로컬 저장 (필요시)
             // UserDefaults.standard.set(character, forKey: "selectedCharacter")
@@ -57,6 +65,7 @@ final class CreateProfileCoordinator: Coordinator {
         viewModel.shouldComplete
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] in
+                print("현재 닉ㅇ네임: \(self?.curationData.nickname ?? "없어")")
                 self?.onFinish?()
             })
             .disposed(by: disposeBag)

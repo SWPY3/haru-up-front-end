@@ -20,6 +20,9 @@ class NicknameSelectViewController: UIViewController {
     
     var onFinish: ((Int, String) -> Void)? // 캐릭터 인덱스, 닉네임
     
+    private var currentNickname: String = ""
+    
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "닉네임을 지어주세요"
@@ -41,7 +44,7 @@ class NicknameSelectViewController: UIViewController {
     
     private let textField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "나나"
+        tf.placeholder = "2~10자로 입력해주세요"
         tf.borderStyle = .none
         tf.font = .systemFont(ofSize: 16)
         return tf
@@ -49,14 +52,17 @@ class NicknameSelectViewController: UIViewController {
     
     private let textFieldContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 8
-        view.layer.borderWidth = 1
-        view.layer.borderColor = UIColor.systemGray4.cgColor
+        view.backgroundColor = .clear
         return view
     }()
     
-    private let characterCountLabel: UILabel = {
+    private let textFieldBottomLine: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        return view
+    }()
+    
+    private let textCountLabel: UILabel = {
         let label = UILabel()
         label.text = "0/10"
         label.font = .systemFont(ofSize: 14)
@@ -68,7 +74,7 @@ class NicknameSelectViewController: UIViewController {
     private let nextButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("다음", for: .normal)
-        btn.backgroundColor = .black
+        btn.backgroundColor = .systemBlue
         btn.setTitleColor(.white, for: .normal)
         btn.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         btn.layer.cornerRadius = 8
@@ -102,18 +108,19 @@ class NicknameSelectViewController: UIViewController {
     
     private func setupUI() {
         textFieldContainer.addSubview(textField)
+        textFieldContainer.addSubview(textFieldBottomLine)
         
         view.addSubview(titleLabel)
         view.addSubview(subtitleLabel)
         view.addSubview(textFieldContainer)
-        view.addSubview(characterCountLabel)
+        view.addSubview(textCountLabel)
         view.addSubview(nextButton)
         
         titleLabel.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 40,
+            paddingTop: 60,
             paddingLeft: 30,
             paddingRight: 30
         )
@@ -142,11 +149,19 @@ class NicknameSelectViewController: UIViewController {
             left: textFieldContainer.leftAnchor,
             bottom: textFieldContainer.bottomAnchor,
             right: textFieldContainer.rightAnchor,
-            paddingLeft: 16,
-            paddingRight: 16
+            paddingLeft: 9,
+            paddingRight: 9
+            
         )
         
-        characterCountLabel.anchor(
+        textFieldBottomLine.anchor(
+            left: textFieldContainer.leftAnchor,
+            bottom: textFieldContainer.bottomAnchor,
+            right: textFieldContainer.rightAnchor,
+            height: 2
+        )
+        
+        textCountLabel.anchor(
             top: textFieldContainer.bottomAnchor,
             right: view.rightAnchor,
             paddingTop: 8,
@@ -167,10 +182,36 @@ class NicknameSelectViewController: UIViewController {
     // MARK: - Bind UI
     
     private func bindUI() {
+        
+        textField.rx.controlEvent(.editingDidBegin)
+            .subscribe(onNext: { [weak self] in
+                print("🔵 포커스 들어옴")
+                UIView.animate(withDuration: 0.3) {
+                    self?.textFieldBottomLine.backgroundColor = .systemBlue
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        textField.rx.controlEvent(.editingDidEnd)
+            .subscribe(onNext: { [weak self] in
+                print("🔵 포커스 나감")
+                UIView.animate(withDuration: 0.3) {
+                    self?.textFieldBottomLine.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 현재 닉네임 저장
+        textField.rx.text.orEmpty
+            .subscribe(onNext: { [weak self] text in
+                self?.currentNickname = text.trimmingCharacters(in: .whitespaces)
+            })
+            .disposed(by: disposeBag)
+        
         // 글자 수 표시
         textField.rx.text.orEmpty
             .map { "\($0.count)/10" }
-            .bind(to: characterCountLabel.rx.text)
+            .bind(to: textCountLabel.rx.text)
             .disposed(by: disposeBag)
         
         // 10자 제한
@@ -204,6 +245,8 @@ class NicknameSelectViewController: UIViewController {
             .filter { $0.count >= 2 }
             .subscribe(onNext: { [weak self] nickname in
                 guard let self = self else { return }
+                self.onFinish?(self.selectedCharacter, nickname)
+                
                 self.viewModel.submitProfile(characterIndex: self.selectedCharacter, nickname: nickname)
             })
             .disposed(by: disposeBag)
@@ -239,7 +282,7 @@ class NicknameSelectViewController: UIViewController {
         viewModel.shouldComplete
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] in
-                self?.onFinish?(self?.selectedCharacter ?? 0, "")
+                print("shouldComplete 호출됨")
             })
             .disposed(by: disposeBag)
     }

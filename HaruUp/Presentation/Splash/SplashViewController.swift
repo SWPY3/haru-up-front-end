@@ -18,7 +18,7 @@ class SplashViewController: UIViewController {
     
     let mainLogoImage: UIImageView = {
         let iv = UIImageView()
-        iv.image = UIImage(named: "ex_logo")
+        iv.image = UIImage(named: "haruUp_splash")
         iv.contentMode = .scaleAspectFit
         return iv
     }()
