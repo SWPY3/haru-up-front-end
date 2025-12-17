@@ -14,10 +14,19 @@ enum SocialLoginProvider: String, Codable {
     case naver = "NAVER"
 }
 
+struct SocialLoginRequestDTO: Encodable {
+    let loginType: String
+    let snsId: String
+    let email: String
+    let name: String
+}
+
+
+
 struct SocialLoginRequest {
     let provider: SocialLoginProvider
     let accessToken: String
-    let snsUserId: String   
+    let snsUserId: String
     let email: String?
     let name: String?
     
@@ -47,5 +56,15 @@ struct SocialLoginRequest {
         self.authorizationCode = authorizationCode
         self.userIdentifier = userIdentifier
         self.nonce = nonce
+    }
+    
+    // DTO로 변환
+    func toDTO() -> SocialLoginRequestDTO {
+        return SocialLoginRequestDTO(
+            loginType: provider.rawValue,
+            snsId: snsUserId,
+            email: email ?? "",
+            name: name ?? ""
+        )
     }
 }
