@@ -47,7 +47,7 @@ final class BirthSelectViewModel {
                 // 실제 날짜인지 검증
                 if ((self?.isValidDate(birth)) != nil) {
                     print("✅ 유효한 날짜입니다")
-                    self?.coordinator?.showNextFlow(selectedBirth: birth)
+                    self?.coordinator?.showInterestSelectFlow(selectedBirth: birth)
                 } else {
                     print("❌ 유효하지 않은 날짜입니다")
                     self?.invalidDateAlert.onNext(())  // 에러 알림

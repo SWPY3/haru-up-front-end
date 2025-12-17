@@ -16,7 +16,6 @@ final class BirthSelectCoordinator: Coordinator {
     
     private var curationData: CurationData
     
-    var onFinish: (() -> Void)?
     
     init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
@@ -29,10 +28,14 @@ final class BirthSelectCoordinator: Coordinator {
         navigationController.pushViewController(birthSelectVC, animated: true)
     }
     
-    func showNextFlow(selectedBirth: String) {
+    func showInterestSelectFlow(selectedBirth: String) {
         curationData.birthDate = selectedBirth
-                print("📦 저장된 데이터 - 생년월일: \(selectedBirth)")
-        onFinish?()
+        let interestSelectCoordinator = InterestSelectCoordinator(navigationController: navigationController, curationData: curationData)
+        
+        curationData.birthDate = selectedBirth
+        
+        childCoordinators.append(interestSelectCoordinator)
+        interestSelectCoordinator.start()
     }
     
 }

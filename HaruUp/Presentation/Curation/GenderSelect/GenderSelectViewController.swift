@@ -21,12 +21,12 @@ class GenderSelectViewController: UIViewController {
     private var genders: [String] = []
     
     private let backButton: UIButton = {
-            let button = UIButton()
-            button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-            button.tintColor = .black
-            button.translatesAutoresizingMaskIntoConstraints = false
-            return button
-        }()
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        button.tintColor = .black
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
     
     
     
@@ -227,7 +227,7 @@ class GenderSelectViewController: UIViewController {
                 self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
             })
             .disposed(by: disposeBag)
-
+        
     }
     
     private func createGenderButtons(with genders: [String]) {

@@ -28,8 +28,8 @@ class CurationData {
         job != nil &&
         jobDetail != nil &&
         gender != nil &&
-        birthDate != nil
-//        interest != nil &&
+        birthDate != nil &&
+        interest != nil
 //        interestDetail != nil &&
 //        goal != nil
     }
@@ -43,6 +43,7 @@ class CurationData {
                 "jobDetail": jobDetail ?? "",
                 "gender": gender ?? "",
                 "birthDate": birthDate ?? "",
+                "interest": interest ?? "",
             ]
         }
 }
