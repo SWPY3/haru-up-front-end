@@ -37,6 +37,24 @@ final class InterestDetailSelectCoordinator: Coordinator {
         navigationController.pushViewController(interestDetailSelectVC, animated: true)
     }
     
+    func showForeignLanguageInput() {
+        print("🔵 외국어 입력 모달 표시")
+        
+        let bottomSheet = ForeignLanguageInputBottomSheet()
+        bottomSheet.modalPresentationStyle = .overFullScreen
+        bottomSheet.modalTransitionStyle = .crossDissolve
+        
+        bottomSheet.onFinish = { [weak self] foreignLanguage in
+            print("✅ 입력된 외국어: \(foreignLanguage)")
+            // 입력된 외국어를 다음 화면으로 전달
+            self?.curationData.interestDetail = foreignLanguage
+            self?.showGoalSelectFlow(selectedInterestDetail: foreignLanguage)
+        }
+        
+        // ⭐️ navigationController의 최상단 ViewController에서 present
+        navigationController.topViewController?.present(bottomSheet, animated: true)
+    }
+    
     // 다음 화면으로 이동
     func showGoalSelectFlow(selectedInterestDetail: String) {
         print("선택된 관심사: \(selectedInterest), 선택된 세부 직무: \(selectedInterestDetail)")

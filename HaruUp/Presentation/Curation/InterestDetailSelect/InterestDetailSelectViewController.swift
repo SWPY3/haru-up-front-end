@@ -194,7 +194,6 @@ class InterestDetailSelectViewController: UIViewController {
         )
         let output = viewModel.transform(input: input)
         
-        
         output.interestDetails
             .drive(onNext: { [weak self] interestDetails in
                 self?.interestDetails = interestDetails
@@ -221,6 +220,8 @@ class InterestDetailSelectViewController: UIViewController {
                 self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
             })
             .disposed(by: disposeBag)
+        
+        
     }
     
     private func createInterestDetailButtons(with interestDetails: [String]) {

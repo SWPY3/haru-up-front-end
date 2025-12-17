@@ -52,8 +52,11 @@ final class InterestDetailSelectViewModel {
                     print("세부 직무를 선택해주세요")
                     return
                 }
-                // Coordinator를 통해 다음 화면으로 이동
-                self?.coordinator?.showGoalSelectFlow(selectedInterestDetail: selectedInterestDetail)
+                if selectedInterestDetail == "기타 외국어" {
+                    self?.coordinator?.showForeignLanguageInput()
+                } else {
+                    self?.coordinator?.showGoalSelectFlow(selectedInterestDetail: selectedInterestDetail)
+                }
             })
             .disposed(by: disposeBag)
         
