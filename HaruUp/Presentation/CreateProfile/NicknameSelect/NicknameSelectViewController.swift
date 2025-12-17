@@ -52,10 +52,13 @@ class NicknameSelectViewController: UIViewController {
     
     private let textFieldContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 8
-        view.layer.borderWidth = 1
-        view.layer.borderColor = UIColor.systemGray4.cgColor
+        view.backgroundColor = .clear
+        return view
+    }()
+    
+    private let textFieldBottomLine: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
         return view
     }()
     
@@ -105,6 +108,7 @@ class NicknameSelectViewController: UIViewController {
     
     private func setupUI() {
         textFieldContainer.addSubview(textField)
+        textFieldContainer.addSubview(textFieldBottomLine)
         
         view.addSubview(titleLabel)
         view.addSubview(subtitleLabel)
@@ -145,8 +149,16 @@ class NicknameSelectViewController: UIViewController {
             left: textFieldContainer.leftAnchor,
             bottom: textFieldContainer.bottomAnchor,
             right: textFieldContainer.rightAnchor,
-            paddingLeft: 16,
-            paddingRight: 16
+            paddingLeft: 9,
+            paddingRight: 9
+            
+        )
+        
+        textFieldBottomLine.anchor(
+            left: textFieldContainer.leftAnchor,
+            bottom: textFieldContainer.bottomAnchor,
+            right: textFieldContainer.rightAnchor,
+            height: 2
         )
         
         textCountLabel.anchor(
@@ -170,6 +182,24 @@ class NicknameSelectViewController: UIViewController {
     // MARK: - Bind UI
     
     private func bindUI() {
+        
+        textField.rx.controlEvent(.editingDidBegin)
+            .subscribe(onNext: { [weak self] in
+                print("🔵 포커스 들어옴")
+                UIView.animate(withDuration: 0.3) {
+                    self?.textFieldBottomLine.backgroundColor = .systemBlue
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        textField.rx.controlEvent(.editingDidEnd)
+            .subscribe(onNext: { [weak self] in
+                print("🔵 포커스 나감")
+                UIView.animate(withDuration: 0.3) {
+                    self?.textFieldBottomLine.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+                }
+            })
+            .disposed(by: disposeBag)
         
         // 현재 닉네임 저장
         textField.rx.text.orEmpty

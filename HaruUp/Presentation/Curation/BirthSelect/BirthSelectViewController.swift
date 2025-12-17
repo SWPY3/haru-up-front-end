@@ -65,12 +65,17 @@ class BirthSelectViewController: UIViewController {
     
     private let textFieldContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .white
+        view.backgroundColor = .clear
         view.layer.cornerRadius = 8
-        view.layer.borderWidth = 1
-        view.layer.borderColor = UIColor.systemGray4.cgColor
         return view
     }()
+    
+    private let textFieldBottomLine: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBlue
+        return view
+    }()
+    
 //    private let textCountLabel: UILabel = {
 //        let label = UILabel()
 //        label.text = "0/8"
@@ -140,6 +145,7 @@ class BirthSelectViewController: UIViewController {
         view.backgroundColor = .white
         
         textFieldContainer.addSubview(textField)
+        textFieldContainer.addSubview(textFieldBottomLine)
         
         view.addSubview(backButton)
         view.addSubview(stackView)
@@ -151,7 +157,6 @@ class BirthSelectViewController: UIViewController {
         stackView.addArrangedSubview(titleLabelStackView)
         
         view.addSubview(textFieldContainer)
-//        view.addSubview(textCountLabel)
         view.addSubview(nextButton)
         
         backButton.anchor(
@@ -195,8 +200,15 @@ class BirthSelectViewController: UIViewController {
             left: textFieldContainer.leftAnchor,
             bottom: textFieldContainer.bottomAnchor,
             right: textFieldContainer.rightAnchor,
-            paddingLeft: 16,
-            paddingRight: 16
+            paddingLeft: 9,
+            paddingRight: 9
+        )
+        
+        textFieldBottomLine.anchor(
+            left: textFieldContainer.leftAnchor,
+            bottom: textFieldContainer.bottomAnchor,
+            right: textFieldContainer.rightAnchor,
+            height: 2
         )
         
 //        textCountLabel.anchor(
