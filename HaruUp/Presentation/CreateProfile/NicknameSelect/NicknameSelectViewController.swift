@@ -44,7 +44,7 @@ class NicknameSelectViewController: UIViewController {
     
     private let textField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "나나"
+        tf.placeholder = "2~10자로 입력해주세요"
         tf.borderStyle = .none
         tf.font = .systemFont(ofSize: 16)
         return tf
@@ -59,7 +59,7 @@ class NicknameSelectViewController: UIViewController {
         return view
     }()
     
-    private let characterCountLabel: UILabel = {
+    private let textCountLabel: UILabel = {
         let label = UILabel()
         label.text = "0/10"
         label.font = .systemFont(ofSize: 14)
@@ -109,7 +109,7 @@ class NicknameSelectViewController: UIViewController {
         view.addSubview(titleLabel)
         view.addSubview(subtitleLabel)
         view.addSubview(textFieldContainer)
-        view.addSubview(characterCountLabel)
+        view.addSubview(textCountLabel)
         view.addSubview(nextButton)
         
         titleLabel.anchor(
@@ -149,7 +149,7 @@ class NicknameSelectViewController: UIViewController {
             paddingRight: 16
         )
         
-        characterCountLabel.anchor(
+        textCountLabel.anchor(
             top: textFieldContainer.bottomAnchor,
             right: view.rightAnchor,
             paddingTop: 8,
@@ -181,7 +181,7 @@ class NicknameSelectViewController: UIViewController {
         // 글자 수 표시
         textField.rx.text.orEmpty
             .map { "\($0.count)/10" }
-            .bind(to: characterCountLabel.rx.text)
+            .bind(to: textCountLabel.rx.text)
             .disposed(by: disposeBag)
         
         // 10자 제한

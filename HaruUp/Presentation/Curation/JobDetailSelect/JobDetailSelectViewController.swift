@@ -170,6 +170,7 @@ class JobDetailSelectViewController: UIViewController {
             paddingLeft: 30,
             paddingRight: 30
         )
+        
         nextButton.anchor(
             left: view.leftAnchor,
             bottom: view.safeAreaLayoutGuide.bottomAnchor,

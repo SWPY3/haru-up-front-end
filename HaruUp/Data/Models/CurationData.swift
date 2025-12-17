@@ -27,8 +27,8 @@ class CurationData {
         nickname != nil &&
         job != nil &&
         jobDetail != nil &&
-        gender != nil
-//        birthDate != nil &&
+        gender != nil &&
+        birthDate != nil
 //        interest != nil &&
 //        interestDetail != nil &&
 //        goal != nil
@@ -41,7 +41,8 @@ class CurationData {
                 "nickname": nickname ?? "",
                 "job": job ?? "",
                 "jobDetail": jobDetail ?? "",
-                "gender": gender ?? ""
+                "gender": gender ?? "",
+                "birthDate": birthDate ?? "",
             ]
         }
 }

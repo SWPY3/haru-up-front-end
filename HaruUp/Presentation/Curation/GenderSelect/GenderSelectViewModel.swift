@@ -51,7 +51,7 @@ final class GenderSelectViewModel {
                     return
                 }
                 print("🔵 Coordinator 호출 시작")
-                self?.coordinator?.showNextFlow(selectedGender: selectedGender)
+                self?.coordinator?.showBirthSelectFlow(selectedGender: selectedGender)
                 print("🔵 Coordinator 호출 완료")
             })
             .disposed(by: disposeBag)
