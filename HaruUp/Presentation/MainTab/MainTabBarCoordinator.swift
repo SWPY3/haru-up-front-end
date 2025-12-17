@@ -11,11 +11,8 @@ final class MainTabBarCoordinator: Coordinator {
     var navigationController: UINavigationController
     var childCoordinators: [any Coordinator] = []
     
-    private let tabBarController: UITabBarController
-    
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
-        self.tabBarController = UITabBarController()
     }
     
     func start() {
@@ -43,10 +40,9 @@ final class MainTabBarCoordinator: Coordinator {
         myPageCoordinator.start()
         myPageNav.tabBarItem = UITabBarItem(title: "마이페이지", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
         
-        tabBarController.viewControllers = [homeNav, historyNav, recommendNav, myPageNav]
-        tabBarController.selectedIndex = 0
+        let container = MainTabBarController(tabs: [homeNav, historyNav, recommendNav, myPageNav])
         
-        navigationController.setViewControllers([tabBarController], animated: true)
+        navigationController.setViewControllers([container], animated: true)
         navigationController.setNavigationBarHidden(true, animated: false)
     }
 }
