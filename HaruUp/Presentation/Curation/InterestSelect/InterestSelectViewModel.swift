@@ -57,7 +57,7 @@ final class InterestSelectViewModel {
                     return
                 }
                 print("🔵 다음 버튼 탭됨 - 관심사: \(interest)")
-                self?.coordinator?.showNextFlow(selectedInterest: interest)
+                self?.coordinator?.showInterestDetailSelectFlow(selectedInterest: interest)
             })
             .disposed(by: disposeBag)
         

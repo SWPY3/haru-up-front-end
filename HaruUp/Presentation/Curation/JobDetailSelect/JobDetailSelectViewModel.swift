@@ -54,7 +54,7 @@ final class JobDetailSelectViewModel {
             .withLatestFrom(currentSelectedJobDetail)
             .subscribe(onNext: { [weak self] selectedJobDetail in
                 guard let selectedJobDetail = selectedJobDetail else {
-                    print("세부 직무를 선택해주세요")
+                    print("세부 관심사를 선택해주세요")
                     return
                 }
                 // Coordinator를 통해 다음 화면으로 이동

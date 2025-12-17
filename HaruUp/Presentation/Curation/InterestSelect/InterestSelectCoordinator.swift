@@ -30,10 +30,14 @@ final class InterestSelectCoordinator: Coordinator {
         
     }
     
-    func showNextFlow(selectedInterest: String) {
+    func showInterestDetailSelectFlow(selectedInterest: String) {
         curationData.interest = selectedInterest
         print("📦 저장된 데이터 - 관심사: \(selectedInterest)")
-        onFinish?()
+        
+        let interestDetailCoordinator = InterestDetailSelectCoordinator(navigationController: navigationController, selectedInterest: selectedInterest, curationData: curationData)
+        
+        childCoordinators.append(interestDetailCoordinator)
+        interestDetailCoordinator.start()
     }
     
     
