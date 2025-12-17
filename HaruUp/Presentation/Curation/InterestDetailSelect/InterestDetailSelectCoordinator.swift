@@ -38,12 +38,16 @@ final class InterestDetailSelectCoordinator: Coordinator {
     }
     
     // 다음 화면으로 이동
-    func showNextFlow(selectedInterestDetail: String) {
+    func showGoalSelectFlow(selectedInterestDetail: String) {
         print("선택된 관심사: \(selectedInterest), 선택된 세부 직무: \(selectedInterestDetail)")
-        
-        
         curationData.interestDetail = selectedInterestDetail
         print("📦 저장된 데이터 - 상세직업: \(selectedInterestDetail)")
+        
+        let goalSelectCoordinator = GoalSelectCoordinator(navigationController: navigationController, selectedInterestDetail: selectedInterestDetail, curationData: curationData)
+        
+        childCoordinators.append(goalSelectCoordinator)
+        
+        goalSelectCoordinator.start()
         
     }
 }

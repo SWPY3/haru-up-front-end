@@ -1,5 +1,5 @@
 //
-//  InterestSelectViewController.swift
+//  GoalSelectViewController.swift
 //  HaruUp
 //
 //  Created by 하다현 on 12/17/25.
@@ -9,15 +9,16 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-class InterestSelectViewController: UIViewController {
+
+class GoalSelectViewController: UIViewController {
+    private let viewModel: GoalSelectViewModel
     
-    private let viewModel:  InterestSelectViewModel
     private let disposeBag = DisposeBag()
     
-    private let interestSelectedSubject = PublishSubject<String>()
-    private var interestButtons: [InterestButton] = []
-    private var interests: [Interest] = []
     
+    private let goalSelectedSubject = PublishSubject<String>()
+    private var goalButtons: [SelectButton] = []
+    private var goals: [String] = []
     
     private let backButton: UIButton = {
         let button = UIButton()
@@ -29,7 +30,7 @@ class InterestSelectViewController: UIViewController {
     
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 5.0 / 7.0
+        progressBar.progress = 7.0 / 7.0
         progressBar.tintColor = .systemBlue
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
@@ -37,7 +38,7 @@ class InterestSelectViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "관심사는 무엇인가요?"
+        label.text = "목표는 무엇인가요?"
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.textAlignment = .left
         label.numberOfLines = 0
@@ -48,16 +49,15 @@ class InterestSelectViewController: UIViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "적절한 목표를 추천하기 위해 필요해요.\n가장 우선순위가 높은 관심사를 1개 골라주세요."
+        label.text = "목표를 1개 골라주세요."
         label.font = .systemFont(ofSize: 14, weight: .regular)
         label.textAlignment = .left
-        label.numberOfLines = 0
         label.textColor = .gray
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    private let interestButtonsStackView: UIStackView = {
+    private let goalButtonsStackView: UIStackView = {
         let sv = UIStackView()
         sv.translatesAutoresizingMaskIntoConstraints = false
         sv.axis = .vertical
@@ -99,9 +99,7 @@ class InterestSelectViewController: UIViewController {
         return sv
     }()
     
-    
-    // MARK: - Init
-    init(viewModel: InterestSelectViewModel) {
+    init(viewModel: GoalSelectViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -111,29 +109,27 @@ class InterestSelectViewController: UIViewController {
     }
     
     
-    
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
         setupUI()
-        bindViewModel()
+        bindViewmodel()
     }
     
     
-    // MARK: - Setup UI
+    
     private func setupUI() {
-        
         view.backgroundColor = .white
         
         view.addSubview(backButton)
         view.addSubview(stackView)
-
-        view.addSubview(interestButtonsStackView)
+        view.addSubview(goalButtonsStackView)
         view.addSubview(nextButton)
         
         stackView.addArrangedSubview(progressBar)
         stackView.addArrangedSubview(titleLabelStackView)
+        
         
         titleLabelStackView.addArrangedSubview(titleLabel)
         titleLabelStackView.addArrangedSubview(subtitleLabel)
@@ -157,7 +153,6 @@ class InterestSelectViewController: UIViewController {
             paddingLeft: 30,
             paddingRight: 30
         )
-        
         titleLabelStackView.anchor(
             left: view.leftAnchor,
             right: view.rightAnchor,
@@ -166,7 +161,7 @@ class InterestSelectViewController: UIViewController {
             paddingRight: 30
         )
         
-        interestButtonsStackView.anchor(
+        goalButtonsStackView.anchor(
             top: stackView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
@@ -186,40 +181,43 @@ class InterestSelectViewController: UIViewController {
         )
     }
     
-    // MARK: - Bind ViewModel
-    private func bindViewModel() {
+    
+    // MARK: - BindViewModel
+    private func bindViewmodel() {
         backButton.rx.tap
-            .subscribe(onNext: { [weak self] in
+            .subscribe(onNext: { [ weak self ] in
                 self?.navigationController?.popViewController(animated: true)
             })
             .disposed(by: disposeBag)
         
-        let input = InterestSelectViewModel.Input(
-            interestSelected: interestSelectedSubject.asObservable(), nextButtonTapped: nextButton.rx.tap.asObservable()
+        let input = GoalSelectViewModel.Input(
+            goalSelected: goalSelectedSubject.asObservable(),
+            nextButtonTapped: nextButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
         
-        output.interests
-            .drive(onNext: { [weak self] interests in
-                self?.interests = interests
-                self?.createInterestButtons(with: interests)
+        
+        output.goals
+            .drive(onNext: { [weak self] goals in
+                self?.goals = goals
+                self?.createGoalButtons(with: goals)
             })
             .disposed(by: disposeBag)
         
-        
-        output.selectedInterest
-            .drive(onNext: { [weak self] selectedInterest in
+        output.selectedGoal
+            .drive(onNext: { [weak self] selectedGoal in
                 guard let self = self else { return }
                 
-                self.interestButtons.enumerated().forEach { index, button in
-                    let isSelected = self.interests[index].title == selectedInterest
+                self.goalButtons.enumerated().forEach { index, button in
+                    let isSelected = self.goals[index] == selectedGoal
                     button.setSelected(isSelected)
                 }
             })
             .disposed(by: disposeBag)
         
-        output.selectedInterest
-            .map { $0 != nil }
+        // 다음 버튼 활성화
+        output.selectedGoal
+            .map{ $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
                 self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
@@ -227,23 +225,25 @@ class InterestSelectViewController: UIViewController {
             .disposed(by: disposeBag)
     }
     
-    private func createInterestButtons(with interests: [Interest]) {
-        interestButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        interestButtons.removeAll()
+    private func createGoalButtons(with interestDetails: [String]) {
+        goalButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        goalButtons.removeAll()
         
-        interests.forEach { interest in
-            let button = InterestButton()
-            button.configure(icon: interest.icon, title: interest.title)  
+        goals.forEach { goal in
+            let button = SelectButton()
+            button.setTitle(goal, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             
             button.rx.tap
-                .map { interest.title }
-                .bind(to: interestSelectedSubject)
+                .map { goal }
+                .bind(to: goalSelectedSubject)
                 .disposed(by: disposeBag)
             
-            interestButtons.append(button)
-            interestButtonsStackView.addArrangedSubview(button)
+            goalButtons.append(button)
+            goalButtonsStackView.addArrangedSubview(button)
         }
     }
+    
+
 }

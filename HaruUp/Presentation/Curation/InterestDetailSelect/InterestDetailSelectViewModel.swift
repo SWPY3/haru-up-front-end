@@ -53,7 +53,7 @@ final class InterestDetailSelectViewModel {
                     return
                 }
                 // Coordinator를 통해 다음 화면으로 이동
-                self?.coordinator?.showNextFlow(selectedInterestDetail: selectedInterestDetail)
+                self?.coordinator?.showGoalSelectFlow(selectedInterestDetail: selectedInterestDetail)
             })
             .disposed(by: disposeBag)
         

@@ -124,16 +124,16 @@ class InterestDetailSelectViewController: UIViewController {
         
         view.addSubview(backButton)
         view.addSubview(stackView)
-        view.addSubview(titleLabelStackView)
         view.addSubview(interestDetailButtonsStackView)
         view.addSubview(nextButton)
         
         stackView.addArrangedSubview(progressBar)
+        stackView.addArrangedSubview(titleLabelStackView)
         
         titleLabelStackView.addArrangedSubview(titleLabel)
         titleLabelStackView.addArrangedSubview(subtitleLabel)
         
-        stackView.addArrangedSubview(titleLabelStackView)
+        
         
         backButton.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
