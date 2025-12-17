@@ -6,11 +6,17 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 class HomeViewController: UIViewController {
     
     // MARK: - Properties
     private let viewModel: HomeViewModel
+    private let viewDidAppearSubject = PublishSubject<Void>()
+    private let disposeBag = DisposeBag()
+    
+    var onSelectTodayMission: (() -> Void)? // Coordinator와의 연결은 단순히 클로저 사용
     
     // MARK: - LifeCycle
     init(viewModel: HomeViewModel) {
@@ -25,13 +31,31 @@ class HomeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        configureUI()   
+        configureUI()
+        bind()
     }
     
-    // MARK: - Selectors
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        viewDidAppearSubject.onNext(())
+    }
     
+    private func bind() {
+        let input = HomeViewModel.Input(
+            viewDidAppear: viewDidAppearSubject.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        output.showTodayMissionFlow
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] in
+                guard let self else { return }
+                self.onSelectTodayMission?()
+            })
+            .disposed(by: disposeBag)
+    }
     
-    // MARK: - Helpers
     func configureUI() {
         view.backgroundColor = .brown
     }
