@@ -6,10 +6,12 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 final class HomeSectionHeaderView: UIView {
     
-    var onTapInfo: (() -> Void)?
+    private let disposeBag = DisposeBag()
     
     private let stackView: UIStackView = {
         let stackView = UIStackView()
@@ -29,9 +31,8 @@ final class HomeSectionHeaderView: UIView {
     }()
     
     private let infoButton: UIButton = {
-        let button = UIButton(type: .system)
+        let button = UIButton()
         button.setImage(.iconInfo, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         
         return button
     }()
@@ -44,10 +45,19 @@ final class HomeSectionHeaderView: UIView {
         return label
     }()
     
+    private let tooltipView: MissionToolTipView = {
+        let view = MissionToolTipView()
+        view.isHidden = true
+        view.alpha = 0
+        
+        return view
+    }()
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
         setupView()
+        bind()
     }
     
     required init?(coder: NSCoder) {
@@ -58,6 +68,7 @@ final class HomeSectionHeaderView: UIView {
         self.backgroundColor = .clear
         
         configureLabel()
+        configureTooltipView()
     }
     
     private func configureLabel() {
@@ -80,5 +91,43 @@ final class HomeSectionHeaderView: UIView {
             subtitleLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
             subtitleLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -15)
         ])
+    }
+    
+    private func configureTooltipView() {
+        self.addSubview(tooltipView)
+        tooltipView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            tooltipView.bottomAnchor.constraint(equalTo: infoButton.topAnchor, constant: -7),
+            tooltipView.leadingAnchor.constraint(equalTo: infoButton.centerXAnchor, constant: -33) /// leading + width/2 = 24 + 18/2 = 33
+        ])
+    }
+    
+    private func bind() {
+        infoButton.rx.tap
+            .asDriver()
+            .drive(onNext: { [weak self] in
+                self?.toggleTooltip()
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func toggleTooltip() {
+        if tooltipView.isHidden {
+            tooltipView.isHidden = false
+            tooltipView.transform = CGAffineTransform(translationX: 0, y: 10) // 살짝 아래에서 올라오는 효과
+            
+            UIView.animate(withDuration: 0.2) {
+                self.tooltipView.alpha = 1
+                self.tooltipView.transform = .identity
+            }
+        } else {
+            UIView.animate(withDuration: 0.2, animations: {
+                self.tooltipView.alpha = 0
+                self.tooltipView.transform = CGAffineTransform(translationX: 0, y: 10)
+            }) { _ in
+                self.tooltipView.isHidden = true
+            }
+        }
     }
 }
