@@ -50,10 +50,12 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                     return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                 }
                 
-                let request = SocialLoginRequest(
-                    provider: .kakao, accessToken: kakaoUserInfo.accessToken, snsUserId: kakaoUserInfo.snsUserId, email: kakaoUserInfo.email ?? "",
+                let request = SocialLoginRequestDTO(
+                    loginType: SocialLoginProvider.kakao.rawValue,
+                    snsId: kakaoUserInfo.snsUserId,
+                    email: kakaoUserInfo.email ?? "",
                     name: kakaoUserInfo.name ?? ""
-                    )
+                )
                 // 소셜 로그인 요청
                 return self.sendSocialLoginToServer(request: request)
             }
@@ -221,16 +223,15 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         }
         
         
-        let request = SocialLoginRequest(
-            provider: .apple,
-            accessToken: authorizationCodeString,
-            snsUserId: userIdentifier,
-            email: email,
-            name: name.isEmpty ? nil : name,
+        let request = SocialLoginRequestDTO(
+            loginType: SocialLoginProvider.apple.rawValue,
+            snsId: userIdentifier,
+            email: email ?? "",
+            name: name.isEmpty ? "" : name,
             identityToken: identityTokenString,
             authorizationCode: authorizationCodeString,
-            userIdentifier: userIdentifier,
-            nonce: nonce)
+            nonce: nonce
+        )
         
         print("🍎 Apple userIdentifier: \(userIdentifier)")
         print("🍎 email: \(String(describing: email))")
@@ -238,13 +239,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         print("🍎 authorizationCode: \(authorizationCodeString.prefix(20))...")
         print("🍎 nonce: \(nonce)")
         
-        
-        //        sendAppleLoginToServer(
-        //                identityToken: identityTokenString,
-        //                authorizationCode: authorizationCodeString,
-        //                nonce: nonce,
-        //                userIdentifier: userIdentifier
-        //            )
+
         sendSocialLoginToServer(request: request)
             .subscribe(onSuccess: { [weak self] result in
                 self?.appleLoginObserver?(.success(result))
@@ -322,12 +317,11 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                     return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                 }
                 
-                let request = SocialLoginRequest(
-                    provider: .naver,
-                    accessToken: profile.accessToken,
-                    snsUserId: profile.id,
-                    email: profile.email,
-                    name: profile.name
+                let request = SocialLoginRequestDTO(
+                    loginType: SocialLoginProvider.naver.rawValue,
+                    snsId: profile.id,
+                    email: profile.email ?? "",
+                    name: profile.name ?? ""
                 )
                 
                 return self.sendSocialLoginToServer(request: request)
@@ -395,7 +389,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
     }
     
     // MARK:  공통 백엔드 API 호출
-    private func sendSocialLoginToServer(request: SocialLoginRequest) -> Single<SocialLoginResult> {
+    private func sendSocialLoginToServer(request: SocialLoginRequestDTO) -> Single<SocialLoginResult> {
         print("백엔드 호출 요청: \(request)")
         
         return authAPI.socialLogin(request: request)

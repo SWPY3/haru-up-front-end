@@ -11,7 +11,7 @@ import Alamofire
 
 
 protocol AuthAPIProtocol {
-    func socialLogin(request: SocialLoginRequest) -> Single<SocialLoginResponseDTO>
+    func socialLogin(request: SocialLoginRequestDTO) -> Single<SocialLoginResponseDTO>
     func logout(refreshToken: String) -> Single<GenericResponse<EmptyResponseData>>
 }
 
@@ -48,7 +48,7 @@ final class AuthAPI: AuthAPIProtocol {
     }
     
     // 소셜 로그인
-    func socialLogin(request: SocialLoginRequest) -> Single<SocialLoginResponseDTO> {
+    func socialLogin(request: SocialLoginRequestDTO) -> Single<SocialLoginResponseDTO> {
         let url = NetworkDefine.AuthAPI.snsLogin.url
         
         var headers: HTTPHeaders = ["Content-Type": "application/json"]
@@ -59,10 +59,7 @@ final class AuthAPI: AuthAPIProtocol {
             headers["Authorization"] = "Bearer \(token)"
         }
         
-        // DTO로 변환하여 전송
-        let body = request.toDTO()
-        
-        return self.request(url, method: .post, header: headers, body: body)
+        return self.request(url, method: .post, header: headers, body: request)
     }
     
     // 로그아웃
