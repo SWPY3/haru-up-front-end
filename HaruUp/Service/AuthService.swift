@@ -181,9 +181,27 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         // 1) 유저를 식별할 수 있는 고유 ID (서버나 로컬에 저장)
         let userIdentifier = credential.user
         
+        
         // 2) 이름, 이메일 (처음 로그인 할 때만 올 수 있고, Hide my email 하면 nil 일 수 있음)
         let fullName = credential.fullName
         let email = credential.email
+    
+        
+        let name = [fullName?.givenName, fullName?.familyName]
+            .compactMap { $0 }
+            .joined(separator: " ")
+        
+        
+        tokenStorage.saveAppleUserInfo(
+            userId: userIdentifier,
+            email: email,  // 최초 로그인 시에만 있음, 이후엔 nil
+            fullName: name.isEmpty ? nil : name  // 최초 로그인 시에만 있음
+        )
+        
+        print("✅ Apple 로그인 정보 로컬 저장 완료")
+        print("   - userId: \(userIdentifier)")
+        print("   - email: \(email ?? "nil")")
+        print("   - fullName: \(name.isEmpty ? "nil" : name)")
         
         // 3) 서버 연동할 때 쓰는 토큰들 (JWT / code)
         guard let identityTokenData = credential.identityToken,
@@ -202,9 +220,6 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             return
         }
         
-        let name = [fullName?.givenName, fullName?.familyName]
-            .compactMap { $0 }
-            .joined(separator: " ")
         
         let request = SocialLoginRequest(
             provider: .apple,

@@ -50,7 +50,7 @@ final class NaverLoginButton: UIButton {
         clipsToBounds = true
         translatesAutoresizingMaskIntoConstraints = false
         
-        if let logo = UIImage(named: "btnG_아이콘사각") {
+        if let logo = UIImage(named: "naver_login") {
            
             logoImageView.image = logo
         }

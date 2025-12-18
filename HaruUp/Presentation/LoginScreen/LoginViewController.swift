@@ -18,7 +18,7 @@ class LoginViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel: LoginViewModel
     
-    let naverLoginButton = NaverLoginButton()
+//    let naverLoginButton = NaverLoginButton()
     
     var onFinish: ((SocialLoginResult) -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
     
@@ -31,7 +31,16 @@ class LoginViewController: UIViewController {
     
     private let kakaoLoginButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setBackgroundImage(UIImage(named: "kakao_login_large_wide"), for: .normal)
+        button.setBackgroundImage(UIImage(named: "kakao_login"), for: .normal)
+        button.tintColor = .clear
+        button.backgroundColor = .clear
+        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        return button
+    }()
+    
+    private let naverLoginButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setBackgroundImage(UIImage(named: "naver_login"), for: .normal)
         button.tintColor = .clear
         button.backgroundColor = .clear
         button.heightAnchor.constraint(equalToConstant: 50).isActive = true
@@ -45,14 +54,7 @@ class LoginViewController: UIViewController {
         return button
     }()
     
-//    private let naverLoginButton: UIButton = {
-//            let button = UIButton(type: .system)
-//            button.setBackgroundImage(UIImage(named: "btnG_완성형"), for: .normal)
-//            button.tintColor = .clear
-//            button.backgroundColor = .clear
-//            button.heightAnchor.constraint(equalToConstant: 50).isActive = true
-//            return button
-//        }()
+    
     
     // MARK: 로그인 완료 후 온보딩으로 넘어가는 onFinish 클로저 작동용 버튼
     private let nextButton: UIButton = {
@@ -62,7 +64,7 @@ class LoginViewController: UIViewController {
         
         return button
     }()
-
+    
     
     
     
@@ -95,27 +97,27 @@ class LoginViewController: UIViewController {
         
         view.addSubview(logoImageView)
         
-//        logoImageView.setDimensions(width: 150, height: 150)
+        //        logoImageView.setDimensions(width: 150, height: 150)
         
         let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, naverLoginButton, appleLoginButton])
         stack.axis = .vertical
-        stack.spacing = 10
+        stack.spacing = 19
         
         view.addSubview(stack)
         
         logoImageView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 200),
+            logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 160),
             logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            logoImageView.widthAnchor.constraint(equalToConstant: 173),
-            logoImageView.heightAnchor.constraint(equalToConstant: 102)
+            logoImageView.widthAnchor.constraint(equalToConstant: 190),
+            logoImageView.heightAnchor.constraint(equalToConstant: 132)
         ])
         
         stack.anchor(
             top: logoImageView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 100,
+            paddingTop: 110,
             paddingLeft: 28,
             paddingRight: 28)
         

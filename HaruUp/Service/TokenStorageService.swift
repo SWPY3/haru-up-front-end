@@ -19,6 +19,10 @@ final class TokenStorageService {
     private let onboardingCompletedKey = "HaruUp_OnboardingCompleted"
     private let onboardingCompletedMemberIdKey = "HaruUp_OnboardingCompletedMemberId"
     private let memberIdKey = "HaruUp_MemberId"
+    // Apple 로그인 관련 키들
+    private let appleUserIdKey = "HaruUp_AppleUserId"
+    private let appleEmailKey = "HaruUp_AppleEmail"
+    private let appleFullNameKey = "HaruUp_AppleFullName"
     
     private init() {}
     
@@ -59,6 +63,8 @@ final class TokenStorageService {
     }
     
     
+    
+    
     func saveMemberId(_ id: String) {
         UserDefaults.standard.set(id, forKey: memberIdKey)
     }
@@ -66,6 +72,38 @@ final class TokenStorageService {
     func getMemberId() -> String? {
         return UserDefaults.standard.string(forKey: memberIdKey)
     }
+    
+    
+    
+    
+    // MARK: - Apple Login
+        func saveAppleUserInfo(userId: String, email: String?, fullName: String?) {
+            UserDefaults.standard.set(userId, forKey: appleUserIdKey)
+            UserDefaults.standard.set(email, forKey: appleEmailKey)
+            UserDefaults.standard.set(fullName, forKey: appleFullNameKey)
+        }
+        
+        func getAppleUserId() -> String? {
+            return UserDefaults.standard.string(forKey: appleUserIdKey)
+        }
+        
+        func getAppleEmail() -> String? {
+            return UserDefaults.standard.string(forKey: appleEmailKey)
+        }
+        
+        func getAppleFullName() -> String? {
+            return UserDefaults.standard.string(forKey: appleFullNameKey)
+        }
+        
+        private func clearAppleLoginInfo() {
+            UserDefaults.standard.removeObject(forKey: appleUserIdKey)
+            UserDefaults.standard.removeObject(forKey: appleEmailKey)
+            UserDefaults.standard.removeObject(forKey: appleFullNameKey)
+        }
+    
+    
+    
+    
     
     
     func saveOnboardingCompleted(_ completed: Bool) {
@@ -103,8 +141,9 @@ final class TokenStorageService {
         func clearAll() {
             clearTokens()
             clearOnboardingState()
+            clearAppleLoginInfo()
             UserDefaults.standard.removeObject(forKey: memberIdKey)
-            print("🗑️ 모든 저장 데이터 초기화")
+            print("🗑️ 모든 저장 데이터 초기화(로그아웃)")
         }
     
 //    func resetOnboardingStatus() {
