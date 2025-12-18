@@ -219,8 +219,8 @@ final class HomeHeaderView: UIView {
     
     private func setupView() {
         configureBackground()
-        configureStackView()
         configureAchievement()
+        configureStackView()
         configureBubbleView()
         configureCharacter()
         configureCharacterInfo()
@@ -256,7 +256,7 @@ final class HomeHeaderView: UIView {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            stackView.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor),
+            stackView.topAnchor.constraint(greaterThanOrEqualTo: achievementContainer.bottomAnchor, constant: 36),
             stackView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             stackView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
             stackView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
@@ -264,7 +264,8 @@ final class HomeHeaderView: UIView {
     }
     
     private func configureAchievement() {
-        stackView.addArrangedSubview(achievementContainer)
+        self.addSubview(achievementContainer)
+        achievementContainer.translatesAutoresizingMaskIntoConstraints = false
         
         achievementContainer.addSubview(achievementStackView)
         achievementStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -274,6 +275,10 @@ final class HomeHeaderView: UIView {
         }
         
         NSLayoutConstraint.activate([
+            achievementContainer.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor),
+            achievementContainer.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            achievementContainer.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            
             achievementStackView.topAnchor.constraint(equalTo: achievementContainer.topAnchor, constant: 3),
             achievementStackView.bottomAnchor.constraint(equalTo: achievementContainer.bottomAnchor, constant: -3),
             achievementStackView.trailingAnchor.constraint(equalTo: achievementContainer.trailingAnchor, constant: -20)
@@ -281,8 +286,6 @@ final class HomeHeaderView: UIView {
     }
     
     private func configureBubbleView() {
-        stackView.setCustomSpacing(36, after: achievementContainer)
-        
         stackView.addArrangedSubview(bubbleContainer)
         
         bubbleContainer.addSubview(bubbleView)
