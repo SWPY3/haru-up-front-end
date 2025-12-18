@@ -15,6 +15,7 @@ final class LoginCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     var onFinish: ((SocialLoginResult) -> Void)? // 로그인 완료 후 화면 이동
+    var gotoHome: (() -> Void)?
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -27,6 +28,10 @@ final class LoginCoordinator: Coordinator {
         
         loginVC.onFinish = { [weak self] result in
             self?.onFinish?(result)
+        }
+        
+        loginVC.goToHome = { [weak self] in
+            self?.gotoHome?()
         }
         
         navigationController.setViewControllers([loginVC], animated: false)
