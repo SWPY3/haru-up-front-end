@@ -59,7 +59,7 @@ final class LoginViewModel {
                         errorRelay.accept(error.localizedDescription)
                     })
                     .catch { error in
-                        return .just(SocialLoginResult(success: false))
+                        return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                     }
             }
             .filter { $0.success }              // true인 경우(성공)만 통과
@@ -82,7 +82,7 @@ final class LoginViewModel {
                         errorRelay.accept(error.localizedDescription)
                     })
                     .catch { error in
-                        return .just(SocialLoginResult(success: false))
+                        return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                     }
             }
             .filter { $0.success }              // true인 경우(성공)만 통과
@@ -105,7 +105,7 @@ final class LoginViewModel {
                                 errorRelay.accept(error.localizedDescription)
                             })
                             .catch { error in
-                                return .just(SocialLoginResult(success: false))
+                                return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                             }
                     }
                     // false는 성공으로 보지 않도록 필터링
@@ -120,5 +120,7 @@ final class LoginViewModel {
             loginSuccess: loginSuccessRelay.asSignal()
         )
     }
+    
+    
     
 }

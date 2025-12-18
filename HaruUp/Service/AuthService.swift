@@ -47,7 +47,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         return loginWithKakaoSDK()
             .flatMap { [weak self] kakaoUserInfo -> Single<SocialLoginResult> in
                 guard let self = self else {
-                    return .just(SocialLoginResult(success: false))
+                    return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                 }
                 
                 let request = SocialLoginRequest(
@@ -123,7 +123,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
     func loginWithApple() -> Single<SocialLoginResult> {
         return Single<SocialLoginResult>.create { [weak self] single in
             guard let self else {
-                single(.success(SocialLoginResult(success: false)))
+                single(.success(SocialLoginResult(success: false, onboardingCompleted: false)))
                 return Disposables.create()
             }
             
@@ -172,7 +172,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         
         guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
             print("애플 로그인 credential 캐스팅 실패")
-            appleLoginObserver?(.success(SocialLoginResult(success: false)))
+            appleLoginObserver?(.success(SocialLoginResult(success: false, onboardingCompleted: false)))
             appleLoginObserver = nil
 
             return
@@ -304,7 +304,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         return loginAndFetchProfile()
             .flatMap { [weak self] profile -> Single<SocialLoginResult> in
                 guard let self = self else {
-                    return .just(SocialLoginResult(success: false))
+                    return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                 }
                 
                 let request = SocialLoginRequest(
@@ -393,10 +393,10 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                     if let errorMessage = responseDTO.errorMessage {
                         print("❌ 에러 메시지: \(errorMessage)")
                     }
-                    return SocialLoginResult(success: false)
+                    return SocialLoginResult(success: false, onboardingCompleted: false)
                 }
                 
-                // AccessToken / RefreshToken 발급 및 저장
+                // 1. AccessToken / RefreshToken 발급 및 저장
                 let authToken = AuthToken(
                     accessToken: data.accessToken,
                     refreshToken: data.refreshToken
@@ -405,28 +405,23 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                 self?.tokenStorage.saveToken(authToken)
                 print("✅ 토큰 저장 완료")
                 
-                self?.tokenStorage.saveMemberId(String(data.id))
-                print("✅ MemberId 저장: \(data.id)")
+                // 2. MemberId 저장
+                let memberId = String(data.id)
+                self?.tokenStorage.saveMemberId(memberId)
+                print("✅ MemberId 저장: \(memberId)")
                 
-        
-                let isNewUser = true // TODO: - 백엔드 응답에 따라 수정
+                // 3. 다른 계정으로 로그인했다면 온보딩 상태 초기화
+                self?.tokenStorage.clearOnboardingIfDifferentUser(currentMemberId: memberId)
                 
-                if isNewUser {
-                    self?.tokenStorage.saveOnboardingCompleted(false)
-                    print("✅ 신규 회원: 온보딩 필요")
-                } else {
-                    self?.tokenStorage.saveOnboardingCompleted(true)
-                    print("✅ 기존 회원: 온보딩 완료")
-                }
+                
+                let onboardingCompleted = self?.tokenStorage.isOnboardingCompleted() ?? false
                 
                 // 화면 분기를 위한 결과 반환
                 return SocialLoginResult(
                     success: true,
-                    onboardingCompleted: !isNewUser,
-                    onboardingRequired: isNewUser
+                    onboardingCompleted: onboardingCompleted
                 )
             }
     }
-    
     
 }

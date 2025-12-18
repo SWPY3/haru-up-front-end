@@ -11,7 +11,7 @@ class SelectButton: UIButton {
     
     private var buttonIsSelected: Bool = false {
         didSet {
-            print("버튼: \(self.titleLabel?.text ?? ""), 선택 상태: \(isSelected)")
+//            print("버튼: \(self.titleLabel?.text ?? ""), 선택 상태: \(isSelected)")
             updateAppearance()
         }
     }

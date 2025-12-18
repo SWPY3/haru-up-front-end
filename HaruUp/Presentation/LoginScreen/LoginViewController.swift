@@ -103,16 +103,13 @@ class LoginViewController: UIViewController {
         
         view.addSubview(stack)
         
-        logoImageView.anchor(
-            top: view.safeAreaLayoutGuide.topAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingTop: 200,
-            width: 80,
-            height: 80
-        )
-        
-//        logoImageView.centerX(inView: view, topAnchor: view.safeAreaLayoutGuide.topAnchor)
+        logoImageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 200),
+            logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            logoImageView.widthAnchor.constraint(equalToConstant: 173),
+            logoImageView.heightAnchor.constraint(equalToConstant: 102)
+        ])
         
         stack.anchor(
             top: logoImageView.bottomAnchor,
@@ -155,8 +152,7 @@ class LoginViewController: UIViewController {
         output.loginSuccess
             .emit(onNext: { [weak self] result in
                 print("🟢 로그인 성공!")
-                print("   onboardingCompleted: \(result.onboardingCompleted ?? false)")
-                print("   onboardingRequired: \(result.onboardingRequired ?? false)")
+                print("   onboardingCompleted: \(result.onboardingCompleted)")
                 print("   onFinish 클로저 존재 여부: \(self?.onFinish != nil)")
                 
                 self?.onFinish?(result)
