@@ -29,7 +29,7 @@ class InterestSelectViewController: UIViewController {
     
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 5.0 / 7.0
+        progressBar.progress = 6.0 / 8.0
         progressBar.tintColor = .systemBlue
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar

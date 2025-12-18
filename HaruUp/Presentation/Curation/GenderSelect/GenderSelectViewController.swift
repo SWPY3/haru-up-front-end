@@ -32,7 +32,7 @@ class GenderSelectViewController: UIViewController {
     
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 3.0 / 7.0
+        progressBar.progress = 4.0 / 8.0
         progressBar.tintColor = .systemBlue
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
