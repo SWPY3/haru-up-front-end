@@ -304,7 +304,7 @@ final class HomeHeaderView: UIView {
     }
     
     private func configureCharacter() {
-        stackView.setCustomSpacing(8, after: bubbleContainer)
+        stackView.setCustomSpacing(20, after: bubbleContainer)
         
         stackView.addArrangedSubview(characterImageView)
     }
