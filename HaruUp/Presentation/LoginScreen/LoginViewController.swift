@@ -34,7 +34,7 @@ class LoginViewController: UIViewController {
         button.setBackgroundImage(UIImage(named: "kakao_login"), for: .normal)
         button.tintColor = .clear
         button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
         return button
     }()
     
@@ -43,16 +43,25 @@ class LoginViewController: UIViewController {
         button.setBackgroundImage(UIImage(named: "naver_login"), for: .normal)
         button.tintColor = .clear
         button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
         return button
     }()
     
-    private lazy var appleLoginButton: ASAuthorizationAppleIDButton = {
-        let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
-        button.cornerRadius = 8
-        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+    private let appleLoginButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setBackgroundImage(UIImage(named: "apple_login"), for: .normal)
+        button.tintColor = .clear
+        button.backgroundColor = .clear
+        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
         return button
     }()
+    
+//    private lazy var appleLoginButton: ASAuthorizationAppleIDButton = {
+//        let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
+//        button.cornerRadius = 8
+//        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+//        return button
+//    }()
     
     
     
