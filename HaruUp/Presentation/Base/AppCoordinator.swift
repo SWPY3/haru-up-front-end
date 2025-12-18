@@ -18,6 +18,7 @@ final class AppCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     
     private let tokenStorage = TokenStorageService.shared
+    private var curationData = CurationData()
 
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -118,7 +119,8 @@ final class AppCoordinator: Coordinator {
     }
     
     private func createProfileFlow() {
-        let createProfileCoordinator = CreateProfileCoordinator(navigationController: navigationController)
+        let createProfileCoordinator = CreateProfileCoordinator(navigationController: navigationController,
+                                                                curationData: curationData)
         
         createProfileCoordinator.onFinish = { [weak self, weak createProfileCoordinator] in
             guard let self = self else { return }
@@ -136,11 +138,12 @@ final class AppCoordinator: Coordinator {
     }
     
     private func showJobSelectFlow() {
-        let jobSelectCoordinator = JobSelectCoordinator(navigationController: navigationController)
+        let jobSelectCoordinator = JobSelectCoordinator(navigationController: navigationController, curationData: curationData)
         childCoordinators.append(jobSelectCoordinator)
         
         jobSelectCoordinator.start()
     }
+    
     
     
     private func showMainTabFlow() {

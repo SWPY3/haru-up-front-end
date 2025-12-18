@@ -1,27 +1,35 @@
 //
-//  JobSelectViewController.swift
+//  InterestSelectViewController.swift
 //  HaruUp
 //
-//  Created by 하다현 on 12/16/25.
+//  Created by 하다현 on 12/17/25.
 //
 
 import UIKit
 import RxSwift
 import RxCocoa
 
-class JobSelectViewController: UIViewController {
+class InterestSelectViewController: UIViewController {
     
-    private let viewModel: JobSelectViewModel
-    
+    private let viewModel:  InterestSelectViewModel
     private let disposeBag = DisposeBag()
     
-    private let jobSelectedSubject = PublishSubject<String>()
-    private var jobButtons: [SelectButton] = []
-    private var jobs: [String] = []
+    private let interestSelectedSubject = PublishSubject<String>()
+    private var interestButtons: [InterestButton] = []
+    private var interests: [Interest] = []
+    
+    
+    private let backButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        button.tintColor = .black
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
     
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 1.0 / 7.0
+        progressBar.progress = 5.0 / 7.0
         progressBar.tintColor = .systemBlue
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
@@ -29,7 +37,7 @@ class JobSelectViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "현재 어떤 일을 하고 계신가요?"
+        label.text = "관심사는 무엇인가요?"
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.textAlignment = .left
         label.numberOfLines = 0
@@ -40,15 +48,16 @@ class JobSelectViewController: UIViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "적절한 관심사를 추천하기 위해 필요해요."
+        label.text = "적절한 목표를 추천하기 위해 필요해요.\n가장 우선순위가 높은 관심사를 1개 골라주세요."
         label.font = .systemFont(ofSize: 14, weight: .regular)
         label.textAlignment = .left
+        label.numberOfLines = 0
         label.textColor = .gray
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    private let jobButtonsStackView: UIStackView = {
+    private let interestButtonsStackView: UIStackView = {
         let sv = UIStackView()
         sv.translatesAutoresizingMaskIntoConstraints = false
         sv.axis = .vertical
@@ -91,11 +100,8 @@ class JobSelectViewController: UIViewController {
     }()
     
     
-    
-    
     // MARK: - Init
-    
-    init(viewModel: JobSelectViewModel) {
+    init(viewModel: InterestSelectViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -106,28 +112,42 @@ class JobSelectViewController: UIViewController {
     
     
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
         setupUI()
         bindViewModel()
     }
     
     
     // MARK: - Setup UI
-    func setupUI() {
+    private func setupUI() {
+        
+        view.backgroundColor = .white
+        
+        view.addSubview(backButton)
         view.addSubview(stackView)
-        view.addSubview(titleLabelStackView)
-        view.addSubview(jobButtonsStackView)
+
+        view.addSubview(interestButtonsStackView)
         view.addSubview(nextButton)
         
         stackView.addArrangedSubview(progressBar)
+        stackView.addArrangedSubview(titleLabelStackView)
         
         titleLabelStackView.addArrangedSubview(titleLabel)
         titleLabelStackView.addArrangedSubview(subtitleLabel)
         
-        stackView.addArrangedSubview(titleLabelStackView)
+        
+        
+        backButton.anchor(
+            top: view.safeAreaLayoutGuide.topAnchor,
+            left: view.leftAnchor,
+            paddingTop: 5,
+            paddingLeft: 15,
+            width: 47,
+            height: 47
+        )
         
         stackView.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
@@ -137,6 +157,7 @@ class JobSelectViewController: UIViewController {
             paddingLeft: 30,
             paddingRight: 30
         )
+        
         titleLabelStackView.anchor(
             left: view.leftAnchor,
             right: view.rightAnchor,
@@ -145,7 +166,7 @@ class JobSelectViewController: UIViewController {
             paddingRight: 30
         )
         
-        jobButtonsStackView.anchor(
+        interestButtonsStackView.anchor(
             top: stackView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
@@ -163,38 +184,41 @@ class JobSelectViewController: UIViewController {
             paddingRight: 20,
             height: 56
         )
-        
     }
     
-    // MARK: - Binding ViewModel
+    // MARK: - Bind ViewModel
     private func bindViewModel() {
-        let input = JobSelectViewModel.Input(
-            jobSelected: jobSelectedSubject.asObservable(),
-            nextButtonTapped: nextButton.rx.tap.asObservable()
-        )
-        let output = viewModel.transform(input: input)
-        
-        // 직업 목록 받아 버튼 생성
-        output.jobs
-            .drive(onNext: { [weak self] jobs in
-                self?.jobs = jobs
-                self?.createJobButtons(with: jobs)
+        backButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
             })
             .disposed(by: disposeBag)
         
-        // 선택된 직업 처리
-        output.selectedJob
-            .drive(onNext: {[weak self] selectedJob in
+        let input = InterestSelectViewModel.Input(
+            interestSelected: interestSelectedSubject.asObservable(), nextButtonTapped: nextButton.rx.tap.asObservable()
+        )
+        let output = viewModel.transform(input: input)
+        
+        output.interests
+            .drive(onNext: { [weak self] interests in
+                self?.interests = interests
+                self?.createInterestButtons(with: interests)
+            })
+            .disposed(by: disposeBag)
+        
+        
+        output.selectedInterest
+            .drive(onNext: { [weak self] selectedInterest in
                 guard let self = self else { return }
                 
-                self.jobButtons.enumerated().forEach { index, button in
-                    let isSelected = self.jobs[index] == selectedJob
+                self.interestButtons.enumerated().forEach { index, button in
+                    let isSelected = self.interests[index].title == selectedInterest
                     button.setSelected(isSelected)
                 }
             })
             .disposed(by: disposeBag)
         
-        output.selectedJob
+        output.selectedInterest
             .map { $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
@@ -203,34 +227,23 @@ class JobSelectViewController: UIViewController {
             .disposed(by: disposeBag)
     }
     
-    private func createJobButtons(with jobs: [String]) {
-        jobButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        jobButtons.removeAll()
+    private func createInterestButtons(with interests: [Interest]) {
+        interestButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        interestButtons.removeAll()
         
-        jobs.forEach { job in
-            let button = SelectButton()
-            button.setTitle(job, for: .normal)
+        interests.forEach { interest in
+            let button = InterestButton()
+            button.configure(icon: interest.icon, title: interest.title)  
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             
             button.rx.tap
-                .map{ job }
-                .bind(to: jobSelectedSubject)
+                .map { interest.title }
+                .bind(to: interestSelectedSubject)
                 .disposed(by: disposeBag)
             
-            jobButtons.append(button)
-            jobButtonsStackView.addArrangedSubview(button)
+            interestButtons.append(button)
+            interestButtonsStackView.addArrangedSubview(button)
         }
     }
-    //
-    //     private func updateButtonSelection(selectedJob: String?) {
-    //         print("=== 선택된 직업: \(selectedJob ?? "없음") ===")
-    //         jobButtons.forEach { button in
-    //             let buttonTitle = button.titleLabel?.text
-    //             let isSelected = buttonTitle == selectedJob
-    //             print("버튼 '\(buttonTitle ?? "")' -> \(isSelected ? "선택" : "해제")")
-    //             button.setSelected(isSelected)
-    //         }
-    //    }
-    
 }

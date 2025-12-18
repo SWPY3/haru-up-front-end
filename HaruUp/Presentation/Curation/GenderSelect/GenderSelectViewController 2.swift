@@ -1,27 +1,38 @@
 //
-//  JobSelectViewController.swift
+//  GenderSelectViewController.swift
 //  HaruUp
 //
-//  Created by 하다현 on 12/16/25.
+//  Created by 하다현 on 12/17/25.
 //
 
 import UIKit
 import RxSwift
 import RxCocoa
 
-class JobSelectViewController: UIViewController {
+
+class GenderSelectViewController: UIViewController {
     
-    private let viewModel: JobSelectViewModel
+    private let viewModel: GenderSelectViewModel
     
     private let disposeBag = DisposeBag()
     
-    private let jobSelectedSubject = PublishSubject<String>()
-    private var jobButtons: [SelectButton] = []
-    private var jobs: [String] = []
+    private let genderSelectedSubject = PublishSubject<String>()
+    private var genderButtons: [SelectButton] = []
+    private var genders: [String] = []
+    
+    private let backButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        button.tintColor = .black
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    
     
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 1.0 / 7.0
+        progressBar.progress = 3.0 / 7.0
         progressBar.tintColor = .systemBlue
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
@@ -29,7 +40,7 @@ class JobSelectViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "현재 어떤 일을 하고 계신가요?"
+        label.text = "성별이 어떻게 되시나요?"
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.textAlignment = .left
         label.numberOfLines = 0
@@ -40,7 +51,7 @@ class JobSelectViewController: UIViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "적절한 관심사를 추천하기 위해 필요해요."
+        label.text = "적절한 미션 추전에 필요해요! 외부에 공개되지 않아요."
         label.font = .systemFont(ofSize: 14, weight: .regular)
         label.textAlignment = .left
         label.textColor = .gray
@@ -48,7 +59,8 @@ class JobSelectViewController: UIViewController {
         return label
     }()
     
-    private let jobButtonsStackView: UIStackView = {
+    
+    private let genderButtonStackView: UIStackView = {
         let sv = UIStackView()
         sv.translatesAutoresizingMaskIntoConstraints = false
         sv.axis = .vertical
@@ -91,11 +103,17 @@ class JobSelectViewController: UIViewController {
     }()
     
     
+    // MARK: - LifeCycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        setupUI()
+        bindViewModel()
+    }
     
     
     // MARK: - Init
-    
-    init(viewModel: JobSelectViewModel) {
+    init(viewModel: GenderSelectViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -104,22 +122,13 @@ class JobSelectViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
+    // MARK: - setupUI
+    private func setupUI() {
         view.backgroundColor = .white
-        setupUI()
-        bindViewModel()
-    }
-    
-    
-    // MARK: - Setup UI
-    func setupUI() {
+        view.addSubview(backButton)
         view.addSubview(stackView)
         view.addSubview(titleLabelStackView)
-        view.addSubview(jobButtonsStackView)
+        view.addSubview(genderButtonStackView)
         view.addSubview(nextButton)
         
         stackView.addArrangedSubview(progressBar)
@@ -128,6 +137,15 @@ class JobSelectViewController: UIViewController {
         titleLabelStackView.addArrangedSubview(subtitleLabel)
         
         stackView.addArrangedSubview(titleLabelStackView)
+        
+        backButton.anchor(
+            top: view.safeAreaLayoutGuide.topAnchor,
+            left: view.leftAnchor,
+            paddingTop: 5,
+            paddingLeft: 15,
+            width: 47,
+            height: 47
+        )
         
         stackView.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
@@ -145,7 +163,7 @@ class JobSelectViewController: UIViewController {
             paddingRight: 30
         )
         
-        jobButtonsStackView.anchor(
+        genderButtonStackView.anchor(
             top: stackView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
@@ -163,74 +181,74 @@ class JobSelectViewController: UIViewController {
             paddingRight: 20,
             height: 56
         )
-        
     }
-    
     // MARK: - Binding ViewModel
     private func bindViewModel() {
-        let input = JobSelectViewModel.Input(
-            jobSelected: jobSelectedSubject.asObservable(),
-            nextButtonTapped: nextButton.rx.tap.asObservable()
-        )
-        let output = viewModel.transform(input: input)
         
-        // 직업 목록 받아 버튼 생성
-        output.jobs
-            .drive(onNext: { [weak self] jobs in
-                self?.jobs = jobs
-                self?.createJobButtons(with: jobs)
+        backButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
             })
             .disposed(by: disposeBag)
         
-        // 선택된 직업 처리
-        output.selectedJob
-            .drive(onNext: {[weak self] selectedJob in
+        
+        let input = GenderSelectViewModel.Input(
+            genderSelected: genderSelectedSubject.asObservable(),
+            nextButtonTapped: nextButton.rx.tap.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        // 성별 받아 버튼 생성
+        output.genders
+            .drive(onNext: { [weak self] genders in
+                self?.genders = genders
+                self?.createGenderButtons(with: genders)
+            })
+            .disposed(by: disposeBag)
+        
+        
+        // 선택된 성별 처리
+        output.selectedGender
+            .drive(onNext: { [weak self] selectedGender in
                 guard let self = self else { return }
                 
-                self.jobButtons.enumerated().forEach { index, button in
-                    let isSelected = self.jobs[index] == selectedJob
+                self.genderButtons.enumerated().forEach { index, button in
+                    let isSelected = self.genders[index] == selectedGender
                     button.setSelected(isSelected)
                 }
             })
             .disposed(by: disposeBag)
         
-        output.selectedJob
-            .map { $0 != nil }
+        output.selectedGender
+            .map{ $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
                 self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
             })
             .disposed(by: disposeBag)
+        
     }
     
-    private func createJobButtons(with jobs: [String]) {
-        jobButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        jobButtons.removeAll()
+    private func createGenderButtons(with genders: [String]) {
+        genderButtonStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        genderButtons.removeAll()
         
-        jobs.forEach { job in
+        genders.forEach { gender in
             let button = SelectButton()
-            button.setTitle(job, for: .normal)
+            button.setTitle(gender, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             
             button.rx.tap
-                .map{ job }
-                .bind(to: jobSelectedSubject)
+                .map{ gender }
+                .bind(to: genderSelectedSubject)
                 .disposed(by: disposeBag)
             
-            jobButtons.append(button)
-            jobButtonsStackView.addArrangedSubview(button)
+            genderButtons.append(button)
+            genderButtonStackView.addArrangedSubview(button)
+            
         }
+        
     }
-    //
-    //     private func updateButtonSelection(selectedJob: String?) {
-    //         print("=== 선택된 직업: \(selectedJob ?? "없음") ===")
-    //         jobButtons.forEach { button in
-    //             let buttonTitle = button.titleLabel?.text
-    //             let isSelected = buttonTitle == selectedJob
-    //             print("버튼 '\(buttonTitle ?? "")' -> \(isSelected ? "선택" : "해제")")
-    //             button.setSelected(isSelected)
-    //         }
-    //    }
-    
 }

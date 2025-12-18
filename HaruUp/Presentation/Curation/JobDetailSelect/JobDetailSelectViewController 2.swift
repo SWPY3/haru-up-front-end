@@ -1,5 +1,5 @@
 //
-//  JobSelectViewController.swift
+//  JobDetailSelectViewController.swift
 //  HaruUp
 //
 //  Created by 하다현 on 12/16/25.
@@ -9,19 +9,26 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-class JobSelectViewController: UIViewController {
-    
-    private let viewModel: JobSelectViewModel
-    
+
+class JobDetailSelectViewController: UIViewController {
+    private let viewModel: JobDetailSelectViewModel
     private let disposeBag = DisposeBag()
     
-    private let jobSelectedSubject = PublishSubject<String>()
-    private var jobButtons: [SelectButton] = []
-    private var jobs: [String] = []
+    private let jobDetailSelectedSubject = PublishSubject<String>()
+    private var jobDetailButtons: [SelectButton] = []
+    private var jobDetails: [String] = []
+    
+    private let backButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        button.tintColor = .black
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
     
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 1.0 / 7.0
+        progressBar.progress = 2.0 / 7.0
         progressBar.tintColor = .systemBlue
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
@@ -29,7 +36,7 @@ class JobSelectViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "현재 어떤 일을 하고 계신가요?"
+        label.text = "세부 직무를 골라주세요."
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.textAlignment = .left
         label.numberOfLines = 0
@@ -48,7 +55,20 @@ class JobSelectViewController: UIViewController {
         return label
     }()
     
-    private let jobButtonsStackView: UIStackView = {
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.showsVerticalScrollIndicator = true
+        return scrollView
+    }()
+    
+    private let contentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let jobDetailButtonsStackView: UIStackView = {
         let sv = UIStackView()
         sv.translatesAutoresizingMaskIntoConstraints = false
         sv.axis = .vertical
@@ -90,12 +110,9 @@ class JobSelectViewController: UIViewController {
         return sv
     }()
     
-    
-    
-    
     // MARK: - Init
     
-    init(viewModel: JobSelectViewModel) {
+    init(viewModel: JobDetailSelectViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -109,17 +126,18 @@ class JobSelectViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
         setupUI()
         bindViewModel()
     }
     
     
-    // MARK: - Setup UI
-    func setupUI() {
+    // MARK: - setup UI
+    private func setupUI() {
+        view.backgroundColor = .white
+        view.addSubview(backButton)
         view.addSubview(stackView)
         view.addSubview(titleLabelStackView)
-        view.addSubview(jobButtonsStackView)
+        view.addSubview(scrollView)
         view.addSubview(nextButton)
         
         stackView.addArrangedSubview(progressBar)
@@ -128,6 +146,18 @@ class JobSelectViewController: UIViewController {
         titleLabelStackView.addArrangedSubview(subtitleLabel)
         
         stackView.addArrangedSubview(titleLabelStackView)
+        scrollView.addSubview(contentView)
+        contentView.addSubview(jobDetailButtonsStackView)
+        
+        
+        backButton.anchor(
+            top: view.safeAreaLayoutGuide.topAnchor,
+            left: view.leftAnchor,
+            paddingTop: 5,
+            paddingLeft: 15,
+            width: 47,
+            height: 47
+        )
         
         stackView.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
@@ -145,15 +175,6 @@ class JobSelectViewController: UIViewController {
             paddingRight: 30
         )
         
-        jobButtonsStackView.anchor(
-            top: stackView.bottomAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingTop: 56,
-            paddingLeft: 30,
-            paddingRight: 30
-        )
-        
         nextButton.anchor(
             left: view.leftAnchor,
             bottom: view.safeAreaLayoutGuide.bottomAnchor,
@@ -164,73 +185,100 @@ class JobSelectViewController: UIViewController {
             height: 56
         )
         
+        scrollView.anchor(
+            top: stackView.bottomAnchor,
+            left: view.leftAnchor,
+            bottom: nextButton.topAnchor,
+            right: view.rightAnchor,
+            paddingTop: 56,
+            paddingLeft: 30,
+            paddingBottom: 20,
+            paddingRight: 30
+        )
+        
+        contentView.anchor(
+            top: scrollView.topAnchor,
+            left: scrollView.leftAnchor,
+            bottom: scrollView.bottomAnchor,
+            right: scrollView.rightAnchor,
+            
+        )
+        contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
+        
+        jobDetailButtonsStackView.anchor(
+            top: contentView.topAnchor,
+            left: contentView.leftAnchor,
+            bottom: contentView.bottomAnchor,
+            right: contentView.rightAnchor,
+            
+        )
+        
+        
+        
     }
     
-    // MARK: - Binding ViewModel
     private func bindViewModel() {
-        let input = JobSelectViewModel.Input(
-            jobSelected: jobSelectedSubject.asObservable(),
-            nextButtonTapped: nextButton.rx.tap.asObservable()
-        )
-        let output = viewModel.transform(input: input)
-        
-        // 직업 목록 받아 버튼 생성
-        output.jobs
-            .drive(onNext: { [weak self] jobs in
-                self?.jobs = jobs
-                self?.createJobButtons(with: jobs)
+        backButton.rx.tap
+            .subscribe(onNext: { [ weak self ] in
+                self?.navigationController?.popViewController(animated: true)
             })
             .disposed(by: disposeBag)
         
-        // 선택된 직업 처리
-        output.selectedJob
-            .drive(onNext: {[weak self] selectedJob in
+        let input = JobDetailSelectViewModel.Input(
+            jobDetailSelected: jobDetailSelectedSubject.asObservable(),
+            nextButtonTapped: nextButton.rx.tap.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        // 세부 직무 목록 받아서 버튼 생성
+        output.jobDetails
+            .drive(onNext: { [weak self] jobDetails in
+                self?.jobDetails = jobDetails
+                self?.createJobDetailButtons(with: jobDetails)
+            })
+            .disposed(by: disposeBag)
+        
+        // 선택된 세부 직무에 따라 버튼 상태 업데이트
+        output.selectedJobDetail
+            .drive(onNext: { [weak self] selectedJobDetail in
                 guard let self = self else { return }
                 
-                self.jobButtons.enumerated().forEach { index, button in
-                    let isSelected = self.jobs[index] == selectedJob
+                self.jobDetailButtons.enumerated().forEach { index, button in
+                    let isSelected = self.jobDetails[index] == selectedJobDetail
                     button.setSelected(isSelected)
                 }
             })
             .disposed(by: disposeBag)
         
-        output.selectedJob
-            .map { $0 != nil }
+        // 다음 버튼 활성화
+        output.selectedJobDetail
+            .map{ $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
                 self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
             })
             .disposed(by: disposeBag)
     }
-    
-    private func createJobButtons(with jobs: [String]) {
-        jobButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        jobButtons.removeAll()
+    private func createJobDetailButtons(with jobDetails: [String]) {
+        jobDetailButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        jobDetailButtons.removeAll()
         
-        jobs.forEach { job in
+        jobDetails.forEach { jobDetail in
             let button = SelectButton()
-            button.setTitle(job, for: .normal)
+            button.setTitle(jobDetail, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             
             button.rx.tap
-                .map{ job }
-                .bind(to: jobSelectedSubject)
+                .map { jobDetail }
+                .bind(to: jobDetailSelectedSubject)
                 .disposed(by: disposeBag)
             
-            jobButtons.append(button)
-            jobButtonsStackView.addArrangedSubview(button)
+            jobDetailButtons.append(button)
+            jobDetailButtonsStackView.addArrangedSubview(button)
         }
     }
-    //
-    //     private func updateButtonSelection(selectedJob: String?) {
-    //         print("=== 선택된 직업: \(selectedJob ?? "없음") ===")
-    //         jobButtons.forEach { button in
-    //             let buttonTitle = button.titleLabel?.text
-    //             let isSelected = buttonTitle == selectedJob
-    //             print("버튼 '\(buttonTitle ?? "")' -> \(isSelected ? "선택" : "해제")")
-    //             button.setSelected(isSelected)
-    //         }
-    //    }
+    
     
 }

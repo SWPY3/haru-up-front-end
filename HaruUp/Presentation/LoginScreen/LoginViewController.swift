@@ -28,7 +28,7 @@ class LoginViewController: UIViewController {
     private let logoImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.image = UIImage(named: "ex_logo")
+        iv.image = UIImage(named: "haruUp_logo")
         return iv
     }()
     
@@ -109,15 +109,33 @@ class LoginViewController: UIViewController {
         view.backgroundColor = .white
         
         view.addSubview(logoImageView)
-        logoImageView.centerX(inView: view, topAnchor: view.safeAreaLayoutGuide.topAnchor)
-        logoImageView.setDimensions(width: 150, height: 150)
+        
+//        logoImageView.setDimensions(width: 150, height: 150)
         
         let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, naverLoginButton, appleLoginButton])
         stack.axis = .vertical
         stack.spacing = 10
         
         view.addSubview(stack)
-        stack.anchor(top: logoImageView.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 100, paddingLeft: 28, paddingRight: 28)
+        
+        logoImageView.anchor(
+            top: view.safeAreaLayoutGuide.topAnchor,
+            left: view.leftAnchor,
+            right: view.rightAnchor,
+            paddingTop: 200,
+            width: 80,
+            height: 80
+        )
+        
+//        logoImageView.centerX(inView: view, topAnchor: view.safeAreaLayoutGuide.topAnchor)
+        
+        stack.anchor(
+            top: logoImageView.bottomAnchor,
+            left: view.leftAnchor,
+            right: view.rightAnchor,
+            paddingTop: 100,
+            paddingLeft: 28,
+            paddingRight: 28)
         
     }
     
