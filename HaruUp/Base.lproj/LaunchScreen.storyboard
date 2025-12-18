@@ -17,19 +17,15 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ex_logo" translatesAutoresizingMaskIntoConstraints="NO" id="zCf-NQ-Yg4">
-                                <rect key="frame" x="96.666666666666629" y="326" width="200" height="200"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="200" id="BYI-n0-N3i"/>
-                                    <constraint firstAttribute="height" constant="200" id="dpm-LT-6TI"/>
-                                </constraints>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="haruUp_splash" translatesAutoresizingMaskIntoConstraints="NO" id="OH6-Ll-qA3">
+                                <rect key="frame" x="110" y="399.66666666666669" width="173" height="53"/>
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="zCf-NQ-Yg4" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="qqg-Vw-eRY"/>
-                            <constraint firstItem="zCf-NQ-Yg4" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="rsw-79-eMA"/>
+                            <constraint firstItem="OH6-Ll-qA3" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="Op6-PR-QYi"/>
+                            <constraint firstItem="OH6-Ll-qA3" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="uI2-ZL-SRL"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -39,7 +35,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="ex_logo" width="2000" height="2000"/>
+        <image name="haruUp_splash" width="173" height="53"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

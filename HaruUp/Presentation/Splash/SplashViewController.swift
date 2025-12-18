@@ -58,9 +58,6 @@ class SplashViewController: UIViewController {
     
     func configureMainLogo() {
         mainLogoImage.translatesAutoresizingMaskIntoConstraints = false
-
-        mainLogoImage.widthAnchor.constraint(equalToConstant: 200).isActive = true
-        mainLogoImage.heightAnchor.constraint(equalToConstant: 200).isActive = true
         mainLogoImage.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         mainLogoImage.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
     }

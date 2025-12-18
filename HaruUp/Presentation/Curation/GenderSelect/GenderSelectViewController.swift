@@ -60,7 +60,7 @@ class GenderSelectViewController: UIViewController {
     }()
     
     
-    private let genderButtonStackView: UIStackView = {
+    private let genderButtonsStackView: UIStackView = {
         let sv = UIStackView()
         sv.translatesAutoresizingMaskIntoConstraints = false
         sv.axis = .vertical
@@ -128,7 +128,7 @@ class GenderSelectViewController: UIViewController {
         view.addSubview(backButton)
         view.addSubview(stackView)
         view.addSubview(titleLabelStackView)
-        view.addSubview(genderButtonStackView)
+        view.addSubview(genderButtonsStackView)
         view.addSubview(nextButton)
         
         stackView.addArrangedSubview(progressBar)
@@ -163,7 +163,7 @@ class GenderSelectViewController: UIViewController {
             paddingRight: 30
         )
         
-        genderButtonStackView.anchor(
+        genderButtonsStackView.anchor(
             top: stackView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
@@ -231,7 +231,7 @@ class GenderSelectViewController: UIViewController {
     }
     
     private func createGenderButtons(with genders: [String]) {
-        genderButtonStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        genderButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         genderButtons.removeAll()
         
         genders.forEach { gender in
@@ -246,7 +246,7 @@ class GenderSelectViewController: UIViewController {
                 .disposed(by: disposeBag)
             
             genderButtons.append(button)
-            genderButtonStackView.addArrangedSubview(button)
+            genderButtonsStackView.addArrangedSubview(button)
             
         }
         

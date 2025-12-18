@@ -118,15 +118,13 @@ class LoginViewController: UIViewController {
         NSLayoutConstraint.activate([
             logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 160),
             logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            logoImageView.widthAnchor.constraint(equalToConstant: 190),
-            logoImageView.heightAnchor.constraint(equalToConstant: 132)
         ])
         
         stack.anchor(
             top: logoImageView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 110,
+            paddingTop: 130,
             paddingLeft: 28,
             paddingRight: 28)
         
