@@ -17,6 +17,14 @@ class CharacterSelectViewController: UIViewController {
     
     var onNext: ((Int) -> Void)? // 선택된 캐릭터 인덱스를 전달하며 다음 화면으로
     
+    private let progressBar: UIProgressView = {
+        let progressBar = UIProgressView(progressViewStyle: .default)
+        progressBar.progress = 1.0 / 8.0
+        progressBar.tintColor = .systemBlue
+        progressBar.translatesAutoresizingMaskIntoConstraints = false
+        return progressBar
+    }()
+    
     
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -35,7 +43,7 @@ class CharacterSelectViewController: UIViewController {
         return view
     }()
     
-    private let descriptionLabel: UILabel = {
+    private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.text = "만나서 반가워요!\n저와 함께 한결음씩 성장하며 가보실까요?"
         label.font = .systemFont(ofSize: 15, weight: .regular)
@@ -135,7 +143,7 @@ class CharacterSelectViewController: UIViewController {
     
     // MARK: - Helpers
     private func setupUI() {
-        descriptionBox.addSubview(descriptionLabel)
+        descriptionBox.addSubview(subtitleLabel)
         
         view.addSubview(titleLabel)
         view.addSubview(descriptionBox)
@@ -162,7 +170,7 @@ class CharacterSelectViewController: UIViewController {
             paddingRight: 30
         )
         
-        descriptionLabel.anchor(
+        subtitleLabel.anchor(
             top: descriptionBox.topAnchor,
             left: descriptionBox.leftAnchor,
             bottom: descriptionBox.bottomAnchor,

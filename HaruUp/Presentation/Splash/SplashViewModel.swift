@@ -19,7 +19,7 @@ enum SplashResult {
 final class SplashViewModel {
     private let tokenStorage = TokenStorageService.shared
     private let disposeBag = DisposeBag()
-    private let minDisplayTime: TimeInterval = 0.8
+    private let minDisplayTime: TimeInterval = 0.5
     
     
     func checkAuthStatus() -> Observable<SplashResult> {

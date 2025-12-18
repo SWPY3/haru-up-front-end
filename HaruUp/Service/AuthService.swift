@@ -47,13 +47,15 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         return loginWithKakaoSDK()
             .flatMap { [weak self] kakaoUserInfo -> Single<SocialLoginResult> in
                 guard let self = self else {
-                    return .just(SocialLoginResult(success: false))
+                    return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                 }
                 
-                let request = SocialLoginRequest(
-                    provider: .kakao, accessToken: kakaoUserInfo.accessToken, snsUserId: kakaoUserInfo.snsUserId, email: kakaoUserInfo.email ?? "",
+                let request = SocialLoginRequestDTO(
+                    loginType: SocialLoginProvider.kakao.rawValue,
+                    snsId: kakaoUserInfo.snsUserId,
+                    email: kakaoUserInfo.email ?? "",
                     name: kakaoUserInfo.name ?? ""
-                    )
+                )
                 // 소셜 로그인 요청
                 return self.sendSocialLoginToServer(request: request)
             }
@@ -123,7 +125,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
     func loginWithApple() -> Single<SocialLoginResult> {
         return Single<SocialLoginResult>.create { [weak self] single in
             guard let self else {
-                single(.success(SocialLoginResult(success: false)))
+                single(.success(SocialLoginResult(success: false, onboardingCompleted: false)))
                 return Disposables.create()
             }
             
@@ -172,7 +174,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         
         guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
             print("애플 로그인 credential 캐스팅 실패")
-            appleLoginObserver?(.success(SocialLoginResult(success: false)))
+            appleLoginObserver?(.success(SocialLoginResult(success: false, onboardingCompleted: false)))
             appleLoginObserver = nil
 
             return
@@ -181,9 +183,27 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         // 1) 유저를 식별할 수 있는 고유 ID (서버나 로컬에 저장)
         let userIdentifier = credential.user
         
+        
         // 2) 이름, 이메일 (처음 로그인 할 때만 올 수 있고, Hide my email 하면 nil 일 수 있음)
         let fullName = credential.fullName
         let email = credential.email
+    
+        
+        let name = [fullName?.givenName, fullName?.familyName]
+            .compactMap { $0 }
+            .joined(separator: " ")
+        
+        
+        tokenStorage.saveAppleUserInfo(
+            userId: userIdentifier,
+            email: email,  // 최초 로그인 시에만 있음, 이후엔 nil
+            fullName: name.isEmpty ? nil : name  // 최초 로그인 시에만 있음
+        )
+        
+        print("✅ Apple 로그인 정보 로컬 저장 완료")
+        print("   - userId: \(userIdentifier)")
+        print("   - email: \(email ?? "nil")")
+        print("   - fullName: \(name.isEmpty ? "nil" : name)")
         
         // 3) 서버 연동할 때 쓰는 토큰들 (JWT / code)
         guard let identityTokenData = credential.identityToken,
@@ -202,20 +222,16 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             return
         }
         
-        let name = [fullName?.givenName, fullName?.familyName]
-            .compactMap { $0 }
-            .joined(separator: " ")
         
-        let request = SocialLoginRequest(
-            provider: .apple,
-            accessToken: authorizationCodeString,
-            snsUserId: userIdentifier,
-            email: email,
-            name: name.isEmpty ? nil : name,
+        let request = SocialLoginRequestDTO(
+            loginType: SocialLoginProvider.apple.rawValue,
+            snsId: userIdentifier,
+            email: email ?? "",
+            name: name.isEmpty ? "" : name,
             identityToken: identityTokenString,
             authorizationCode: authorizationCodeString,
-            userIdentifier: userIdentifier,
-            nonce: nonce)
+            nonce: nonce
+        )
         
         print("🍎 Apple userIdentifier: \(userIdentifier)")
         print("🍎 email: \(String(describing: email))")
@@ -223,13 +239,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         print("🍎 authorizationCode: \(authorizationCodeString.prefix(20))...")
         print("🍎 nonce: \(nonce)")
         
-        
-        //        sendAppleLoginToServer(
-        //                identityToken: identityTokenString,
-        //                authorizationCode: authorizationCodeString,
-        //                nonce: nonce,
-        //                userIdentifier: userIdentifier
-        //            )
+
         sendSocialLoginToServer(request: request)
             .subscribe(onSuccess: { [weak self] result in
                 self?.appleLoginObserver?(.success(result))
@@ -304,15 +314,14 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         return loginAndFetchProfile()
             .flatMap { [weak self] profile -> Single<SocialLoginResult> in
                 guard let self = self else {
-                    return .just(SocialLoginResult(success: false))
+                    return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                 }
                 
-                let request = SocialLoginRequest(
-                    provider: .naver,
-                    accessToken: profile.accessToken,
-                    snsUserId: profile.id,
-                    email: profile.email,
-                    name: profile.name
+                let request = SocialLoginRequestDTO(
+                    loginType: SocialLoginProvider.naver.rawValue,
+                    snsId: profile.id,
+                    email: profile.email ?? "",
+                    name: profile.name ?? ""
                 )
                 
                 return self.sendSocialLoginToServer(request: request)
@@ -380,18 +389,23 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
     }
     
     // MARK:  공통 백엔드 API 호출
-    private func sendSocialLoginToServer(request: SocialLoginRequest) -> Single<SocialLoginResult> {
+    private func sendSocialLoginToServer(request: SocialLoginRequestDTO) -> Single<SocialLoginResult> {
         print("백엔드 호출 요청: \(request)")
+        
         return authAPI.socialLogin(request: request)
-            .map { [weak self] response in
-                print("🔥 sns-loginAPI response: \(response)")
-                guard response.success,
-                      let data = response.data else {
+            .map { [weak self] responseDTO in
+                print("🔥 sns-loginAPI response: \(responseDTO)")
+                
+                guard responseDTO.success,
+                      let data = responseDTO.data else {
                     print("❌ 로그인 실패: response.success = false 또는 data 없음")
-                    return SocialLoginResult(success: false)
+                    if let errorMessage = responseDTO.errorMessage {
+                        print("❌ 에러 메시지: \(errorMessage)")
+                    }
+                    return SocialLoginResult(success: false, onboardingCompleted: false)
                 }
                 
-                // AccessToken / RefreshToken 발급 및 저장
+                // 1. AccessToken / RefreshToken 발급 및 저장
                 let authToken = AuthToken(
                     accessToken: data.accessToken,
                     refreshToken: data.refreshToken
@@ -400,33 +414,23 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                 self?.tokenStorage.saveToken(authToken)
                 print("✅ 토큰 저장 완료")
                 
-                if let memberInfo = data.memberInfo {
-                    print("✅ MemberInfo 받음: id=\(memberInfo.id), name=\(memberInfo.name ?? "nil")")
-                    self?.tokenStorage.saveMemberId(memberInfo.id)
-                    print("✅ MemberId 저장: \(memberInfo.id)")
-                } else {
-                    print("⚠️ MemberInfo가 nil입니다!")
-                }
-                    
-                // onboardingCompleted/onboardingRequired 저장
-                if let onboardingCompleted = data.onboardingCompleted {
-                    print("✅ onboardingCompleted: \(onboardingCompleted)")
-                    self?.tokenStorage.saveOnboardingCompleted(onboardingCompleted)
-                } else if let onboardingRequired = data.onboardingRequired, onboardingRequired {
-                    print("✅ onboardingRequired: \(onboardingRequired)")
-                    self?.tokenStorage.saveOnboardingCompleted(false)
-                }else {
-                    print("⚠️ onboarding 상태가 없습니다. (둘 다 nil)")
-                }
+                // 2. MemberId 저장
+                let memberId = String(data.id)
+                self?.tokenStorage.saveMemberId(memberId)
+                print("✅ MemberId 저장: \(memberId)")
+                
+                // 3. 다른 계정으로 로그인했다면 온보딩 상태 초기화
+                self?.tokenStorage.clearOnboardingIfDifferentUser(currentMemberId: memberId)
+                
+                
+                let onboardingCompleted = self?.tokenStorage.isOnboardingCompleted() ?? false
                 
                 // 화면 분기를 위한 결과 반환
                 return SocialLoginResult(
                     success: true,
-                    onboardingCompleted: data.onboardingCompleted,
-                    onboardingRequired: data.onboardingRequired
+                    onboardingCompleted: onboardingCompleted
                 )
             }
     }
-    
     
 }

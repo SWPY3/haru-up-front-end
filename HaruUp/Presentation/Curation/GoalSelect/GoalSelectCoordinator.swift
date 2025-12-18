@@ -61,6 +61,9 @@ final class GoalSelectCoordinator: Coordinator {
         print("직접 입력 목표: \(curationData.goalInput ?? "없음")")
         print("📦 ========================== 📦")
         
+        // 온보딩 완료!!
+        TokenStorageService.shared.saveOnboardingCompleted(true)
+        print("✅온보딩 완료!! - onboardingCompleted: \(TokenStorageService.shared.isOnboardingCompleted)")
         
         onFinish?()
     }

@@ -18,7 +18,7 @@ class LoginViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel: LoginViewModel
     
-    let naverLoginButton = NaverLoginButton()
+//    let naverLoginButton = NaverLoginButton()
     
     var onFinish: ((SocialLoginResult) -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
     
@@ -34,28 +34,39 @@ class LoginViewController: UIViewController {
     
     private let kakaoLoginButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setBackgroundImage(UIImage(named: "kakao_login_large_wide"), for: .normal)
+        button.setBackgroundImage(UIImage(named: "kakao_login"), for: .normal)
         button.tintColor = .clear
         button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
         return button
     }()
     
-    private lazy var appleLoginButton: ASAuthorizationAppleIDButton = {
-        let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
-        button.cornerRadius = 8
-        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+    private let naverLoginButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setBackgroundImage(UIImage(named: "naver_login"), for: .normal)
+        button.tintColor = .clear
+        button.backgroundColor = .clear
+        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
         return button
     }()
     
-//    private let naverLoginButton: UIButton = {
-//            let button = UIButton(type: .system)
-//            button.setBackgroundImage(UIImage(named: "btnG_완성형"), for: .normal)
-//            button.tintColor = .clear
-//            button.backgroundColor = .clear
-//            button.heightAnchor.constraint(equalToConstant: 50).isActive = true
-//            return button
-//        }()
+    private let appleLoginButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setBackgroundImage(UIImage(named: "apple_login"), for: .normal)
+        button.tintColor = .clear
+        button.backgroundColor = .clear
+        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
+        return button
+    }()
+    
+//    private lazy var appleLoginButton: ASAuthorizationAppleIDButton = {
+//        let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
+//        button.cornerRadius = 8
+//        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+//        return button
+//    }()
+    
+    
     
     // MARK: 로그인 완료 후 온보딩으로 넘어가는 onFinish 클로저 작동용 버튼
     private let nextButton: UIButton = {
@@ -65,7 +76,7 @@ class LoginViewController: UIViewController {
         
         return button
     }()
-
+    
     
     
     
@@ -110,30 +121,25 @@ class LoginViewController: UIViewController {
         
         view.addSubview(logoImageView)
         
-//        logoImageView.setDimensions(width: 150, height: 150)
+        //        logoImageView.setDimensions(width: 150, height: 150)
         
         let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, naverLoginButton, appleLoginButton])
         stack.axis = .vertical
-        stack.spacing = 10
+        stack.spacing = 19
         
         view.addSubview(stack)
         
-        logoImageView.anchor(
-            top: view.safeAreaLayoutGuide.topAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingTop: 200,
-            width: 80,
-            height: 80
-        )
-        
-//        logoImageView.centerX(inView: view, topAnchor: view.safeAreaLayoutGuide.topAnchor)
+        logoImageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 160),
+            logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+        ])
         
         stack.anchor(
             top: logoImageView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 100,
+            paddingTop: 130,
             paddingLeft: 28,
             paddingRight: 28)
         
@@ -176,8 +182,7 @@ class LoginViewController: UIViewController {
         output.loginSuccess
             .emit(onNext: { [weak self] result in
                 print("🟢 로그인 성공!")
-                print("   onboardingCompleted: \(result.onboardingCompleted ?? false)")
-                print("   onboardingRequired: \(result.onboardingRequired ?? false)")
+                print("   onboardingCompleted: \(result.onboardingCompleted)")
                 print("   onFinish 클로저 존재 여부: \(self?.onFinish != nil)")
                 
                 self?.onFinish?(result)

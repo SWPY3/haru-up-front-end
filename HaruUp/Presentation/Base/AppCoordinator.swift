@@ -64,20 +64,15 @@ final class AppCoordinator: Coordinator {
                 self.childCoordinators.remove(at: index)
             }
             // 로그인 완료 후 분기 처리 개선
-            print("onboardingCompleted: \(loginResult.onboardingCompleted ?? false)")
-            print("onboardingRequired: \(loginResult.onboardingRequired ?? false)")
+            print("🔍 로그인 결과 - onboardingCompleted: \(loginResult.onboardingCompleted)")
             
             
             // 로그인 완료 후 온보딩 여부 확인
-            if let onboardingCompleted = loginResult.onboardingCompleted, onboardingCompleted {
-                print("-> 홈 화면으로 이동")
+            if loginResult.onboardingCompleted {
+                print("✅ 온보딩 완료 → 홈 화면으로 이동")
                 self.showMainTabFlow()
-            } else if let onboardingRequired = loginResult.onboardingRequired, onboardingRequired {
-                print("-> 온보딩 화면으로 이동")
-                self.showOnboardingFlow()
             } else {
-                // ⭐️ 둘 다 false인 경우 기본 동작 (서버 응답 이상)
-                print("⚠️ 온보딩 상태 불명확 - 기본적으로 온보딩 화면으로 이동")
+                print("⚠️ 온보딩 필요 → 온보딩 화면으로 이동")
                 self.showOnboardingFlow()
             }
             
@@ -106,11 +101,6 @@ final class AppCoordinator: Coordinator {
                 self.childCoordinators.remove(at: index)
             }
             
-            
-            
-//            // 🛑 온보딩 완료시 저장
-//            TokenStorageService.shared.saveOnboardingCompleted(true)
-//            self.showMainTabFlow()
             self.createProfileFlow()
         }
         
