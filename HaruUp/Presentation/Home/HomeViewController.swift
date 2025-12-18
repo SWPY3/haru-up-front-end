@@ -13,7 +13,8 @@ class HomeViewController: UIViewController {
     
     // MARK: - Properties
     private let viewModel: HomeViewModel
-    private let viewDidAppearSubject = PublishSubject<Void>()
+    private let viewDidLoadRelay = PublishRelay<Void>() // PublishSubject에서 PublishRelay로 변경.
+    private let viewDidAppearRelay = PublishRelay<Void>()
     private let disposeBag = DisposeBag()
     
     var onSelectTodayMission: (() -> Void)? // Coordinator와의 연결은 단순히 클로저 사용
@@ -21,9 +22,11 @@ class HomeViewController: UIViewController {
     private let tableView: UITableView = {
         let tableView = UITableView()
         tableView.backgroundColor = .clear
-        tableView.register(TodayMissionTableViewCell.self, forCellReuseIdentifier: TodayMissionTableViewCell.identifier)
         tableView.rowHeight = UITableView.automaticDimension
         tableView.contentInsetAdjustmentBehavior = .never
+        tableView.separatorStyle = .none
+        
+        tableView.register(EmptyMissionCell.self, forCellReuseIdentifier: EmptyMissionCell.identifier)
         
         return tableView
     }()
@@ -45,6 +48,8 @@ class HomeViewController: UIViewController {
         
         setupView()
         bind()
+        
+        viewDidLoadRelay.accept(())
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -54,7 +59,7 @@ class HomeViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        viewDidAppearSubject.onNext(())
+        viewDidAppearRelay.accept(())
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -78,7 +83,9 @@ class HomeViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
         tableView.tableHeaderView = headerView
-        tableView.sectionHeaderTopPadding = 0
+        tableView.sectionHeaderTopPadding = 28
+        
+        tableView.delegate = self
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -106,17 +113,56 @@ class HomeViewController: UIViewController {
     
     private func bind() {
         let input = HomeViewModel.Input(
-            viewDidAppear: viewDidAppearSubject.asObservable()
+            viewDidLoad: viewDidLoadRelay.asObservable(),
+            viewDidAppear: viewDidAppearRelay.asObservable(),
         )
         
         let output = viewModel.transform(input: input)
         
+        output.rows
+            .asObservable()
+            .bind(to: tableView.rx.items) { [weak self] (tableView: UITableView, row: Int, item: TodayMissionRow) -> UITableViewCell in
+                guard let self else { return UITableViewCell() }
+                
+                switch item {
+                case .empty:
+                    guard let cell = tableView.dequeueReusableCell(withIdentifier: EmptyMissionCell.identifier, for: IndexPath(row: row, section: 0)) as? EmptyMissionCell else { return UITableViewCell() }
+                    
+                    cell.onTapAdd = { [weak self] in
+                        // TODO: Mission 추가 생성 기능
+                        print("Add Button 동작")
+                    }
+                    
+                    return cell
+                    
+                case .mission(let mission):
+                    
+                    return UITableViewCell()
+                    
+                case .add:
+                    return UITableViewCell()
+                }
+            }
+            .disposed(by: disposeBag)
+        
         output.showTodayMissionFlow
-            .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] in
-                guard let self else { return }
-                self.onSelectTodayMission?()
+            .emit(onNext: { [weak self] in
+                self?.onSelectTodayMission?()
             })
             .disposed(by: disposeBag)
+        
+        output.error
+            .emit(onNext: { err in
+                print("Home Error Occurred: \(err)")
+            })
+            .disposed(by: disposeBag)
+    }
+}
+
+extension HomeViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let header = HomeSectionHeaderView()
+        
+        return header
     }
 }
