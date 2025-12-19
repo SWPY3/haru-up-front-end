@@ -156,14 +156,10 @@ final class HomeHeaderView: UIView {
         return stackView
     }()
     
-    private let expProgressView: UIProgressView = {
-        let view = UIProgressView(progressViewStyle: .default)
-        view.trackTintColor = .neutral50
-        view.progressTintColor = .primaryBlue700
-        view.progress = 0.5
-        view.layer.cornerRadius = 6
-        view.clipsToBounds = true
-        
+    private let expProgressView: RoundedProgressView = {
+        let view = RoundedProgressView()
+        view.setColors(trackTintColor: .white, trackBorderColor: .neutral50, progressColor: .primaryBlue700)
+
         return view
     }()
     
@@ -226,6 +222,8 @@ final class HomeHeaderView: UIView {
         configureCharacterInfo()
         
         applyBackgroundAspect()
+        
+        expProgressView.progress = 0.5
     }
 
     private func applyBackgroundAspect() {
