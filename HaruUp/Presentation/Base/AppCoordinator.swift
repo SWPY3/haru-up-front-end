@@ -101,18 +101,19 @@ final class AppCoordinator: Coordinator {
                 self.childCoordinators.remove(at: index)
             }
             
-            self.createProfileFlow()
+            self.showCurationFlow()
         }
         
         childCoordinators.append(onboardingCoordinator)
         onboardingCoordinator.start()
     }
     
-    private func createProfileFlow() {
-        let createProfileCoordinator = CharacterSelectCoordinator(navigationController: navigationController,
+    private func showCurationFlow() {
+        let characterSelectCoordinator = CharacterSelectCoordinator(navigationController: navigationController,
                                                                 curationData: curationData)
         
-        createProfileCoordinator.start()
+        childCoordinators.append(characterSelectCoordinator)
+        characterSelectCoordinator.start()
     }
     
     

@@ -27,6 +27,8 @@ final class CharacterSelectCoordinator: Coordinator {
     
     func showNicknameSelectFlow(selectedCharacter: Int) {
             curationData.characterId = selectedCharacter
+        print("📦 저장된 데이터 - 캐릭터: \(selectedCharacter)")
+        
             let nicknameSelectCoordinator = NicknameSelectCoordinator(
                 navigationController: navigationController,
                 curationData: curationData
