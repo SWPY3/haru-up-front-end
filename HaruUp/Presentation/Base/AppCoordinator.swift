@@ -109,29 +109,10 @@ final class AppCoordinator: Coordinator {
     }
     
     private func createProfileFlow() {
-        let createProfileCoordinator = CreateProfileCoordinator(navigationController: navigationController,
+        let createProfileCoordinator = CharacterSelectCoordinator(navigationController: navigationController,
                                                                 curationData: curationData)
         
-        createProfileCoordinator.onFinish = { [weak self, weak createProfileCoordinator] in
-            guard let self = self else { return }
-            
-            if let coordinator = createProfileCoordinator,
-               let index = self.childCoordinators.firstIndex(where: {$0 === coordinator}) {
-                self.childCoordinators.remove(at: index)
-            }
-            
-            self.showJobSelectFlow()
-        }
-        
-        childCoordinators.append(createProfileCoordinator)
         createProfileCoordinator.start()
-    }
-    
-    private func showJobSelectFlow() {
-        let jobSelectCoordinator = JobSelectCoordinator(navigationController: navigationController, curationData: curationData)
-        childCoordinators.append(jobSelectCoordinator)
-        
-        jobSelectCoordinator.start()
     }
     
     

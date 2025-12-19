@@ -12,16 +12,11 @@ import RxCocoa
 
 
 class NicknameSelectViewController: UIViewController {
-    
+    private let viewModel: NicknameSelectViewModel
     private let disposeBag = DisposeBag()
-    private let selectedCharacter: Int
-    private let viewModel: CreateProfileViewModel
     
-    
-    var onFinish: ((Int, String) -> Void)? // 캐릭터 인덱스, 닉네임
-    
+    private let nicknameInputSubject = PublishSubject<String>()
     private var currentNickname: String = ""
-    
     
     private var nextButtonBottomConstraint: NSLayoutConstraint?
     
@@ -118,8 +113,7 @@ class NicknameSelectViewController: UIViewController {
     
     
     // MARK: - Init
-    init(selectedCharacter: Int, viewModel: CreateProfileViewModel) {
-        self.selectedCharacter = selectedCharacter
+    init(viewModel: NicknameSelectViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -134,9 +128,9 @@ class NicknameSelectViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
         setupUI()
         bindUI()
+        bindViewModel()
         setupKeyboardObservers()
         setupTapGesture()
         
@@ -200,6 +194,8 @@ class NicknameSelectViewController: UIViewController {
     // MARK: - Setup UI
     
     private func setupUI() {
+        view.backgroundColor = .white
+        
         textFieldContainer.addSubview(textField)
         textFieldContainer.addSubview(textFieldBottomLine)
         textFieldContainer.addSubview(clearButton)
@@ -274,17 +270,6 @@ class NicknameSelectViewController: UIViewController {
             paddingLeft: 30
         )
         
-        //        nextButton.anchor(
-        //            left: view.leftAnchor,
-        //            bottom: view.safeAreaLayoutGuide.bottomAnchor,
-        //            right: view.rightAnchor,
-        //            paddingLeft: 20,
-        //            paddingBottom: 20,
-        //            paddingRight: 20,
-        //            height: 56
-        //        )
-        
-        
         nextButton.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             nextButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20),
@@ -302,7 +287,6 @@ class NicknameSelectViewController: UIViewController {
     // MARK: - Bind UI
     
     private func bindUI() {
-        
         
         textField.rx.text.orEmpty
             .map { !$0.isEmpty }
@@ -341,13 +325,13 @@ class NicknameSelectViewController: UIViewController {
             .disposed(by: disposeBag)
         
         // 텍스트 입력 시 warningLabel 숨김
-//        textField.rx.text.orEmpty
-//            .skip(1)  // 초기값 무시
-//            .subscribe(onNext: { [weak self] _ in
-//                self?.warningLabel.isHidden = true
-//                self?.warningLabel.text = ""
-//            })
-//            .disposed(by: disposeBag)
+        //        textField.rx.text.orEmpty
+        //            .skip(1)  // 초기값 무시
+        //            .subscribe(onNext: { [weak self] _ in
+        //                self?.warningLabel.isHidden = true
+        //                self?.warningLabel.text = ""
+        //            })
+        //            .disposed(by: disposeBag)
         
         // 현재 닉네임 저장
         textField.rx.text.orEmpty
@@ -366,8 +350,26 @@ class NicknameSelectViewController: UIViewController {
                 self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
             })
             .disposed(by: disposeBag)
+    }
+    
+    
+    // MARK: - Bind ViewModel
+    private func bindViewModel() {
         
+        textField.rx.text.orEmpty
+            .bind(to: nicknameInputSubject)
+            .disposed(by: disposeBag)
         
+        let input = NicknameSelectViewModel.Input(
+            nicknameInput: nicknameInputSubject.asObservable(),
+            nextButtonTapped: nextButton.rx.tap.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        output.formattedNickname
+            .drive(textField.rx.text)
+            .disposed(by: disposeBag)
         
         // 다음 버튼 탭 - 유효성 검사 및 진행
         nextButton.rx.tap
@@ -383,7 +385,6 @@ class NicknameSelectViewController: UIViewController {
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     return
                 }
-                
                 // 2자 미만 또는 10자 초과인 경우
                 if nickname.count < 2 || nickname.count > 10 {
                     self.warningLabel.text = "*2~10자로 입력해주세요."
@@ -392,85 +393,11 @@ class NicknameSelectViewController: UIViewController {
                     return
                 }
                 
-                // 유효한 경우 - 다음 단계 진행
-                self.onFinish?(self.selectedCharacter, nickname)
-                self.viewModel.submitProfile(characterIndex: self.selectedCharacter, nickname: nickname)
-            })
-            .disposed(by: disposeBag)
+                // 유효한 경우 - warningLabel 숨김 처리
+                self.warningLabel.isHidden = true
+                self.warningLabel.text = ""
+            }).disposed(by: disposeBag)
         
-        //        nextButton.rx.tap
-        //            .withLatestFrom(textField.rx.text.orEmpty)
-        //            .map { $0.trimmingCharacters(in: .whitespaces) }
-        //            .filter { $0.count >= 2 }
-        //            .subscribe(onNext: { [weak self] nickname in
-        //                guard let self = self else { return }
-        //                self.onFinish?(self.selectedCharacter, nickname)
-        //
-        //                self.viewModel.submitProfile(characterIndex: self.selectedCharacter, nickname: nickname)
-        //            })
-        //            .disposed(by: disposeBag)
-        //
-        //        nextButton.rx.tap
-        //            .withLatestFrom(textField.rx.text.orEmpty)
-        //            .map { $0.trimmingCharacters(in: .whitespaces) }
-        //            .subscribe(onNext: { [weak self] nickname in
-        //                guard let self = self else { return }
-        //
-        //                // 빈 텍스트필드인 경우
-        //                if nickname.count == 0 {
-        //                    UIView.animate(withDuration: 0.2) {
-        //                        self.warningLabel.text = "*닉네임을 입력해주세요."
-        //                        self.warningLabel.textColor = .systemRed
-        //                        self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-        //                    }
-        //                    return
-        //                }
-        //
-        //                // 2자 미만 또는 10자 초과인 경우
-        //                if nickname.count < 2 || nickname.count > 10 {
-        //                    UIView.animate(withDuration: 0.2) {
-        //                        self.warningLabel.text = "*2~10자로 입력해주세요."
-        //                        self.warningLabel.textColor = .systemRed
-        //                        self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-        //                    }
-        //                    return
-        //                }
-        //
-        //                // ViewModel Output 바인딩
-        //                viewModel.showDuplicateNicknameAlert
-        //                    .observe(on: MainScheduler.instance)
-        //                    .subscribe(onNext: { [weak self] in
-        //                        let alert = UIAlertController(
-        //                            title: "닉네임 중복",
-        //                            message: "이미 사용 중인 닉네임입니다.",
-        //                            preferredStyle: .alert
-        //                        )
-        //                        alert.addAction(UIAlertAction(title: "확인", style: .default) { _ in
-        //                            // 버튼 비활성화
-        //                            self?.nextButton.isEnabled = false
-        //                            self?.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-        //                        })
-        //                        self?.present(alert, animated: true)
-        //                    })
-        //                    .disposed(by: disposeBag)
-        //
-        viewModel.errorMessage
-            .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] message in
-                let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "확인", style: .default))
-                self?.present(alert, animated: true)
-            })
-            .disposed(by: disposeBag)
-        
-        viewModel.shouldComplete
-            .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] in
-                print("shouldComplete 호출됨")
-            })
-            .disposed(by: disposeBag)
     }
-    
-    
 }
 

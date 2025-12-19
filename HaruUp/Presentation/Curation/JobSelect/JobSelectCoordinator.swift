@@ -28,8 +28,6 @@ final class JobSelectCoordinator: Coordinator {
     }
     
     func showjobDetailFlow(selectedJob: String) {
-        print("🟢 showJobDetailSelect 호출됨")
-            print("🟢 선택된 직업: \(selectedJob)")
         let jobDetailCoordinator = JobDetailSelectCoordinator(
             navigationController: navigationController,
             selectedJob: selectedJob,
