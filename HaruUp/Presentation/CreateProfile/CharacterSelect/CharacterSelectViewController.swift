@@ -17,14 +17,6 @@ class CharacterSelectViewController: UIViewController {
     
     var onNext: ((Int) -> Void)? // 선택된 캐릭터 인덱스를 전달하며 다음 화면으로
     
-    private let progressBar: UIProgressView = {
-        let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 1.0 / 8.0
-        progressBar.tintColor = .systemBlue
-        progressBar.translatesAutoresizingMaskIntoConstraints = false
-        return progressBar
-    }()
-    
     
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -81,7 +73,7 @@ class CharacterSelectViewController: UIViewController {
     }()
     
     private let nextButton: UIButton = {
-        let btn = UIButton(type: .system)
+        let btn = UIButton()
         btn.setTitle("다음", for: .normal)
         btn.backgroundColor = .systemBlue
         btn.setTitleColor(.white, for: .normal)

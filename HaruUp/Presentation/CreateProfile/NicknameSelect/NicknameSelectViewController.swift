@@ -25,6 +25,14 @@ class NicknameSelectViewController: UIViewController {
     
     private var nextButtonBottomConstraint: NSLayoutConstraint?
     
+    private let progressBar: UIProgressView = {
+        let progressBar = UIProgressView(progressViewStyle: .default)
+        progressBar.progress = 1.0 / 8.0
+        progressBar.tintColor = .systemBlue
+        progressBar.translatesAutoresizingMaskIntoConstraints = false
+        return progressBar
+    }()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "닉네임을 지어주세요"
@@ -46,7 +54,7 @@ class NicknameSelectViewController: UIViewController {
     
     private let textField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "홍길동"
+        tf.placeholder = "2~10자의 한글만 입력해주세요."
         tf.borderStyle = .none
         tf.font = .systemFont(ofSize: 16)
         return tf
@@ -64,24 +72,50 @@ class NicknameSelectViewController: UIViewController {
         return view
     }()
     
+    private let clearButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "icon_x.png"), for: .normal)
+        button.isHidden = true
+        return button
+    }()
+    
     private let warningLabel: UILabel = {
         let label = UILabel()
-        label.text = "2~10자로 입력해주세요."
+        label.text = ""
         label.font = .systemFont(ofSize: 14)
-        label.textColor = .gray
-        label.textAlignment = .right
+        label.textColor = .systemRed
+        label.textAlignment = .left
+        label.isHidden = true
         return label
     }()
     
+    private let stackView: UIStackView = {
+        let sv = UIStackView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .equalSpacing
+        sv.spacing = 35
+        return sv
+    }()
+    
+    private let titleLabelStackView: UIStackView = {
+        let sv = UIStackView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .equalSpacing
+        sv.spacing = 12
+        return sv
+    }()
+    
     private let nextButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setTitle("다음", for: .normal)
-        btn.backgroundColor = .systemBlue
-        btn.setTitleColor(.white, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        btn.layer.cornerRadius = 8
+        let btn = UIButton()
+        btn.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         return btn
     }()
+    
+    
     
     // MARK: - Init
     init(selectedCharacter: Int, viewModel: CreateProfileViewModel) {
@@ -138,13 +172,13 @@ class NicknameSelectViewController: UIViewController {
         let keyboardHeight = keyboardFrame.height
         
         // nextButton을 키보드 위로 이동 (safeArea bottom 대신 키보드 높이만큼)
-        nextButtonBottomConstraint?.constant = -(keyboardHeight + 20)
+        nextButtonBottomConstraint?.constant = -(keyboardHeight + 0)
         
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
         }
     }
-        
+    
     // 키보드가 내려갈 때
     @objc private func keyboardWillHide(_ notification: Notification) {
         guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else {
@@ -162,33 +196,40 @@ class NicknameSelectViewController: UIViewController {
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
-        
+    
     // MARK: - Setup UI
-        
+    
     private func setupUI() {
         textFieldContainer.addSubview(textField)
         textFieldContainer.addSubview(textFieldBottomLine)
+        textFieldContainer.addSubview(clearButton)
         
-        view.addSubview(titleLabel)
-        view.addSubview(subtitleLabel)
+        
+        view.addSubview(stackView)
         view.addSubview(textFieldContainer)
         view.addSubview(warningLabel)
         view.addSubview(nextButton)
         
-        titleLabel.anchor(
+        titleLabelStackView.addArrangedSubview(titleLabel)
+        titleLabelStackView.addArrangedSubview(subtitleLabel)
+        
+        stackView.addArrangedSubview(progressBar)
+        stackView.addArrangedSubview(titleLabelStackView)
+        
+        
+        stackView.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 60,
+            paddingTop: 50,
             paddingLeft: 30,
             paddingRight: 30
         )
         
-        subtitleLabel.anchor(
-            top: titleLabel.bottomAnchor,
+        titleLabelStackView.anchor(
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 12,
+            paddingTop: 20,
             paddingLeft: 30,
             paddingRight: 30
         )
@@ -213,6 +254,12 @@ class NicknameSelectViewController: UIViewController {
             
         )
         
+        clearButton.anchor(
+            bottom: textField.bottomAnchor,
+            right: textFieldContainer.rightAnchor,
+            paddingBottom: 10
+        )
+        
         textFieldBottomLine.anchor(
             left: textFieldContainer.leftAnchor,
             bottom: textFieldContainer.bottomAnchor,
@@ -227,15 +274,15 @@ class NicknameSelectViewController: UIViewController {
             paddingLeft: 30
         )
         
-//        nextButton.anchor(
-//            left: view.leftAnchor,
-//            bottom: view.safeAreaLayoutGuide.bottomAnchor,
-//            right: view.rightAnchor,
-//            paddingLeft: 20,
-//            paddingBottom: 20,
-//            paddingRight: 20,
-//            height: 56
-//        )
+        //        nextButton.anchor(
+        //            left: view.leftAnchor,
+        //            bottom: view.safeAreaLayoutGuide.bottomAnchor,
+        //            right: view.rightAnchor,
+        //            paddingLeft: 20,
+        //            paddingBottom: 20,
+        //            paddingRight: 20,
+        //            height: 56
+        //        )
         
         
         nextButton.translatesAutoresizingMaskIntoConstraints = false
@@ -256,6 +303,25 @@ class NicknameSelectViewController: UIViewController {
     
     private func bindUI() {
         
+        
+        textField.rx.text.orEmpty
+            .map { !$0.isEmpty }
+            .subscribe(onNext: { [weak self] hasText in
+                UIView.animate(withDuration: 0.2) {
+                    self?.clearButton.isHidden = !hasText
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        
+        clearButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.textField.text = ""
+                self?.textField.sendActions(for: .editingChanged)
+            })
+            .disposed(by: disposeBag)
+        
+        
         textField.rx.controlEvent(.editingDidBegin)
             .subscribe(onNext: { [weak self] in
                 print("🔵 포커스 들어옴")
@@ -274,6 +340,15 @@ class NicknameSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
+        // 텍스트 입력 시 warningLabel 숨김
+//        textField.rx.text.orEmpty
+//            .skip(1)  // 초기값 무시
+//            .subscribe(onNext: { [weak self] _ in
+//                self?.warningLabel.isHidden = true
+//                self?.warningLabel.text = ""
+//            })
+//            .disposed(by: disposeBag)
+        
         // 현재 닉네임 저장
         textField.rx.text.orEmpty
             .subscribe(onNext: { [weak self] text in
@@ -281,52 +356,20 @@ class NicknameSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 버튼 활성화 조건( 2글자 이상)
-        let isValidNickname = textField.rx.text.orEmpty
+        textField.rx.text.orEmpty
             .map { text in
                 let trimmed = text.trimmingCharacters(in: .whitespaces)
                 return trimmed.count >= 2 && trimmed.count <= 10
             }
-            .share(replay: 1)
-        
-        isValidNickname
-            .bind(to: nextButton.rx.isEnabled)
-            .disposed(by: disposeBag)
-        
-        isValidNickname
             .subscribe(onNext: { [weak self] isValid in
-                self?.nextButton.backgroundColor = isValid ? UIColor.systemBlue : UIColor.gray
+                let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
+                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
             })
             .disposed(by: disposeBag)
         
         
-        textField.rx.text.orEmpty
-            .map { text in
-                let trimmed = text.trimmingCharacters(in: .whitespaces)
-                let count = trimmed.count
-                // 텍스트가 있으면서 2자 미만이거나 10자 초과인 경우
-                return (count > 0 && (count < 2 || count > 10))
-            }
-            .subscribe(onNext: { [weak self] shouldShowWarning in
-                UIView.animate(withDuration: 0.2) {
-                    self?.warningLabel.text = "2~10자로 입력해주세요."
-                    self?.warningLabel.textColor = shouldShowWarning ? .systemRed : .gray
-                }
-            })
-            .disposed(by: disposeBag)
         
-        nextButton.rx.tap
-            .withLatestFrom(textField.rx.text.orEmpty)
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { $0.count >= 2 }
-            .subscribe(onNext: { [weak self] nickname in
-                guard let self = self else { return }
-                self.onFinish?(self.selectedCharacter, nickname)
-                
-                self.viewModel.submitProfile(characterIndex: self.selectedCharacter, nickname: nickname)
-            })
-            .disposed(by: disposeBag)
-        
+        // 다음 버튼 탭 - 유효성 검사 및 진행
         nextButton.rx.tap
             .withLatestFrom(textField.rx.text.orEmpty)
             .map { $0.trimmingCharacters(in: .whitespaces) }
@@ -335,57 +378,99 @@ class NicknameSelectViewController: UIViewController {
                 
                 // 빈 텍스트필드인 경우
                 if nickname.isEmpty {
-                    UIView.animate(withDuration: 0.2) {
-                        self.warningLabel.text = "*닉네임을 입력해주세요."
-                        self.warningLabel.textColor = .systemRed
-                    }
+                    self.warningLabel.text = "*닉네임을 입력해주세요."
+                    self.warningLabel.isHidden = false
+                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     return
                 }
                 
                 // 2자 미만 또는 10자 초과인 경우
                 if nickname.count < 2 || nickname.count > 10 {
-                    UIView.animate(withDuration: 0.2) {
-                        self.warningLabel.text = "*2~10자로 입력해주세요."
-                        self.warningLabel.textColor = .systemRed
-                    }
+                    self.warningLabel.text = "*2~10자로 입력해주세요."
+                    self.warningLabel.isHidden = false
+                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     return
                 }
                 
-                // ViewModel Output 바인딩
-                viewModel.showDuplicateNicknameAlert
-                    .observe(on: MainScheduler.instance)
-                    .subscribe(onNext: { [weak self] in
-                        let alert = UIAlertController(
-                            title: "닉네임 중복",
-                            message: "이미 사용 중인 닉네임입니다.",
-                            preferredStyle: .alert
-                        )
-                        alert.addAction(UIAlertAction(title: "확인", style: .default) { _ in
-                            // 버튼 비활성화
-                            self?.nextButton.isEnabled = false
-                            self?.nextButton.backgroundColor = .systemGray3
-                            self?.nextButton.alpha = 0.5
-                        })
-                        self?.present(alert, animated: true)
-                    })
-                    .disposed(by: disposeBag)
-                
-                viewModel.errorMessage
-                    .observe(on: MainScheduler.instance)
-                    .subscribe(onNext: { [weak self] message in
-                        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
-                        alert.addAction(UIAlertAction(title: "확인", style: .default))
-                        self?.present(alert, animated: true)
-                    })
-                    .disposed(by: disposeBag)
-                
-                viewModel.shouldComplete
-                    .observe(on: MainScheduler.instance)
-                    .subscribe(onNext: { [weak self] in
-                        print("shouldComplete 호출됨")
-                    })
-                    .disposed(by: disposeBag)
-            }
-                       
-    )}
+                // 유효한 경우 - 다음 단계 진행
+                self.onFinish?(self.selectedCharacter, nickname)
+                self.viewModel.submitProfile(characterIndex: self.selectedCharacter, nickname: nickname)
+            })
+            .disposed(by: disposeBag)
+        
+        //        nextButton.rx.tap
+        //            .withLatestFrom(textField.rx.text.orEmpty)
+        //            .map { $0.trimmingCharacters(in: .whitespaces) }
+        //            .filter { $0.count >= 2 }
+        //            .subscribe(onNext: { [weak self] nickname in
+        //                guard let self = self else { return }
+        //                self.onFinish?(self.selectedCharacter, nickname)
+        //
+        //                self.viewModel.submitProfile(characterIndex: self.selectedCharacter, nickname: nickname)
+        //            })
+        //            .disposed(by: disposeBag)
+        //
+        //        nextButton.rx.tap
+        //            .withLatestFrom(textField.rx.text.orEmpty)
+        //            .map { $0.trimmingCharacters(in: .whitespaces) }
+        //            .subscribe(onNext: { [weak self] nickname in
+        //                guard let self = self else { return }
+        //
+        //                // 빈 텍스트필드인 경우
+        //                if nickname.count == 0 {
+        //                    UIView.animate(withDuration: 0.2) {
+        //                        self.warningLabel.text = "*닉네임을 입력해주세요."
+        //                        self.warningLabel.textColor = .systemRed
+        //                        self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+        //                    }
+        //                    return
+        //                }
+        //
+        //                // 2자 미만 또는 10자 초과인 경우
+        //                if nickname.count < 2 || nickname.count > 10 {
+        //                    UIView.animate(withDuration: 0.2) {
+        //                        self.warningLabel.text = "*2~10자로 입력해주세요."
+        //                        self.warningLabel.textColor = .systemRed
+        //                        self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+        //                    }
+        //                    return
+        //                }
+        //
+        //                // ViewModel Output 바인딩
+        //                viewModel.showDuplicateNicknameAlert
+        //                    .observe(on: MainScheduler.instance)
+        //                    .subscribe(onNext: { [weak self] in
+        //                        let alert = UIAlertController(
+        //                            title: "닉네임 중복",
+        //                            message: "이미 사용 중인 닉네임입니다.",
+        //                            preferredStyle: .alert
+        //                        )
+        //                        alert.addAction(UIAlertAction(title: "확인", style: .default) { _ in
+        //                            // 버튼 비활성화
+        //                            self?.nextButton.isEnabled = false
+        //                            self?.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+        //                        })
+        //                        self?.present(alert, animated: true)
+        //                    })
+        //                    .disposed(by: disposeBag)
+        //
+        viewModel.errorMessage
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] message in
+                let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "확인", style: .default))
+                self?.present(alert, animated: true)
+            })
+            .disposed(by: disposeBag)
+        
+        viewModel.shouldComplete
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] in
+                print("shouldComplete 호출됨")
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    
 }
+

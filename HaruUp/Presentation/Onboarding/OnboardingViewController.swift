@@ -45,7 +45,7 @@ class OnboardingViewController: UIViewController {
     }()
     
     private let nextButton: UIButton = {
-        let btn = UIButton(type: .system)
+        let btn = UIButton()
         btn.setTitle("다음", for: .normal)
         btn.backgroundColor = .systemBlue
         btn.setTitleColor(.white, for: .normal)
