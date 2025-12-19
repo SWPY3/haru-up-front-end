@@ -27,6 +27,7 @@ class HomeViewController: UIViewController {
         tableView.separatorStyle = .none
         
         tableView.register(EmptyMissionCell.self, forCellReuseIdentifier: EmptyMissionCell.identifier)
+        tableView.register(MissionTableViewCell.self, forCellReuseIdentifier: MissionTableViewCell.identifier)
         
         return tableView
     }()
@@ -136,8 +137,15 @@ class HomeViewController: UIViewController {
                     return cell
                     
                 case .mission(let mission):
+                    guard let cell = tableView.dequeueReusableCell(withIdentifier: MissionTableViewCell.identifier, for: IndexPath(row: row, section: 0)) as? MissionTableViewCell else { return UITableViewCell() }
                     
-                    return UITableViewCell()
+                    cell.configure(mission: mission)
+                    cell.onTapSetting = { [weak self] in
+                        // TODO: Mission 완료여부 기능
+                        print("Setting Button 동작")
+                    }
+                    
+                    return cell
                     
                 case .add:
                     return UITableViewCell()

@@ -9,7 +9,12 @@ import UIKit
 
 struct FontStyle {
     let font: UIFont
-    let lineHeight: CGFloat = 1.50 // 150 %
+    let lineHeight: CGFloat // 150 %
+
+    init(font: UIFont, lineHeight: CGFloat = 1.50) {
+        self.font = font
+        self.lineHeight = lineHeight
+    }
 }
 
 enum Typography {
@@ -36,4 +41,9 @@ enum Typography {
     
     // Level
     static let level = FontStyle(font: .pretendard(size: 13, weight: .semiBold))
+    
+    // Difficulty
+    static let difficulty = FontStyle(font: .pretendard(size: 14, weight: .medium), lineHeight: 1.40)
+    // Exp
+    static let exp = FontStyle(font: .pretendard(size: 14, weight: .medium), lineHeight: 1.40)
 }

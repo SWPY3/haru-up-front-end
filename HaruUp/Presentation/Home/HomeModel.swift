@@ -6,9 +6,9 @@
 //
 
 struct Mission: Hashable {
-    let id: Int
     let title: String
-    let isCompleted: Bool
+    let difficulty: MissionDifficultyModel
+    let exp: Int
 }
 
 enum TodayMissionRow: Hashable {

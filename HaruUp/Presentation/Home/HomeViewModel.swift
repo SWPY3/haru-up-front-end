@@ -76,14 +76,18 @@ final class HomeViewModel {
 
     // MARK: - Temp loader (서버 붙이면 여기만 교체)
     private func loadSelectedMissions() -> Observable<[Mission]> {
-        // TODO: Mission List 조회
-        // empty dummy
-        return Observable.just([])
+//        // TODO: Mission List 조회
+//        // empty dummy
+//        return Observable.just([])
         // mission 1개 dummy
-//        let dummy: [Mission] = [
-//            Mission(title: "영어 회화 유튜브 강의 10분 시청하기...", difficulty: .high, exp: 200)
-//        ]
-//        return Observable.just(dummy)
+        let dummy: [Mission] = [
+            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .veryHigh, exp: 200),
+            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .high, exp: 150),
+            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .mediumHigh, exp: 100),
+            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .medium, exp: 50),
+            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .low, exp: 10)
+        ]
+        return Observable.just(dummy)
     }
 }
 
