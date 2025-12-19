@@ -23,35 +23,33 @@ class NicknameSelectViewController: UIViewController {
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
         progressBar.progress = 1.0 / 8.0
-        progressBar.tintColor = .systemBlue
+        progressBar.tintColor = .primaryBlue700
+        progressBar.trackTintColor = .neutral50
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "닉네임을 지어주세요"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
+        label.setStyle(Typography.title2, text:  "닉네임을 지어주세요")
         label.textAlignment = .left
-        label.numberOfLines = 0
         label.textColor = .black
         return label
     }()
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "하루업에서 불리고 싶은 이름을 지어주세요."
-        label.font = .systemFont(ofSize: 15, weight: .regular)
+        label.setStyle(Typography.body4, text: "하루업에서 불리고 싶은 이름을 지어주세요.")
         label.textAlignment = .left
-        label.textColor = .gray
+        label.textColor = .neutral700
         return label
     }()
     
     private let textField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "2~10자의 한글만 입력해주세요."
+        tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.borderStyle = .none
-        tf.font = .systemFont(ofSize: 16)
         return tf
     }()
     
@@ -77,8 +75,8 @@ class NicknameSelectViewController: UIViewController {
     private let warningLabel: UILabel = {
         let label = UILabel()
         label.text = ""
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .systemRed
+        label.setStyle(Typography.body4, text: "")
+        label.textColor = .secondaryRed200
         label.textAlignment = .left
         label.isHidden = true
         return label
@@ -166,7 +164,7 @@ class NicknameSelectViewController: UIViewController {
         let keyboardHeight = keyboardFrame.height
         
         // nextButton을 키보드 위로 이동 (safeArea bottom 대신 키보드 높이만큼)
-        nextButtonBottomConstraint?.constant = -(keyboardHeight + 0)
+        nextButtonBottomConstraint?.constant = -(keyboardHeight + 20)
         
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
@@ -221,6 +219,8 @@ class NicknameSelectViewController: UIViewController {
             paddingLeft: 30,
             paddingRight: 30
         )
+        
+        progressBar.heightAnchor.constraint(equalToConstant: 6).isActive = true
         
         titleLabelStackView.anchor(
             left: view.leftAnchor,
@@ -278,9 +278,21 @@ class NicknameSelectViewController: UIViewController {
         ])
         
         nextButtonBottomConstraint = nextButton.bottomAnchor.constraint(
-            equalTo: view.safeAreaLayoutGuide.bottomAnchor,
-            constant: -20
+            equalTo: view.bottomAnchor,
+            constant: -46
         )
+        
+        nextButton.anchor(
+            left: view.leftAnchor,
+            bottom: view.bottomAnchor,
+            right: view.rightAnchor,
+            paddingLeft: 20,
+            paddingBottom: 46,
+            paddingRight: 20,
+            height: 56
+        )
+        
+       
         nextButtonBottomConstraint?.isActive = true
     }
     
