@@ -89,7 +89,7 @@ class HomeViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
         tableView.tableHeaderView = headerView
-        tableView.sectionHeaderTopPadding = 28
+        tableView.sectionHeaderTopPadding = 28 // Section Header와 TableView Header의 간격
         
         tableView.delegate = self
         

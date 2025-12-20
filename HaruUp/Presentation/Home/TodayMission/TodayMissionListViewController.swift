@@ -19,13 +19,28 @@ class TodayMissionListViewController: UIViewController {
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let refreshTapSubject = PublishSubject<Void>()
     
+    private let topContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        
+        return view
+    }()
+    
+    private let closeButton: UIButton = {
+        let button = UIButton()
+        button.setImage(.iconXmark, for: .normal)
+        
+        return button
+    }()
+    
     private let tableView: UITableView = {
         let tableView = UITableView()
-        tableView.backgroundColor = .clear
+        tableView.backgroundColor = .neutral10
         tableView.rowHeight = UITableView.automaticDimension
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.separatorStyle = .none
         tableView.bounces = false
+        tableView.sectionHeaderTopPadding = 0
         
         tableView.register(SkeletonMissionCell.self, forCellReuseIdentifier: SkeletonMissionCell.identifier)
         tableView.register(TodayMissionTableViewCell.self, forCellReuseIdentifier: TodayMissionTableViewCell.identifier)
@@ -49,6 +64,27 @@ class TodayMissionListViewController: UIViewController {
         return button
     }()
     
+    private let bottomViewContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .green
+        
+        return view
+    }()
+    
+    private let loadingButtonView: LoadingButtonView = {
+        let view = LoadingButtonView()
+        
+        return view
+    }()
+    
+    private let selectedButtonView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .red
+        view.isHidden = true
+        
+        return view
+    }()
+    
     init(viewModel: TodayMissionListViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -67,11 +103,41 @@ class TodayMissionListViewController: UIViewController {
         viewDidLoadSubject.onNext(())
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
     private func setupView() {
         view.backgroundColor = .neutral10
         
-        configureCompleteButton()
+//        configureCompleteButton()
+        configureCloseButton()
+        configureBottomView()
         configureTableview()
+    }
+    
+    private func configureCloseButton() {
+        view.addSubview(topContainerView)
+        topContainerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        topContainerView.addSubview(closeButton)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
+        
+        NSLayoutConstraint.activate([
+            topContainerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            topContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            topContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            
+            closeButton.topAnchor.constraint(equalTo: topContainerView.topAnchor, constant: 5),
+            closeButton.bottomAnchor.constraint(equalTo: topContainerView.bottomAnchor, constant: -5),
+            closeButton.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
+            closeButton.heightAnchor.constraint(equalToConstant: 44),
+            closeButton.widthAnchor.constraint(equalToConstant: 44)
+        ])
     }
     
     private func configureCompleteButton() {
@@ -97,10 +163,36 @@ class TodayMissionListViewController: UIViewController {
         tableView.delegate = self
         
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            tableView.topAnchor.constraint(equalTo: topContainerView.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: refreshButton.topAnchor, constant: -20),
+            tableView.bottomAnchor.constraint(equalTo: bottomViewContainer.topAnchor),
+        ])
+    }
+    
+    private func configureBottomView() {
+        view.addSubview(bottomViewContainer)
+        bottomViewContainer.translatesAutoresizingMaskIntoConstraints = false
+        
+        [loadingButtonView, selectedButtonView].forEach {
+            bottomViewContainer.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        NSLayoutConstraint.activate([
+            bottomViewContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            bottomViewContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bottomViewContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            
+            loadingButtonView.topAnchor.constraint(equalTo: bottomViewContainer.topAnchor),
+            loadingButtonView.bottomAnchor.constraint(equalTo: bottomViewContainer.bottomAnchor),
+            loadingButtonView.leadingAnchor.constraint(equalTo: bottomViewContainer.leadingAnchor),
+            loadingButtonView.trailingAnchor.constraint(equalTo: bottomViewContainer.trailingAnchor),
+            
+            selectedButtonView.topAnchor.constraint(equalTo: bottomViewContainer.topAnchor),
+            selectedButtonView.bottomAnchor.constraint(equalTo: bottomViewContainer.bottomAnchor),
+            selectedButtonView.leadingAnchor.constraint(equalTo: bottomViewContainer.leadingAnchor),
+            selectedButtonView.trailingAnchor.constraint(equalTo: bottomViewContainer.trailingAnchor)
         ])
     }
     
@@ -153,6 +245,10 @@ class TodayMissionListViewController: UIViewController {
             .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] isLoading in
+                print("loading? : \(isLoading)")
+                self?.loadingButtonView.isHidden = !isLoading
+                self?.selectedButtonView.isHidden = isLoading
+                
                 self?.refreshButton.isEnabled = !isLoading
                 self?.completeButton.isEnabled = !isLoading
             })
@@ -173,6 +269,10 @@ class TodayMissionListViewController: UIViewController {
                 self?.onComplete?()
             })
             .disposed(by: disposeBag)
+    }
+    
+    @objc private func closeButtonTapped() {
+        onComplete?()
     }
 }
 
