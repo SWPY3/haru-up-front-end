@@ -34,7 +34,7 @@ class TodayMissionListViewController: UIViewController {
     }()
     
     private let tableView: UITableView = {
-        let tableView = UITableView()
+        let tableView = UITableView(frame: .zero, style: .plain)
         tableView.backgroundColor = .neutral10
         tableView.rowHeight = UITableView.automaticDimension
         tableView.contentInsetAdjustmentBehavior = .never
@@ -278,7 +278,7 @@ class TodayMissionListViewController: UIViewController {
 
 extension TodayMissionListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let header = HomeSectionHeaderView()
+        let header = TodayMissionSectionHeaderView()
         
         return header
     }
