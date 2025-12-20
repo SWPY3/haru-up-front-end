@@ -15,7 +15,7 @@ final class MissionTableViewCell: UITableViewCell {
     private let cardView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
-        view.layer.cornerRadius = 15
+        view.layer.cornerRadius = 16
         view.clipsToBounds = true
         
         return view

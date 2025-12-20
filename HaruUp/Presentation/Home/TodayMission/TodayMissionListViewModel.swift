@@ -24,6 +24,10 @@ final class TodayMissionListViewModel {
     }
     
     private let missionService: MissionServiceProtocol
+    
+    private let loadingRelay = BehaviorRelay<Bool>(value: false)
+    private let errorRelay = PublishRelay<String>()
+    
     private let disposeBag = DisposeBag()
     
     // TODO: test용
@@ -52,21 +56,27 @@ final class TodayMissionListViewModel {
             .flatMapLatest { [weak self] _ -> Observable<[RecommendedMissionDTO]> in
                 guard let self = self else { return .empty() }
                 
-                // MARK: TEST
-                return Observable.just(dummyMissions)
+                let request: Observable<[RecommendedMissionDTO]> = Observable
+                    .just(self.dummyMissions)
+                    .delay(.seconds(100), scheduler: MainScheduler.instance)
                 
-                // MARK: API
-//                return self.missionService
-//                    .fetchRecommendedMissions(userId: userId, interests: interests)
-//                    .asObservable()
-//                    .map { $0.missions }
-//                    .do(onError: { error in
-//                        errorSubject.onNext(error.localizedDescription)
-//                    })
-//                    .catch { _ in .empty() }
+                /*
+                 let request: Observable<[RecommendedMissionDTO]> = self.missionService
+                 .fetchRecommendedMissions(userId: self.userId, interests: self.interests)
+                 .asObservable()
+                 .map { $0.missions }
+                 */
+                
+                return request
+                    .do(
+                        onSubscribe: { [weak self] in self?.loadingRelay.accept(true) },
+                        onDispose: { [weak self] in self?.loadingRelay.accept(false) }
+                    )
+                    .catch { [weak self] error in
+                        self?.errorRelay.accept(error.localizedDescription)
+                        return .just([]) // 에러 시 빈 배열로
+                    }
             }
-            .do(onNext: { _ in loadingSubject.onNext(false) },
-                onError: { _ in loadingSubject.onNext(false) })
             .share(replay: 1)
         
         let missionCompleted = input.completeTap
