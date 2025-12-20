@@ -34,6 +34,7 @@ class NicknameSelectViewController: UIViewController {
         label.setStyle(Typography.title2, text:  "닉네임을 지어주세요")
         label.textAlignment = .left
         label.textColor = .black
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -42,6 +43,7 @@ class NicknameSelectViewController: UIViewController {
         label.setStyle(Typography.body4, text: "하루업에서 불리고 싶은 이름을 지어주세요.")
         label.textAlignment = .left
         label.textColor = .neutral700
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -50,18 +52,21 @@ class NicknameSelectViewController: UIViewController {
         tf.placeholder = "2~10자의 한글만 입력해주세요."
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.borderStyle = .none
+        tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
     
     private let textFieldContainer: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
+        view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
     private let textFieldBottomLine: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
@@ -69,6 +74,7 @@ class NicknameSelectViewController: UIViewController {
         let button = UIButton()
         button.setImage(UIImage(named: "icon_x.png"), for: .normal)
         button.isHidden = true
+        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
@@ -79,6 +85,7 @@ class NicknameSelectViewController: UIViewController {
         label.textColor = .secondaryRed200
         label.textAlignment = .left
         label.isHidden = true
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -105,6 +112,7 @@ class NicknameSelectViewController: UIViewController {
     private let nextButton: UIButton = {
         let btn = UIButton()
         btn.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
+        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
     
@@ -164,7 +172,7 @@ class NicknameSelectViewController: UIViewController {
         let keyboardHeight = keyboardFrame.height
         
         // nextButton을 키보드 위로 이동 (safeArea bottom 대신 키보드 높이만큼)
-        nextButtonBottomConstraint?.constant = -(keyboardHeight + 20)
+        nextButtonBottomConstraint?.constant = -(keyboardHeight + 0)
         
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
@@ -178,7 +186,7 @@ class NicknameSelectViewController: UIViewController {
         }
         
         // nextButton을 원래 위치로 복원
-        nextButtonBottomConstraint?.constant = -20
+        nextButtonBottomConstraint?.constant = -5
         
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
@@ -216,8 +224,8 @@ class NicknameSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 50,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         progressBar.heightAnchor.constraint(equalToConstant: 6).isActive = true
@@ -226,8 +234,8 @@ class NicknameSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 20,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         textFieldContainer.anchor(
@@ -235,8 +243,8 @@ class NicknameSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 40,
-            paddingLeft: 30,
-            paddingRight: 30,
+            paddingLeft: 20,
+            paddingRight: 20,
             height: 50
         )
         
@@ -267,7 +275,7 @@ class NicknameSelectViewController: UIViewController {
             top: textFieldContainer.bottomAnchor,
             left: view.leftAnchor,
             paddingTop: 8,
-            paddingLeft: 30
+            paddingLeft: 20
         )
         
         nextButton.translatesAutoresizingMaskIntoConstraints = false
@@ -278,16 +286,14 @@ class NicknameSelectViewController: UIViewController {
         ])
         
         nextButtonBottomConstraint = nextButton.bottomAnchor.constraint(
-            equalTo: view.bottomAnchor,
-            constant: -46
+            equalTo: view.safeAreaLayoutGuide.bottomAnchor,
+            constant: -5
         )
         
         nextButton.anchor(
             left: view.leftAnchor,
-            bottom: view.bottomAnchor,
             right: view.rightAnchor,
             paddingLeft: 20,
-            paddingBottom: 46,
             paddingRight: 20,
             height: 56
         )

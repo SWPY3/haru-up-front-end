@@ -10,10 +10,11 @@ import UIKit
 
 final class JobSelectCoordinator: Coordinator {
     let navigationController: UINavigationController
-    
     var childCoordinators: [any Coordinator] = []
-    
+
     private var curationData: CurationData
+    
+    var onFinish: ((CurationData) -> Void)?
     
     init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
@@ -24,7 +25,7 @@ final class JobSelectCoordinator: Coordinator {
         let jobSelectVM = JobSelectViewModel(coordinator: self)
         let jobSelectVC = JobSelectViewController(viewModel: jobSelectVM)
         
-        navigationController.setViewControllers([jobSelectVC], animated: false)
+        navigationController.pushViewController(jobSelectVC, animated: true)
     }
     
     func showjobDetailFlow(selectedJob: String) {

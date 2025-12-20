@@ -21,6 +21,7 @@ final class NicknameSelectCoordinator: Coordinator {
     func start() {
         let nicknameSelectVM = NicknameSelectViewModel(coordinator: self)
         let nicknameSelectVC = NicknameSelectViewController(viewModel: nicknameSelectVM)
+        
         navigationController.pushViewController(nicknameSelectVC, animated: true)
     }
     

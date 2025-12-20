@@ -15,7 +15,6 @@ class CharacterSelectViewController: UIViewController {
     private let viewModel: CharacterSelectViewModel
     private let disposeBag = DisposeBag()
     
-    //    private let characterSelectedSubject = PublishSubject<Int>()
     private let currentCharacterIndex = BehaviorRelay<Int>(value: 0)
     
     private let characters: [(name: String, image: String, textImage: String)] = [
@@ -29,6 +28,7 @@ class CharacterSelectViewController: UIViewController {
         label.textAlignment = .center
         label.numberOfLines = 0
         label.textColor = .black
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -36,6 +36,7 @@ class CharacterSelectViewController: UIViewController {
         let iv = UIImageView()
         iv.image = UIImage(named: "text_character_haru.png")
         iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -43,6 +44,8 @@ class CharacterSelectViewController: UIViewController {
         let iv = UIImageView()
         iv.image = UIImage(named: "haru_level1.png")
         iv.contentMode = .scaleAspectFit
+        iv.isUserInteractionEnabled = true
+        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -50,6 +53,7 @@ class CharacterSelectViewController: UIViewController {
        let iv = UIImageView()
         iv.image = UIImage(named: "character_shadow.png")
         iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -58,6 +62,7 @@ class CharacterSelectViewController: UIViewController {
         label.setStyle(Typography.title3, text: "하루")
         label.textAlignment = .center
         label.textColor = .black
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -65,18 +70,21 @@ class CharacterSelectViewController: UIViewController {
         let btn = UIButton()
         btn.setImage(UIImage(named: "chevron_left.png"), for: .normal)
         btn.isEnabled = false
+        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
     
     private let rightArrowButton: UIButton = {
         let btn = UIButton()
         btn.setImage(UIImage(named: "chevron_right.png"), for: .normal)
+        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
     
     private let nextButton: UIButton = {
         let btn = UIButton()
         btn.setImage(UIImage(named: "next_btn_blue.png"), for: .normal)
+        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
     
@@ -124,8 +132,8 @@ class CharacterSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 80,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         characterTextImageView.anchor(
@@ -178,23 +186,14 @@ class CharacterSelectViewController: UIViewController {
             right: view.rightAnchor,
             paddingTop: 20
         )
-        
-//        nextButton.anchor(
-//            left: view.leftAnchor,
-//            bottom: view.safeAreaLayoutGuide.bottomAnchor,
-//            right: view.rightAnchor,
-//            paddingLeft: 20,
-//            paddingBottom: 20,
-//            paddingRight: 20,
-//            height: 56
-//        )
+
         
         nextButton.anchor(
             left: view.leftAnchor,
-            bottom: view.bottomAnchor,
+            bottom: view.safeAreaLayoutGuide.bottomAnchor,
             right: view.rightAnchor,
             paddingLeft: 20,
-            paddingBottom: 46,
+            paddingBottom: 5,
             paddingRight: 20,
             height: 56
         )
@@ -203,6 +202,16 @@ class CharacterSelectViewController: UIViewController {
     }
     
     private func setupGestures() {
+        let tapGesture = UITapGestureRecognizer()
+        characterImageView.addGestureRecognizer(tapGesture)
+        
+        tapGesture.rx.event
+            .subscribe(onNext: { [weak self] _ in
+                self?.showNextCharacter()
+            })
+            .disposed(by: disposeBag)
+        
+        
         // 화살표 버튼 액션
         leftArrowButton.rx.tap
             .subscribe(onNext: { [weak self] in
@@ -235,6 +244,8 @@ class CharacterSelectViewController: UIViewController {
         let currentIndex = currentCharacterIndex.value
         if currentIndex < characters.count - 1 {
             currentCharacterIndex.accept(currentIndex + 1)
+        } else {
+            currentCharacterIndex.accept(0)
         }
     }
     
@@ -274,10 +285,10 @@ class CharacterSelectViewController: UIViewController {
         
         // 화살표 버튼 활성화/비활성화
         leftArrowButton.isEnabled = index > 0
-        leftArrowButton.tintColor = index > 0 ? .black : .neutral50
+        leftArrowButton.alpha = index > 0 ? 1.0 : 0.2
         
         rightArrowButton.isEnabled = index < characters.count - 1
-        rightArrowButton.tintColor = index < characters.count - 1 ? .black : .neutral50
+        rightArrowButton.alpha = index < characters.count - 1 ? 1.0 : 0.2
         
     }
     

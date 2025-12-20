@@ -80,13 +80,9 @@ class JobDetailSelectViewController: UIViewController {
     
     private let nextButton: UIButton = {
         let button = UIButton()
-        button.setTitle("다음", for: .normal)
-        button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 12
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.isEnabled = false
-        button.alpha = 0.5
         return button
     }()
     
@@ -256,7 +252,8 @@ class JobDetailSelectViewController: UIViewController {
             .map{ $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
-                self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
+                let imageName = isEnabled ? "next_btn_blue" : "next_btn_gray"
+                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
             })
             .disposed(by: disposeBag)
     }
