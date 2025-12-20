@@ -38,8 +38,7 @@ class JobSelectViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "현재 어떤 일을 하고 계신가요?"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
+        label.setStyle(Typography.title2, text: "현재 어떤 일을 하고 계신가요?")
         label.textAlignment = .left
         label.numberOfLines = 0
         label.textColor = .black
@@ -49,10 +48,9 @@ class JobSelectViewController: UIViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "적절한 관심사를 추천하기 위해 필요해요."
-        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.setStyle(Typography.body4, text: "적절한 관심사를 추천하기 위해 필요해요.")
         label.textAlignment = .left
-        label.textColor = .gray
+        label.textColor = .neutral700
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -139,7 +137,7 @@ class JobSelectViewController: UIViewController {
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
             paddingTop: 10,
-            paddingLeft: 30,
+            paddingLeft: 20,
             width: 20,
             height: 20
         )
@@ -149,8 +147,8 @@ class JobSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 50,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         progressBar.heightAnchor.constraint(equalToConstant: 6).isActive = true
@@ -159,8 +157,8 @@ class JobSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 20,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         jobButtonsStackView.anchor(
@@ -168,16 +166,16 @@ class JobSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 56,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
-        
-        nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -46).isActive = true
         
         nextButton.anchor(
             left: view.leftAnchor,
+            bottom: view.safeAreaLayoutGuide.bottomAnchor,
             right: view.rightAnchor,
             paddingLeft: 20,
+            paddingBottom: 5,
             paddingRight: 20,
             height: 56
         )

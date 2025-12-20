@@ -27,7 +27,7 @@ class SelectButton: UIButton {
     }
     
     private func setupButton() {
-        layer.cornerRadius = 12
+        layer.cornerRadius = 16
         layer.masksToBounds = true
         
         backgroundColor = .neutral10
@@ -53,14 +53,22 @@ class SelectButton: UIButton {
     }
     
     private func updateAppearance() {
-            if buttonIsSelected {
-                layer.borderColor = UIColor.primaryBlue700 as! CGColor
-                layer.borderWidth = 2
-                backgroundColor = .primaryBlue50
-            } else {
-                layer.borderColor = nil
-                layer.borderWidth = 0
-                backgroundColor = .neutral10
-            }
+        if buttonIsSelected {
+            
+            setTitleColor(.primaryBlue700, for: .selected)
+            
+            layer.borderWidth = 2
+            layer.borderColor = UIColor.cta.cgColor
+            
+            backgroundColor = .primaryBlue50
+        } else {
+
+//            setTitleColor(., for: .normal)
+            
+            layer.borderColor = nil
+            layer.borderWidth = 0
+            backgroundColor = .neutral10
         }
+    }
+    
 }
