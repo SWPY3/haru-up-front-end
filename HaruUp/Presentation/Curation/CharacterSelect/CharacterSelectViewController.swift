@@ -22,6 +22,14 @@ class CharacterSelectViewController: UIViewController {
         (name: "나루", image: "naru_level1", textImage: "text_box_character_naru")
     ]
     
+    private let backgroundImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(named: "background_gradation.png")
+        iv.contentMode = .scaleAspectFill
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.setStyle(Typography.title2, text: "앞으로 함께 성장할\n메이트를 선택해주세요!")
@@ -115,9 +123,8 @@ class CharacterSelectViewController: UIViewController {
     
     // MARK: - Helpers
     private func setupUI() {
-        view.backgroundColor = .primaryBlue100
-        
-        
+        view.insertSubview(backgroundImageView, at: 0)
+    
         view.addSubview(titleLabel)
         view.addSubview(characterTextImageView)
         view.addSubview(characterImageView)
@@ -126,6 +133,13 @@ class CharacterSelectViewController: UIViewController {
         view.addSubview(leftArrowButton)
         view.addSubview(rightArrowButton)
         view.addSubview(nextButton)
+        
+        backgroundImageView.anchor(
+            top: view.topAnchor,
+            left: view.leftAnchor,
+            bottom: view.bottomAnchor,
+            right: view.rightAnchor
+        )
         
         titleLabel.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
@@ -159,8 +173,7 @@ class CharacterSelectViewController: UIViewController {
             paddingBottom: 5
             
         )
-        
-//        leftArrowButton.centerY(inView: characterImageView)
+    
         leftArrowButton.anchor(
             top: characterImageView.topAnchor,
             left: view.leftAnchor,
@@ -170,7 +183,6 @@ class CharacterSelectViewController: UIViewController {
             height: 32
         )
         
-//        rightArrowButton.centerY(inView: characterImageView)
         rightArrowButton.anchor(
             top: characterImageView.topAnchor,
             right: view.rightAnchor,
