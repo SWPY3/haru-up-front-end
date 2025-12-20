@@ -385,36 +385,47 @@ class NicknameSelectViewController: UIViewController {
         
         let output = viewModel.transform(input: input)
         
-        output.formattedNickname
-            .drive(textField.rx.text)
+        // 실시간 글자 수 체크 (2~10자 사이인지만 확인)
+        output.isLengthValid
+            .drive(onNext: { [weak self] isValid in
+                let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
+                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
+            })
             .disposed(by: disposeBag)
         
-        // 다음 버튼 탭 - 유효성 검사 및 진행
-        nextButton.rx.tap
-            .withLatestFrom(textField.rx.text.orEmpty)
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .subscribe(onNext: { [weak self] nickname in
+        // 다음 버튼 탭 시 전체 유효성 검사 결과
+        output.buttonTapValidation
+            .drive(onNext: { [weak self] result in
                 guard let self = self else { return }
                 
-                // 빈 텍스트필드인 경우
-                if nickname.isEmpty {
+                switch result {
+                case .success:
+                    // 성공 - 경고 숨김
+                    self.warningLabel.isHidden = true
+                    self.warningLabel.text = ""
+                    
+                case .empty:
                     self.warningLabel.text = "*닉네임을 입력해주세요."
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-                    return
-                }
-                // 2자 미만 또는 10자 초과인 경우
-                if nickname.count < 2 || nickname.count > 10 {
+                    
+                case .tooShort, .tooLong:
                     self.warningLabel.text = "*2~10자로 입력해주세요."
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-                    return
+                    
+                case .invalidCharacters:
+                    self.warningLabel.text = "*한글만 입력해주세요."
+                    self.warningLabel.isHidden = false
+                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    
+                case .incompleteKorean:
+                    self.warningLabel.text = "*올바른 형태로 입력해주세요."
+                    self.warningLabel.isHidden = false
+                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                 }
-                
-                // 유효한 경우 - warningLabel 숨김 처리
-                self.warningLabel.isHidden = true
-                self.warningLabel.text = ""
-            }).disposed(by: disposeBag)
+            })
+            .disposed(by: disposeBag)
         
     }
 }
