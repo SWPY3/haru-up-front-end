@@ -25,9 +25,14 @@ class HomeViewController: UIViewController {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.separatorStyle = .none
+        tableView.bounces = false
+        // bottom 여백
+        tableView.contentInset.bottom = 40
+        tableView.verticalScrollIndicatorInsets.bottom = 40
         
         tableView.register(EmptyMissionCell.self, forCellReuseIdentifier: EmptyMissionCell.identifier)
         tableView.register(MissionTableViewCell.self, forCellReuseIdentifier: MissionTableViewCell.identifier)
+        tableView.register(AddMissionTableViewCell.self, forCellReuseIdentifier: AddMissionTableViewCell.identifier)
         
         return tableView
     }()
@@ -148,7 +153,14 @@ class HomeViewController: UIViewController {
                     return cell
                     
                 case .add:
-                    return UITableViewCell()
+                    guard let cell = tableView.dequeueReusableCell(withIdentifier: AddMissionTableViewCell.identifier, for: IndexPath(row: row, section: 0)) as? AddMissionTableViewCell else { return UITableViewCell() }
+                    
+                    cell.onTapAdd = { [weak self] in
+                        // TODO: 미션 추천 화면 이동
+                        print("Add Button 동작")
+                    }
+                    
+                    return cell
                 }
             }
             .disposed(by: disposeBag)

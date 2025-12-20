@@ -83,9 +83,7 @@ final class HomeViewModel {
         let dummy: [Mission] = [
             Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .veryHigh, exp: 200),
             Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .high, exp: 150),
-            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .mediumHigh, exp: 100),
-            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .medium, exp: 50),
-            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .low, exp: 10)
+            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .mediumHigh, exp: 100)
         ]
         return Observable.just(dummy)
     }
