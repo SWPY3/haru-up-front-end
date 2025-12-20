@@ -113,6 +113,8 @@ class NicknameSelectViewController: UIViewController {
         let btn = UIButton()
         btn.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.contentMode = .scaleAspectFit
+        btn.isEnabled = false
         return btn
     }()
     

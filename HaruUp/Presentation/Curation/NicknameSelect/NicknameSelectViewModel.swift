@@ -28,8 +28,8 @@ final class NicknameSelectViewModel {
     }
     
     struct Output {
-        let isLengthValid: Driver<Bool>               // 실시간: 2~10글자인지만 체크
-        let buttonTapValidation: Driver<ValidationResult>  // 버튼 탭 시: 전체 유효성 검사
+        let isLengthValid: Driver<Bool>
+        let buttonTapValidation: Driver<ValidationResult>
     }
     
     private weak var coordinator: NicknameSelectCoordinator?

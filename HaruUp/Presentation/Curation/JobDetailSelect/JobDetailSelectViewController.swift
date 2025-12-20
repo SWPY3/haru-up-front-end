@@ -20,8 +20,8 @@ class JobDetailSelectViewController: UIViewController {
     
     private let backButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        button.tintColor = .black
+        button.setImage(UIImage(named: "chevron_left.png"), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -29,17 +29,16 @@ class JobDetailSelectViewController: UIViewController {
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
         progressBar.progress = 3.0 / 8.0
-        progressBar.tintColor = .systemBlue
+        progressBar.tintColor = .primaryBlue700
+        progressBar.trackTintColor = .neutral50
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "세부 직무를 골라주세요."
-        label.font = .systemFont(ofSize: 24, weight: .bold)
+        label.setStyle(Typography.title2, text: "세부 직무를 골라주세요.")
         label.textAlignment = .left
-        label.numberOfLines = 0
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -47,12 +46,31 @@ class JobDetailSelectViewController: UIViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "적절한 관심사를 추천하기 위해 필요해요."
-        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.setStyle(Typography.body4, text: "적절한 관심사를 추천하기 위해 필요해요.")
         label.textAlignment = .left
-        label.textColor = .gray
+        label.textColor = .neutral700
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+    
+    private let stackView: UIStackView = {
+        let sv = UIStackView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .equalSpacing
+        sv.spacing = 35
+        return sv
+    }()
+    
+    private let titleLabelStackView: UIStackView = {
+        let sv = UIStackView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .equalSpacing
+        sv.spacing = 12
+        return sv
     }()
     
     private let scrollView: UIScrollView = {
@@ -86,26 +104,6 @@ class JobDetailSelectViewController: UIViewController {
         return button
     }()
     
-    private let stackView: UIStackView = {
-        let sv = UIStackView()
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.axis = .vertical
-        sv.alignment = .fill
-        sv.distribution = .equalSpacing
-        sv.spacing = 35
-        return sv
-    }()
-    
-    private let titleLabelStackView: UIStackView = {
-        let sv = UIStackView()
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.axis = .vertical
-        sv.alignment = .fill
-        sv.distribution = .equalSpacing
-        sv.spacing = 12
-        return sv
-    }()
-    
     // MARK: - Init
     
     init(viewModel: JobDetailSelectViewModel) {
@@ -130,6 +128,7 @@ class JobDetailSelectViewController: UIViewController {
     // MARK: - setup UI
     private func setupUI() {
         view.backgroundColor = .white
+        
         view.addSubview(backButton)
         view.addSubview(stackView)
         view.addSubview(titleLabelStackView)
@@ -149,10 +148,10 @@ class JobDetailSelectViewController: UIViewController {
         backButton.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
-            paddingTop: 5,
-            paddingLeft: 15,
-            width: 47,
-            height: 47
+            paddingTop: 10,
+            paddingLeft: 20,
+            width: 20,
+            height: 20
         )
         
         stackView.anchor(
@@ -160,25 +159,18 @@ class JobDetailSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 50,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
+        
+        progressBar.heightAnchor.constraint(equalToConstant: 6).isActive = true
+        
         titleLabelStackView.anchor(
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 20,
-            paddingLeft: 30,
-            paddingRight: 30
-        )
-        
-        nextButton.anchor(
-            left: view.leftAnchor,
-            bottom: view.safeAreaLayoutGuide.bottomAnchor,
-            right: view.rightAnchor,
             paddingLeft: 20,
-            paddingBottom: 20,
-            paddingRight: 20,
-            height: 56
+            paddingRight: 20
         )
         
         scrollView.anchor(
@@ -187,9 +179,9 @@ class JobDetailSelectViewController: UIViewController {
             bottom: nextButton.topAnchor,
             right: view.rightAnchor,
             paddingTop: 56,
-            paddingLeft: 30,
+            paddingLeft: 20,
             paddingBottom: 20,
-            paddingRight: 30
+            paddingRight: 20
         )
         
         contentView.anchor(
@@ -209,7 +201,15 @@ class JobDetailSelectViewController: UIViewController {
             
         )
         
-        
+        nextButton.anchor(
+            left: view.leftAnchor,
+            bottom: view.safeAreaLayoutGuide.bottomAnchor,
+            right: view.rightAnchor,
+            paddingLeft: 20,
+            paddingBottom: 5,
+            paddingRight: 20,
+            height: 56
+        )
         
     }
     

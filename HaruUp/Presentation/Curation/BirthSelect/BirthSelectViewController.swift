@@ -16,10 +16,12 @@ class BirthSelectViewController: UIViewController {
     
     private let birthInputSubject = PublishSubject<String>()
     
+    private var nextButtonBottomConstraint: NSLayoutConstraint?
+    
     private let backButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        button.tintColor = .black
+        button.setImage(UIImage(named: "chevron_left.png"), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -28,17 +30,16 @@ class BirthSelectViewController: UIViewController {
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
         progressBar.progress = 5.0 / 8.0
-        progressBar.tintColor = .systemBlue
+        progressBar.tintColor = .primaryBlue700
+        progressBar.trackTintColor = .neutral50
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "생년월일을 입력해주세요"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
+        label.setStyle(Typography.title2, text: "생년월일을 입력해주세요")
         label.textAlignment = .left
-        label.numberOfLines = 0
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -46,10 +47,9 @@ class BirthSelectViewController: UIViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "적절한 미션 추천에 필요해요! 외부에 공개되지 않아요."
-        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.setStyle(Typography.body4, text: "적절한 미션 추천에 필요해요! 외부에 공개되지 않아요.")
         label.textAlignment = .left
-        label.textColor = .gray
+        label.textColor = .neutral700
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -58,44 +58,43 @@ class BirthSelectViewController: UIViewController {
         let tf = UITextField()
         tf.placeholder = "YYYYMMDD"
         tf.borderStyle = .none
-        tf.font = .systemFont(ofSize: 16)
+        tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.keyboardType = .numberPad
+        tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
     
     private let textFieldContainer: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
-        view.layer.cornerRadius = 8
+        view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
     private let textFieldBottomLine: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBlue
+        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
-//    private let textCountLabel: UILabel = {
-//        let label = UILabel()
-//        label.text = "0/8"
-//        label.font = .systemFont(ofSize: 14)
-//        label.textColor = .gray
-//        label.textAlignment = .right
-//        label.translatesAutoresizingMaskIntoConstraints = false
-//        return label
-//    }()
-//    
-    private let nextButton: UIButton = {
+    private let clearButton: UIButton = {
         let button = UIButton()
-        button.setTitle("다음", for: .normal)
-        button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 12
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.setImage(UIImage(named: "icon_x.png"), for: .normal)
+        button.isHidden = true
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.isEnabled = false
-        button.alpha = 0.5
         return button
+    }()
+    
+    private let warningLabel: UILabel = {
+        let label = UILabel()
+        label.text = ""
+        label.setStyle(Typography.body4, text: "")
+        label.textColor = .secondaryRed200
+        label.textAlignment = .left
+        label.isHidden = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     private let stackView: UIStackView = {
@@ -118,6 +117,16 @@ class BirthSelectViewController: UIViewController {
         return sv
     }()
     
+    private let nextButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.contentMode = .scaleAspectFit
+        button.isEnabled = false
+        return button
+    }()
+
+    
     
     
     // MARK: - Init
@@ -136,8 +145,64 @@ class BirthSelectViewController: UIViewController {
         super.viewDidLoad()
         
         setupUI()
+        bindUI()
         bindViewModel()
+        setupKeyboardObservers()
+        setupTapGesture()
         textField.becomeFirstResponder()
+    }
+    
+    // 화면 탭 시 키보드 내리기
+    private func setupTapGesture() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+    
+    private func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+    }
+    
+    
+    // 키보드가 올라올 때
+    @objc private func keyboardWillShow(_ notification: Notification) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else {
+            return
+        }
+        
+        let keyboardHeight = keyboardFrame.height
+        
+        // nextButton을 키보드 위로 이동 (safeArea bottom 대신 키보드 높이만큼)
+        nextButtonBottomConstraint?.constant = -(keyboardHeight + 0)
+        
+        UIView.animate(withDuration: duration) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    // 키보드가 내려갈 때
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else {
+            return
+        }
+        
+        // nextButton을 원래 위치로 복원
+        nextButtonBottomConstraint?.constant = -5
+        
+        UIView.animate(withDuration: duration) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - setupUI
@@ -146,26 +211,28 @@ class BirthSelectViewController: UIViewController {
         
         textFieldContainer.addSubview(textField)
         textFieldContainer.addSubview(textFieldBottomLine)
-        
+        textFieldContainer.addSubview(clearButton)
+            
         view.addSubview(backButton)
         view.addSubview(stackView)
+        view.addSubview(textFieldContainer)
+        view.addSubview(warningLabel)
+        view.addSubview(nextButton)
         
         titleLabelStackView.addArrangedSubview(titleLabel)
         titleLabelStackView.addArrangedSubview(subtitleLabel)
         
         stackView.addArrangedSubview(progressBar)
         stackView.addArrangedSubview(titleLabelStackView)
-        
-        view.addSubview(textFieldContainer)
-        view.addSubview(nextButton)
+    
         
         backButton.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
-            paddingTop: 5,
-            paddingLeft: 15,
-            width: 47,
-            height: 47
+            paddingTop: 10,
+            paddingLeft: 20,
+            width: 20,
+            height: 20
         )
         
         stackView.anchor(
@@ -173,16 +240,18 @@ class BirthSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 50,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
+        
+        progressBar.heightAnchor.constraint(equalToConstant: 6).isActive = true
         
         titleLabelStackView.anchor(
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 20,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         textFieldContainer.anchor(
@@ -190,8 +259,8 @@ class BirthSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 40,
-            paddingLeft: 30,
-            paddingRight: 30,
+            paddingLeft: 20,
+            paddingRight: 20,
             height: 50
         )
         
@@ -204,6 +273,12 @@ class BirthSelectViewController: UIViewController {
             paddingRight: 9
         )
         
+        clearButton.anchor(
+            bottom: textField.bottomAnchor,
+            right: textFieldContainer.rightAnchor,
+            paddingBottom: 10
+        )
+        
         textFieldBottomLine.anchor(
             left: textFieldContainer.leftAnchor,
             bottom: textFieldContainer.bottomAnchor,
@@ -211,23 +286,77 @@ class BirthSelectViewController: UIViewController {
             height: 2
         )
         
-//        textCountLabel.anchor(
-//            top: textFieldContainer.topAnchor,
-//            right: view.rightAnchor,
-//            paddingTop: 8,
-//            paddingRight: 35
-//        )
+        warningLabel.anchor(
+            top: textFieldContainer.bottomAnchor,
+            left: view.leftAnchor,
+            paddingTop: 8,
+            paddingLeft: 20
+        )
+        
+        nextButton.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            nextButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20),
+            nextButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
+            nextButton.heightAnchor.constraint(equalToConstant: 56)
+        ])
+        
+        nextButtonBottomConstraint = nextButton.bottomAnchor.constraint(
+            equalTo: view.safeAreaLayoutGuide.bottomAnchor,
+            constant: -5
+        )
         
         nextButton.anchor(
             left: view.leftAnchor,
-            bottom: view.safeAreaLayoutGuide.bottomAnchor,
             right: view.rightAnchor,
             paddingLeft: 20,
-            paddingBottom: 20,
             paddingRight: 20,
             height: 56
         )
+        
+       
+        nextButtonBottomConstraint?.isActive = true
     }
+    
+    
+    private func bindUI() {
+        textField.rx.text.orEmpty
+            .map { !$0.isEmpty }
+            .subscribe(onNext: { [weak self] hasText in
+                UIView.animate(withDuration: 0.2) {
+                    self?.clearButton.isHidden = !hasText
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        
+        clearButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.textField.text = ""
+                self?.textField.sendActions(for: .editingChanged)
+            })
+            .disposed(by: disposeBag)
+        
+        textField.rx.controlEvent(.editingDidBegin)
+            .subscribe(onNext: { [weak self] in
+                print("🔵 포커스 들어옴")
+                UIView.animate(withDuration: 0.3) {
+                    self?.textFieldBottomLine.backgroundColor = .systemBlue
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        textField.rx.controlEvent(.editingDidEnd)
+            .subscribe(onNext: { [weak self] in
+                print("🔵 포커스 나감")
+                UIView.animate(withDuration: 0.3) {
+                    self?.textFieldBottomLine.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        
+    }
+        
     
     // MARK: - Bind ViewModel
     private func bindViewModel() {
@@ -253,20 +382,15 @@ class BirthSelectViewController: UIViewController {
             .disposed(by: disposeBag)
        
         
-        // 글자 수 표시
-//        output.formattedBirth
-//            .map { "\($0.count)/8" }
-//            .drive(textCountLabel.rx.text)
-//            .disposed(by: disposeBag)
-        
-        
         
         output.isValid
             .drive(onNext: { [weak self] isValid in
                 self?.nextButton.isEnabled = isValid
-                self?.nextButton.alpha = isValid ? 1.0 : 0.5
+                let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
+                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
             })
             .disposed(by: disposeBag)
+        
         
         output.showInvalidDateAlert
                 .drive(onNext: { [weak self] in

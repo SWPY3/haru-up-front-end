@@ -112,7 +112,6 @@ class JobSelectViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
         setupUI()
         bindViewModel()
     }
@@ -120,9 +119,10 @@ class JobSelectViewController: UIViewController {
     
     // MARK: - Setup UI
     func setupUI() {
+        view.backgroundColor = .white
+        
         view.addSubview(backButton)
         view.addSubview(stackView)
-        view.addSubview(titleLabelStackView)
         view.addSubview(jobButtonsStackView)
         view.addSubview(nextButton)
         
