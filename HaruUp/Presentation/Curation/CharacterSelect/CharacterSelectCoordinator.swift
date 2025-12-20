@@ -13,6 +13,7 @@ final class CharacterSelectCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     private var curationData: CurationData
+    var onFinish: ((CurationData) -> Void)?
     
     init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
@@ -33,6 +34,16 @@ final class CharacterSelectCoordinator: Coordinator {
                 navigationController: navigationController,
                 curationData: curationData
             )
+        
+        nicknameSelectCoordinator.onFinish = { [weak self, weak nicknameSelectCoordinator] curationData in
+            if let coordinator = nicknameSelectCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+            }
+            
+            self?.onFinish?(curationData)
+        }
+        
             
             childCoordinators.append(nicknameSelectCoordinator)
             nicknameSelectCoordinator.start()

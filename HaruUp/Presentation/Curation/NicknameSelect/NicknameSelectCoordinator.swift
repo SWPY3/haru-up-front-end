@@ -12,6 +12,7 @@ final class NicknameSelectCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     private var curationData: CurationData
+    var onFinish: ((CurationData) -> Void)?
     
     init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
@@ -33,6 +34,15 @@ final class NicknameSelectCoordinator: Coordinator {
             curationData: curationData
         )
         print("📦 저장된 데이터 - 닉네임: \(selectedNickname)")
+        
+        jobSelectCoordinator.onFinish = { [weak self, weak jobSelectCoordinator] curationData in
+            if let coordinator = jobSelectCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+            }
+            
+            self?.onFinish?(curationData)
+        }
         
         childCoordinators.append(jobSelectCoordinator)
         jobSelectCoordinator.start()

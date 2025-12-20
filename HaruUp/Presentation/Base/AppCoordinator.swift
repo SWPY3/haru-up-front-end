@@ -110,7 +110,33 @@ final class AppCoordinator: Coordinator {
     
     private func showCurationFlow() {
         let characterSelectCoordinator = CharacterSelectCoordinator(navigationController: navigationController,
-                                                                curationData: curationData)
+                                                                    curationData: curationData)
+        
+        characterSelectCoordinator.onFinish = { [weak self, weak characterSelectCoordinator] curationData in
+            print("📦 ===== 최종 수집된 데이터 ===== 📦")
+            print("캐릭터 ID: \(curationData.characterId ?? -1)")
+            print("닉네임: \(curationData.nickname ?? "없음")")
+            print("직업: \(curationData.job ?? "없음")")
+            print("세부 직무: \(curationData.jobDetail ?? "없음")")
+            print("성별: \(curationData.gender ?? "없음")")
+            print("생년월일: \(curationData.birthDate ?? "없음")")
+            print("관심사: \(curationData.interest ?? "없음")")
+            print("세부 관심사: \(curationData.interestDetail ?? "없음")")
+            print("목표: \(curationData.goal ?? "없음")")
+            print("직접 입력 목표: \(curationData.goalInput ?? "없음")")
+            print("📦 ========================== 📦")
+            
+            if let coordinator = characterSelectCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+                print("🗑️ CharacterSelectCoordinator 제거됨 (남은 자식: \(self?.childCoordinators.count ?? 0))")
+            }
+            
+//            self?.saveCurationData(finalData)
+            self?.showMainTabFlow()
+        }
+        
+            
         
         childCoordinators.append(characterSelectCoordinator)
         characterSelectCoordinator.start()

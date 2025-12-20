@@ -29,7 +29,7 @@ final class JobSelectCoordinator: Coordinator {
     }
     
     func showjobDetailFlow(selectedJob: String) {
-        let jobDetailCoordinator = JobDetailSelectCoordinator(
+        let jobDetailSelectCoordinator = JobDetailSelectCoordinator(
             navigationController: navigationController,
             selectedJob: selectedJob,
             curationData: curationData
@@ -37,7 +37,16 @@ final class JobSelectCoordinator: Coordinator {
         curationData.job = selectedJob
         print("📦 저장된 데이터 - 직업: \(selectedJob)")
         
-        childCoordinators.append(jobDetailCoordinator)
-        jobDetailCoordinator.start()
+        jobDetailSelectCoordinator.onFinish = { [weak self, weak jobDetailSelectCoordinator] curationData in
+            if let coordinator = jobDetailSelectCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+            }
+            
+            self?.onFinish?(curationData)
+        }
+        
+        childCoordinators.append(jobDetailSelectCoordinator)
+        jobDetailSelectCoordinator.start()
     }
 }

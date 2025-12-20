@@ -15,7 +15,7 @@ final class GoalInputSelectCoordinator: Coordinator {
     
     private var curationData: CurationData
     
-    var onFinish: (() -> Void)?
+    var onFinish: ((CurationData) -> Void)?
     
     init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
@@ -62,7 +62,7 @@ final class GoalInputSelectCoordinator: Coordinator {
         print("직접 입력 목표: \(curationData.goalInput ?? "없음")")
         print("📦 ========================== 📦")
         
-        onFinish?()
+        onFinish?(curationData)
     }
 }
 
