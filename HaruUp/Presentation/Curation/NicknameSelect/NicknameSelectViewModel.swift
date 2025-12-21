@@ -46,7 +46,7 @@ final class NicknameSelectViewModel {
             .bind(to: currentNickname)
             .disposed(by: disposeBag)
         
-        // ⭐ 실시간: 2~10글자 체크만
+        // 실시간: 2~10글자 체크만
         let isLengthValid = input.nicknameInput
             .map { text -> Bool in
                 let trimmed = text.trimmingCharacters(in: .whitespaces)
@@ -55,7 +55,7 @@ final class NicknameSelectViewModel {
             }
             .asDriver(onErrorJustReturn: false)
         
-        // ⭐ 버튼 탭 시: 전체 유효성 검사
+        // 버튼 탭 시: 전체 유효성 검사
         let buttonTapValidation = input.nextButtonTapped
             .withLatestFrom(currentNickname)
             .map { [weak self] nickname -> ValidationResult in
@@ -64,7 +64,7 @@ final class NicknameSelectViewModel {
             }
             .asDriver(onErrorJustReturn: .empty)
         
-        // ⭐ 유효성 검사 통과 시 화면 전환
+        // 유효성 검사 통과 시 화면 전환
         input.nextButtonTapped
             .withLatestFrom(currentNickname)
             .subscribe(onNext: { [weak self] nickname in

@@ -16,7 +16,6 @@ class NicknameSelectViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     private let nicknameInputSubject = PublishSubject<String>()
-    private var currentNickname: String = ""
     
     private var nextButtonBottomConstraint: NSLayoutConstraint?
     
@@ -114,7 +113,6 @@ class NicknameSelectViewController: UIViewController {
         btn.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         btn.translatesAutoresizingMaskIntoConstraints = false
         btn.contentMode = .scaleAspectFit
-        btn.isEnabled = false
         return btn
     }()
     
@@ -137,7 +135,6 @@ class NicknameSelectViewController: UIViewController {
         super.viewDidLoad()
         
         setupUI()
-        bindUI()
         bindViewModel()
         setupKeyboardObservers()
         setupTapGesture()
@@ -280,12 +277,12 @@ class NicknameSelectViewController: UIViewController {
             paddingLeft: 20
         )
         
-        nextButton.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            nextButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20),
-            nextButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
-            nextButton.heightAnchor.constraint(equalToConstant: 56)
-        ])
+        //        nextButton.translatesAutoresizingMaskIntoConstraints = false
+        //        NSLayoutConstraint.activate([
+        //            nextButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20),
+        //            nextButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
+        //            nextButton.heightAnchor.constraint(equalToConstant: 56)
+        //        ])
         
         nextButtonBottomConstraint = nextButton.bottomAnchor.constraint(
             equalTo: view.safeAreaLayoutGuide.bottomAnchor,
@@ -300,82 +297,16 @@ class NicknameSelectViewController: UIViewController {
             height: 56
         )
         
-       
+        
         nextButtonBottomConstraint?.isActive = true
     }
     
-    // MARK: - Bind UI
-    
-    private func bindUI() {
-        
-        textField.rx.text.orEmpty
-            .map { !$0.isEmpty }
-            .subscribe(onNext: { [weak self] hasText in
-                UIView.animate(withDuration: 0.2) {
-                    self?.clearButton.isHidden = !hasText
-                }
-            })
-            .disposed(by: disposeBag)
-        
-        
-        clearButton.rx.tap
-            .subscribe(onNext: { [weak self] in
-                self?.textField.text = ""
-                self?.textField.sendActions(for: .editingChanged)
-            })
-            .disposed(by: disposeBag)
-        
-        
-        textField.rx.controlEvent(.editingDidBegin)
-            .subscribe(onNext: { [weak self] in
-                print("🔵 포커스 들어옴")
-                UIView.animate(withDuration: 0.3) {
-                    self?.textFieldBottomLine.backgroundColor = .systemBlue
-                }
-            })
-            .disposed(by: disposeBag)
-        
-        textField.rx.controlEvent(.editingDidEnd)
-            .subscribe(onNext: { [weak self] in
-                print("🔵 포커스 나감")
-                UIView.animate(withDuration: 0.3) {
-                    self?.textFieldBottomLine.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
-                }
-            })
-            .disposed(by: disposeBag)
-        
-        // 텍스트 입력 시 warningLabel 숨김
-        //        textField.rx.text.orEmpty
-        //            .skip(1)  // 초기값 무시
-        //            .subscribe(onNext: { [weak self] _ in
-        //                self?.warningLabel.isHidden = true
-        //                self?.warningLabel.text = ""
-        //            })
-        //            .disposed(by: disposeBag)
-        
-        // 현재 닉네임 저장
-        textField.rx.text.orEmpty
-            .subscribe(onNext: { [weak self] text in
-                self?.currentNickname = text.trimmingCharacters(in: .whitespaces)
-            })
-            .disposed(by: disposeBag)
-        
-        textField.rx.text.orEmpty
-            .map { text in
-                let trimmed = text.trimmingCharacters(in: .whitespaces)
-                return trimmed.count >= 2 && trimmed.count <= 10
-            }
-            .subscribe(onNext: { [weak self] isValid in
-                let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
-            })
-            .disposed(by: disposeBag)
-    }
     
     
     // MARK: - Bind ViewModel
     private func bindViewModel() {
         
+        // Input 준비
         textField.rx.text.orEmpty
             .bind(to: nicknameInputSubject)
             .disposed(by: disposeBag)
@@ -387,7 +318,51 @@ class NicknameSelectViewController: UIViewController {
         
         let output = viewModel.transform(input: input)
         
-        // 실시간 글자 수 체크 (2~10자 사이인지만 확인)
+        // 1. clearButton 표시/숨김
+        textField.rx.text.orEmpty
+            .map { !$0.isEmpty }
+            .subscribe(onNext: { [weak self] hasText in
+                UIView.animate(withDuration: 0.2) {
+                    self?.clearButton.isHidden = !hasText
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 2. clearButton 탭
+        clearButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.textField.text = ""
+                self?.textField.sendActions(for: .editingChanged)
+                self?.warningLabel.isHidden = true
+            })
+            .disposed(by: disposeBag)
+        
+        // 3. 텍스트필드 포커스 상태
+        textField.rx.controlEvent(.editingDidBegin)
+            .subscribe(onNext: { [weak self] in
+                UIView.animate(withDuration: 0.3) {
+                    self?.textFieldBottomLine.backgroundColor = .systemBlue
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        textField.rx.controlEvent(.editingDidEnd)
+            .subscribe(onNext: { [weak self] in
+                UIView.animate(withDuration: 0.3) {
+                    self?.textFieldBottomLine.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 4. 텍스트 입력 시 경고 메시지 숨김
+        textField.rx.text.orEmpty
+            .skip(1)
+            .subscribe(onNext: { [weak self] _ in
+                self?.warningLabel.isHidden = true
+            })
+            .disposed(by: disposeBag)
+        
+        // 5. 실시간 글자 수 체크 (2~10자)
         output.isLengthValid
             .drive(onNext: { [weak self] isValid in
                 let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
@@ -395,14 +370,13 @@ class NicknameSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 다음 버튼 탭 시 전체 유효성 검사 결과
+        // 6. 다음 버튼 탭 시 전체 유효성 검사
         output.buttonTapValidation
             .drive(onNext: { [weak self] result in
                 guard let self = self else { return }
                 
                 switch result {
                 case .success:
-                    // 성공 - 경고 숨김
                     self.warningLabel.isHidden = true
                     self.warningLabel.text = ""
                     
@@ -428,7 +402,6 @@ class NicknameSelectViewController: UIViewController {
                 }
             })
             .disposed(by: disposeBag)
-        
     }
+    
 }
-

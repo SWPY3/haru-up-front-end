@@ -122,10 +122,9 @@ class BirthSelectViewController: UIViewController {
         button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.contentMode = .scaleAspectFit
-        button.isEnabled = false
         return button
     }()
-
+    
     
     
     
@@ -145,7 +144,6 @@ class BirthSelectViewController: UIViewController {
         super.viewDidLoad()
         
         setupUI()
-        bindUI()
         bindViewModel()
         setupKeyboardObservers()
         setupTapGesture()
@@ -212,7 +210,7 @@ class BirthSelectViewController: UIViewController {
         textFieldContainer.addSubview(textField)
         textFieldContainer.addSubview(textFieldBottomLine)
         textFieldContainer.addSubview(clearButton)
-            
+        
         view.addSubview(backButton)
         view.addSubview(stackView)
         view.addSubview(textFieldContainer)
@@ -224,7 +222,7 @@ class BirthSelectViewController: UIViewController {
         
         stackView.addArrangedSubview(progressBar)
         stackView.addArrangedSubview(titleLabelStackView)
-    
+        
         
         backButton.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
@@ -293,12 +291,12 @@ class BirthSelectViewController: UIViewController {
             paddingLeft: 20
         )
         
-        nextButton.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            nextButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20),
-            nextButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
-            nextButton.heightAnchor.constraint(equalToConstant: 56)
-        ])
+        //        nextButton.translatesAutoresizingMaskIntoConstraints = false
+        //        NSLayoutConstraint.activate([
+        //            nextButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20),
+        //            nextButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
+        //            nextButton.heightAnchor.constraint(equalToConstant: 56)
+        //        ])
         
         nextButtonBottomConstraint = nextButton.bottomAnchor.constraint(
             equalTo: view.safeAreaLayoutGuide.bottomAnchor,
@@ -313,12 +311,36 @@ class BirthSelectViewController: UIViewController {
             height: 56
         )
         
-       
+        
         nextButtonBottomConstraint?.isActive = true
     }
     
     
-    private func bindUI() {
+    
+    
+    // MARK: - Bind ViewModel
+    private func bindViewModel() {
+        
+        textField.rx.text.orEmpty
+            .bind(to: birthInputSubject)
+            .disposed(by: disposeBag)
+        
+        let input = BirthSelectViewModel.Input(
+            birthInput: birthInputSubject.asObservable(),
+            nextButtonTapped: nextButton.rx.tap.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        
+        backButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
+        
+    
+        
         textField.rx.text.orEmpty
             .map { !$0.isEmpty }
             .subscribe(onNext: { [weak self] hasText in
@@ -338,7 +360,6 @@ class BirthSelectViewController: UIViewController {
         
         textField.rx.controlEvent(.editingDidBegin)
             .subscribe(onNext: { [weak self] in
-                print("🔵 포커스 들어옴")
                 UIView.animate(withDuration: 0.3) {
                     self?.textFieldBottomLine.backgroundColor = .systemBlue
                 }
@@ -347,62 +368,59 @@ class BirthSelectViewController: UIViewController {
         
         textField.rx.controlEvent(.editingDidEnd)
             .subscribe(onNext: { [weak self] in
-                print("🔵 포커스 나감")
                 UIView.animate(withDuration: 0.3) {
                     self?.textFieldBottomLine.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
                 }
             })
             .disposed(by: disposeBag)
         
-        
-    }
-        
-    
-    // MARK: - Bind ViewModel
-    private func bindViewModel() {
-        backButton.rx.tap
-            .subscribe(onNext: { [weak self] in
-                self?.navigationController?.popViewController(animated: true)
+        textField.rx.text.orEmpty
+            .skip(1)
+            .subscribe(onNext: { [weak self] _ in
+                self?.warningLabel.isHidden = true
             })
             .disposed(by: disposeBag)
         
-        textField.rx.text.orEmpty
-            .bind(to: birthInputSubject)
-            .disposed(by: disposeBag)
-        
-        let input = BirthSelectViewModel.Input(
-            birthInput: birthInputSubject.asObservable(),
-            nextButtonTapped: nextButton.rx.tap.asObservable()
-        )
-        
-        let output = viewModel.transform(input: input)
-        
-        output.formattedBirth
-            .drive(textField.rx.text)
-            .disposed(by: disposeBag)
-       
         
         
-        output.isValid
+        output.isLengthValid
             .drive(onNext: { [weak self] isValid in
-                self?.nextButton.isEnabled = isValid
                 let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
                 self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
             })
             .disposed(by: disposeBag)
         
         
-        output.showInvalidDateAlert
-                .drive(onNext: { [weak self] in
-                    let alert = UIAlertController(
-                        title: "올바른 날짜를 입력해주세요",
-                        message: "존재하지 않는 날짜입니다.\nYYYYMMDD 형식으로 정확히 입력해주세요.",
-                        preferredStyle: .alert
-                    )
-                    alert.addAction(UIAlertAction(title: "확인", style: .default))
-                    self?.present(alert, animated: true)
-                })
-                .disposed(by: disposeBag)
+        output.buttonTapValidation
+            .drive(onNext: { [weak self] result in
+                guard let self = self else { return }
+                
+                
+                switch result {
+                case .success:
+                    print("✅ 성공 - 경고 숨김")
+                    self.warningLabel.isHidden = true
+                    self.warningLabel.text = ""
+                    
+                case .empty:
+                    print("⚠️ 빈 문자열 - 경고 표시")
+                    self.warningLabel.text = "*생년월일을 입력해주세요."
+                    self.warningLabel.isHidden = false
+                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    
+                case .tooShort, .tooLong:
+                    self.warningLabel.text = "*올바른 생년월일을 입력해주세요."
+                    self.warningLabel.isHidden = false
+                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    
+                case .invalid:
+                    print("❌ 유효하지 않은 날짜 - 경고 표시")
+                    self.warningLabel.text = "*올바른 생년월일을 입력해주세요."
+                    self.warningLabel.isHidden = false
+                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                }
+            })
+            .disposed(by: disposeBag)
     }
     
 }

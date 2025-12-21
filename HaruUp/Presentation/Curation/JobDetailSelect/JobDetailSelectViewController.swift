@@ -100,7 +100,7 @@ class JobDetailSelectViewController: UIViewController {
         let button = UIButton()
         button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.isEnabled = false
+//        button.isEnabled = false
         return button
     }()
     

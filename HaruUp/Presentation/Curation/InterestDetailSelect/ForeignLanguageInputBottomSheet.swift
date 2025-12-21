@@ -74,7 +74,7 @@ class ForeignLanguageInputBottomSheet: UIViewController {
         button.layer.cornerRadius = 12
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.isEnabled = false
+//        button.isEnabled = false
         button.alpha = 0.5
         return button
     }()

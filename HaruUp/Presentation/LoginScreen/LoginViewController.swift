@@ -98,7 +98,7 @@ class LoginViewController: UIViewController {
         configureUI()
         bind()
         
-        configureNextButton()
+//        configureNextButton()
     }
     
     private func configureNextButton() {
@@ -139,7 +139,7 @@ class LoginViewController: UIViewController {
             top: logoImageView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 150,
+            paddingTop: 160,
             paddingLeft: 20,
             paddingRight: 20)
         

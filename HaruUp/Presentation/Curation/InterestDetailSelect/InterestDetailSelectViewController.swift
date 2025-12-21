@@ -88,7 +88,7 @@ class InterestDetailSelectViewController: UIViewController {
         button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.contentMode = .scaleAspectFit
-        button.isEnabled = false
+//        button.isEnabled = false
         return button
     }()
     
