@@ -381,6 +381,15 @@ class BirthSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
+        // 텍스트 여부에 따른 버튼 활성화 제어
+        textField.rx.text.orEmpty
+            .map { !$0.isEmpty }
+            .distinctUntilChanged()
+            .subscribe(onNext: { [weak self] hasText in
+                self?.nextButton.isEnabled = hasText
+            })
+            .disposed(by: disposeBag)
+        
         
         
         output.isLengthValid
@@ -404,18 +413,16 @@ class BirthSelectViewController: UIViewController {
                     
                 case .empty:
                     print("⚠️ 빈 문자열 - 경고 표시")
-                    self.warningLabel.text = "*생년월일을 입력해주세요."
-                    self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
                 case .tooShort, .tooLong:
-                    self.warningLabel.text = "*올바른 생년월일을 입력해주세요."
+                    self.warningLabel.setStyle(Typography.body4, text: "*올바른 생년월일을 입력해주세요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
                 case .invalid:
                     print("❌ 유효하지 않은 날짜 - 경고 표시")
-                    self.warningLabel.text = "*올바른 생년월일을 입력해주세요."
+                    self.warningLabel.setStyle(Typography.body4, text: "*올바른 생년월일을 입력해주세요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                 }

@@ -363,6 +363,15 @@ class NicknameSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
+        // 텍스트 여부에 따른 버튼 활성화 제어
+        textField.rx.text.orEmpty
+            .map { !$0.isEmpty }
+            .distinctUntilChanged()
+            .subscribe(onNext: { [weak self] hasText in
+                self?.nextButton.isEnabled = hasText
+            })
+            .disposed(by: disposeBag)
+        
         // 6. 다음 버튼 탭 시 전체 유효성 검사
         output.buttonTapValidation
             .drive(onNext: { [weak self] result in
@@ -374,10 +383,9 @@ class NicknameSelectViewController: UIViewController {
                     self.warningLabel.text = ""
                     
                 case .empty:
-                    self.warningLabel.setStyle(Typography.body4, text: "*닉네임을 입력해주세요.")
-                    self.warningLabel.isHidden = false
+                    //                    self.warningLabel.setStyle(Typography.body4, text: "*닉네임을 입력해주세요.")
+                    //                    self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-                    
                 case .tooShort, .tooLong:
                     self.warningLabel.setStyle(Typography.body4, text: "*2~10자로 입력해주세요.")
                     self.warningLabel.isHidden = false

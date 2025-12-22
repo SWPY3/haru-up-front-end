@@ -419,6 +419,15 @@ class GoalInputSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
+        // 텍스트 여부에 따른 버튼 활성화 제어
+        textField.rx.text.orEmpty
+            .map { !$0.isEmpty }
+            .distinctUntilChanged()
+            .subscribe(onNext: { [weak self] hasText in
+                self?.nextButton.isEnabled = hasText
+            })
+            .disposed(by: disposeBag)
+        
         // 다음 버튼 탭 시 전체 유효성 검사 결과
         output.buttonTapValidation
             .drive(onNext: { [weak self] result in
@@ -430,8 +439,6 @@ class GoalInputSelectViewController: UIViewController {
                     
                     
                 case .empty:
-                    self.warningLabel.setStyle(Typography.body4, text: "*목표를 입력해주세요.")
-                    self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
                 case .tooShort, .tooLong:
