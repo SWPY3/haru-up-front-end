@@ -21,6 +21,17 @@ class GoalInputSelectViewController: UIViewController {
     
     let curationData: CurationData
     
+    // 잘못된 입력 카운트
+    private var invalidAttemptCount = 0
+    
+    // 타이머
+    private var countdownTimer: Timer?
+    private var remainingSeconds = 0
+    
+    // 테스트용: API 응답 시뮬레이션
+    private var shouldPassValidation = false
+    
+    
     private let backButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "chevron_left.png"), for: .normal)
@@ -76,18 +87,37 @@ class GoalInputSelectViewController: UIViewController {
         return sv
     }()
     
-    // 선택된 관심사 표시 라벨
-    private let selectedInterestLabel: UILabel = {
+    // 선택된 세부 관심사 안내 라벨
+    private let interestDetailTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.setStyle(Typography.caption2, text: "🥰 선택한 세부 관심사")
         label.textAlignment = .left
-        label.textColor = .systemBlue
+        label.textColor = .neutral600
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
+    
+    // 선택한 세부 관심사를 담는 파란색 배경 뷰
+    private let selectedInterestContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.primaryBlue50
+        view.layer.cornerRadius = 16
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let selectedInterestDetailLabel: UILabel = {
+        let label = UILabel()
+        label.setStyle(Typography.caption1, text: "")
+        label.textAlignment = .center
+        label.textColor = .primaryBlue700
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private let textField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "문법학습"
+        tf.placeholder = "2~20자로 입력해주세요."
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.borderStyle = .none
         tf.translatesAutoresizingMaskIntoConstraints = false
@@ -103,7 +133,7 @@ class GoalInputSelectViewController: UIViewController {
     
     private let textFieldBottomLine: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        view.backgroundColor = UIColor.primaryBlue700.withAlphaComponent(0.3)
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -127,11 +157,20 @@ class GoalInputSelectViewController: UIViewController {
         return label
     }()
     
+    private let textCountLabel: UILabel = {
+        let label = UILabel()
+        label.setStyle(Typography.caption3, text: "0/20")
+        label.textColor = .neutral400
+        label.textAlignment = .right
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private let nextButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         button.contentMode = .scaleAspectFit
-//        button.isEnabled = false
+        //        button.isEnabled = false
         return button
     }()
     
@@ -153,8 +192,9 @@ class GoalInputSelectViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        textField.delegate = self
+        
         setupUI()
-        bindUI()
         bindViewModel()
         setupKeyboardObservers()
         setupTapGesture()
@@ -238,7 +278,11 @@ class GoalInputSelectViewController: UIViewController {
         stackView.addArrangedSubview(progressBar)
         stackView.addArrangedSubview(titleLabelStackView)
         
-        view.addSubview(selectedInterestLabel)
+        view.addSubview(interestDetailTitleLabel)
+        view.addSubview(selectedInterestContainerView)
+        view.addSubview(textCountLabel)
+        
+        selectedInterestContainerView.addSubview(selectedInterestDetailLabel)
         
         titleLabelStackView.addArrangedSubview(titleLabel)
         titleLabelStackView.addArrangedSubview(subtitleLabel)
@@ -273,20 +317,40 @@ class GoalInputSelectViewController: UIViewController {
             paddingRight: 20
         )
         
-        selectedInterestLabel.anchor(
-            top: subtitleLabel.bottomAnchor,
+        interestDetailTitleLabel.anchor(
+            top: titleLabelStackView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 10,
+            paddingTop: 15,
             paddingLeft: 20,
             paddingRight: 20
         )
         
+        selectedInterestContainerView.anchor(
+            top: interestDetailTitleLabel.bottomAnchor,
+            left: view.leftAnchor,
+            paddingTop: 4,
+            paddingLeft: 20
+        )
+        
+        selectedInterestDetailLabel.anchor(
+            top: selectedInterestContainerView.topAnchor,
+            left: selectedInterestContainerView.leftAnchor,
+            bottom: selectedInterestContainerView.bottomAnchor,
+            right: selectedInterestContainerView.rightAnchor,
+            paddingTop: 4,
+            paddingLeft: 10,
+            paddingBottom: 4,
+            paddingRight: 10
+        )
+        
+        selectedInterestDetailLabel.setStyle(Typography.caption1, text: "\(curationData.interestDetail ?? "")")
+        
         textFieldContainer.anchor(
-            top: selectedInterestLabel.bottomAnchor,
+            top: selectedInterestContainerView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 30,
+            paddingTop: 33,
             paddingLeft: 20,
             paddingRight: 20,
             height: 50
@@ -307,11 +371,18 @@ class GoalInputSelectViewController: UIViewController {
             paddingBottom: 10
         )
         
+        
         textFieldBottomLine.anchor(
             left: textFieldContainer.leftAnchor,
             bottom: textFieldContainer.bottomAnchor,
             right: textFieldContainer.rightAnchor,
             height: 2
+        )
+        
+        textCountLabel.anchor(
+            top: textFieldBottomLine.bottomAnchor,
+            right: textFieldContainer.rightAnchor,
+            paddingTop: 10
         )
         
         warningLabel.anchor(
@@ -343,14 +414,23 @@ class GoalInputSelectViewController: UIViewController {
         
         nextButtonBottomConstraint?.isActive = true
         
-        selectedInterestLabel.text = "선택한 관심사 : \(curationData.interest ?? "")"
     }
     
-    private func bindUI() {
+    private func bindViewModel() {
+        
         clearButton.rx.tap
             .subscribe(onNext: { [weak self] in
                 self?.textField.text = ""
                 self?.textField.sendActions(for: .editingChanged)
+            })
+            .disposed(by: disposeBag)
+        
+        textField.rx.text.orEmpty
+            .map { !$0.isEmpty }
+            .subscribe(onNext: { [weak self] hasText in
+                UIView.animate(withDuration: 0.2) {
+                    self?.clearButton.isHidden = !hasText
+                }
             })
             .disposed(by: disposeBag)
         
@@ -372,41 +452,48 @@ class GoalInputSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 현재 목표 저장
+        // 실시간 글자 수 카운터 업데이트
+                textField.rx.text.orEmpty
+                    .subscribe(onNext: { [weak self] text in
+                        guard let self = self else { return }
+                        
+                        let count = text.count
+                        self.textCountLabel.setStyle(Typography.caption3, text: "\(count)/20")
+                        // goalInputSubject에도 전송 (ViewModel과 동기화)
+                        self.goalInputSubject.onNext(text)
+                        
+//                        print("📝 입력된 텍스트: '\(text)', 길이: \(count)")
+                    })
+                    .disposed(by: disposeBag)
+        
+        // 텍스트 입력 시 경고 메시지 숨김 (타이머 작동 중이 아닐 때만)
         textField.rx.text.orEmpty
-            .subscribe(onNext: { [weak self] text in
-                self?.currentGoalInput = text.trimmingCharacters(in: .whitespaces)
+            .skip(1)
+            .subscribe(onNext: { [weak self] _ in
+                guard let self = self else { return }
+                if self.remainingSeconds == 0 {
+                    self.warningLabel.isHidden = true
+                }
             })
             .disposed(by: disposeBag)
         
-        textField.rx.text.orEmpty
-            .map { text in
-                let trimmed = text.trimmingCharacters(in: .whitespaces)
-                return trimmed.count >= 2 && trimmed.count <= 20
-            }
-            .subscribe(onNext: { [weak self] isValid in
-                let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
-            })
-            .disposed(by: disposeBag)
-    }
-    
-    
-    private func bindViewModel() {
+        
         backButton.rx.tap
             .subscribe(onNext: { [weak self] in
                 self?.navigationController?.popViewController(animated: true)
             })
             .disposed(by: disposeBag)
         
-        
         textField.rx.text.orEmpty
             .bind(to: goalInputSubject)
             .disposed(by: disposeBag)
         
+        let isValidGoalSubject = PublishSubject<Bool>()
+        
         let input = GoalInputSelectViewModel.Input(
             goalInput: goalInputSubject.asObservable(),
-            nextButtonTapped: nextButton.rx.tap.asObservable()
+            nextButtonTapped: nextButton.rx.tap.asObservable(),
+            isValidGoal: isValidGoalSubject.asObservable()
         )
         
         let output = viewModel.transform(input: input)
@@ -414,14 +501,27 @@ class GoalInputSelectViewController: UIViewController {
         // 실시간 글자 수 체크 (2~20자 사이인지만 확인)
         output.isLengthValid
             .drive(onNext: { [weak self] isValid in
-                let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
+                guard let self = self else { return }
+                // 타이머가 작동 중이면 버튼은 항상 비활성화
+                if self.remainingSeconds > 0 {
+                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                } else {
+                    let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
+                    self.nextButton.setImage(UIImage(named: imageName), for: .normal)
+                }
             })
             .disposed(by: disposeBag)
         
         // 텍스트 여부에 따른 버튼 활성화 제어
         textField.rx.text.orEmpty
-            .map { !$0.isEmpty }
+            .map { [weak self] text -> Bool in
+                guard let self = self else { return false }
+                // 타이머 작동 중이면 항상 비활성화
+                if self.remainingSeconds > 0 {
+                    return false
+                }
+                return !text.isEmpty
+            }
             .distinctUntilChanged()
             .subscribe(onNext: { [weak self] hasText in
                 self?.nextButton.isEnabled = hasText
@@ -436,24 +536,132 @@ class GoalInputSelectViewController: UIViewController {
                 switch result {
                 case .success:
                     self.warningLabel.text = ""
-                    
+                    self.warningLabel.isHidden = true
+                    self.invalidAttemptCount = 0 // 성공 시 카운트 초기화
                     
                 case .empty:
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
-                case .tooShort, .tooLong:
-                    self.warningLabel.setStyle(Typography.body4, text: "*20자 이내로 입력해주세요.")
+                case .tooShort:
+                    self.warningLabel.setStyle(Typography.body4, text: "*2자 이상으로 입력해주세요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
+//                case .tooLong:
+//                    self.warningLabel.setStyle(Typography.body4, text: "*20자 이내로 입력해주세요.")
+//                    self.warningLabel.isHidden = false
+//                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    
                 case .invalidGoal:
-                    self.warningLabel.setStyle(Typography.body4, text: "*세부 관심사와 맞지 않는 목표예요.")
-                    self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.invalidAttemptCount += 1
+                    print("❌ 잘못된 입력 시도: \(self.invalidAttemptCount)회")
+                    
+                    if self.invalidAttemptCount >= 3 {
+                        // 3번 실패 시 팝업 표시
+                        self.showLockAlert()
+                    } else {
+                        self.warningLabel.setStyle(Typography.body4, text: "*세부 관심사와 맞지 않는 목표예요.")
+                        self.warningLabel.isHidden = false
+                        self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    }
                 }
+            })
+            .disposed(by: disposeBag)
+        
+        // ViewModel에서 유효성 검사 요청이 오면 응답
+        output.requestValidation
+            .drive(onNext: { [weak self] in
+                // 여기서 true/false를 임의로 설정할 수 있습니다
+                // 테스트용: false를 주면 항상 실패
+                guard let self = self else { return }
+                print("🔔 [ViewController] API 유효성 검사 요청 받음")
+                
+                
+                let isValid = self.shouldPassValidation
+                
+                print("📤 [ViewController] API 응답 전송: \(isValid ? "✅ 성공" : "❌ 실패")")
+                isValidGoalSubject.onNext(isValid)
             })
             .disposed(by: disposeBag)
     }
     
+    // MARK: - Alert & Timer
     
+    // 3번 실패 시 표시되는 팝업
+    private func showLockAlert() {
+        let alertVC = CustomAlertViewController()
+        alertVC.modalPresentationStyle = .overFullScreen
+        alertVC.modalTransitionStyle = .crossDissolve
+        
+        alertVC.onConfirm = { [weak self] in
+            self?.startCountdownTimer()
+        }
+        
+        present(alertVC, animated: true)
+    }
+    
+    // 30분 타이머 시작
+    private func startCountdownTimer() {
+        remainingSeconds = 30 * 60
+        
+        nextButton.isEnabled = false
+        nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+        textField.isEnabled = false
+        
+        updateWarningLabelWithTimer()
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            
+            self.remainingSeconds -= 1
+            
+            if self.remainingSeconds <= 0 {
+                self.stopCountdownTimer()
+            } else {
+                self.updateWarningLabelWithTimer()
+            }
+        }
+    }
+    
+    // 타이머 중지 및 초기화
+    private func stopCountdownTimer() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        remainingSeconds = 0
+        invalidAttemptCount = 0
+        
+        // 버튼 활성화 및 텍스트 입력 허용
+        textField.isEnabled = true
+        nextButton.isEnabled = true
+        
+        warningLabel.isHidden = true
+        warningLabel.text = ""
+    }
+    
+    // 경고 라벨에 남은 시간 표시
+    private func updateWarningLabelWithTimer() {
+        let minutes = remainingSeconds / 60
+        let seconds = remainingSeconds % 60
+        
+        warningLabel.setStyle(Typography.body4, text: String(format: "*%02d분 %02d초 뒤에 입력할 수 있어요.", minutes, seconds))
+        warningLabel.isHidden = false
+        textField.text = ""
+    }
+    
+}
+
+
+// MARK: - UITextFieldDelegate
+extension GoalInputSelectViewController: UITextFieldDelegate {
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        // 현재 텍스트
+        let currentText = textField.text ?? ""
+        
+        // 변경될 텍스트 계산
+        guard let stringRange = Range(range, in: currentText) else { return false }
+        let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
+        
+        // 20자 제한
+        return updatedText.count <= 20
+    }
 }

@@ -15,7 +15,7 @@ final class GoalInputSelectViewModel {
         case success
         case empty
         case tooShort
-        case tooLong
+        //        case tooLong
         case invalidGoal
     }
     
@@ -23,17 +23,22 @@ final class GoalInputSelectViewModel {
     struct Input {
         let goalInput: Observable<String>
         let nextButtonTapped: Observable<Void>
+        let isValidGoal: Observable<Bool>
     }
     
     struct Output {
         let isLengthValid: Driver<Bool>
         let buttonTapValidation: Driver<ValidationResult>
+        let requestValidation: Driver<Void>
     }
     
     private weak var coordinator: GoalInputSelectCoordinator?
     private let disposeBag = DisposeBag()
     
     private let currentGoalInput = BehaviorRelay<String>(value: "")
+    private let validationRequestSubject = PublishSubject<Void>()
+    private let isValidGoalRelay = PublishRelay<Bool>()
+    
     
     init(coordinator: GoalInputSelectCoordinator) {
         self.coordinator = coordinator
@@ -42,6 +47,13 @@ final class GoalInputSelectViewModel {
     func transform(input: Input) -> Output {
         input.goalInput
             .bind(to: currentGoalInput)
+            .disposed(by: disposeBag)
+        
+        input.isValidGoal
+            .subscribe(onNext: { [weak self] isValid in
+                print("📥 [ViewModel] ViewController로부터 응답 받음: \(isValid)")
+                self?.isValidGoalRelay.accept(isValid)
+            })
             .disposed(by: disposeBag)
         
         let isLengthValid = input.goalInput
@@ -54,21 +66,30 @@ final class GoalInputSelectViewModel {
         
         let buttonTapValidation = input.nextButtonTapped
             .withLatestFrom(currentGoalInput)
-            .map { [weak self] goalInput -> ValidationResult in
-                guard let self = self else { return .empty }
-                return self.validateGoalInput(goalInput)
+            .flatMap { [weak self] goalInput -> Observable<ValidationResult> in
+                guard let self = self else { return .just(.empty) }
+                
+                // 기본 유효성 검사 먼저 수행
+                let basicValidation = self.validateGoalInputBasic(goalInput)
+                
+                if case .success = basicValidation {
+                    // 기본 검사 통과 시, API 검사 수행
+                    return self.validateWithAPI(goalInput)
+                } else {
+                    // 기본 검사 실패 시 바로 반환
+                    return .just(basicValidation)
+                }
             }
             .asDriver(onErrorJustReturn: .empty)
         
         input.nextButtonTapped
             .withLatestFrom(currentGoalInput)
-            .subscribe(onNext: { [weak self] goalInput in
+            .withLatestFrom(buttonTapValidation.asObservable()) { ($0, $1) }
+            .subscribe(onNext: { [weak self] (goalInput, result) in
                 guard let self = self else { return }
                 
                 let trimmedgoalInput = goalInput.trimmingCharacters(in: .whitespaces)
                 print("🔵 다음 버튼 탭됨 - 목표: \(trimmedgoalInput)")
-                
-                let result = self.validateGoalInput(trimmedgoalInput)
                 print("🔍 유효성 검사 결과: \(result)")
                 
                 if case .success = result {
@@ -81,43 +102,68 @@ final class GoalInputSelectViewModel {
             .disposed(by: disposeBag)
         
         
+        // 유효성 검사 요청
+        let requestValidation = validationRequestSubject
+            .asDriver(onErrorDriveWith: .empty())
+        
         return Output(
             isLengthValid: isLengthValid,
-            buttonTapValidation: buttonTapValidation
-        )
-    }
+            buttonTapValidation: buttonTapValidation,
+            requestValidation: requestValidation
+        )    }
     
     
     // MARK: - Validation Methods
     /// 전체 유효성 검사 (버튼 탭 시에만 실행)
-    private func validateGoalInput(_ goalInput: String) -> ValidationResult {
-        let trimmed = goalInput.trimmingCharacters(in: .whitespaces)
+    private func validateGoalInputBasic(_ goalInput: String) -> ValidationResult {
         
         // 1. 빈 문자열 체크
-        if trimmed.isEmpty {
+        if goalInput.isEmpty {
             return .empty
         }
         
         // 2. 길이 체크
-        if trimmed.count < 2 {
+        if goalInput.count < 2 {
             return .tooShort
         }
         
-        if trimmed.count > 10 {
-            return .tooLong
-        }
-        
-        // 3. 세부 관심사와 맞는 목표인지 체크
-        if !isCorrectWithInterestDetail(goalInput) {
-            return .invalidGoal
-        }
+        //        if trimmed.count > 20 {
+        //            return .tooLong
+        //        }
         
         return .success
     }
+    // API를 통한 유효성 검사 (세부 관심사와 일치 여부)
+    // 현재는 임시로 true/false를 반환하도록 구현
+    private func validateWithAPI(_ goalInput: String) -> Observable<ValidationResult> {
+        return Observable.create { [weak self] observer in
+            guard let self = self else {
+                observer.onNext(.empty)
+                observer.onCompleted()
+                return Disposables.create()
+            }
+            
+            // 유효성 검사 요청 발송
+            self.validationRequestSubject.onNext(())
+            
+            // isValidGoalRelay에서 응답을 기다림
+            let disposable = self.isValidGoalRelay
+                .take(1)
+                .subscribe(onNext: { isValid in
+                    if isValid {
+                        observer.onNext(.success)
+                    } else {
+                        observer.onNext(.invalidGoal)
+                    }
+                    observer.onCompleted()
+                })
+            
+            return disposable
+        }
+    }
     
-    private func isCorrectWithInterestDetail(_ text: String) -> Bool {
-        let koreanPattern = "^[가-힣ㄱ-ㅎㅏ-ㅣ\\s]*$"
-        let predicate = NSPredicate(format: "SELF MATCHES %@", koreanPattern)
-        return predicate.evaluate(with: text)
+    // ViewController에서 호출할 메서드 (API 응답 대신 사용)
+    func setGoalValidation(_ isValid: Bool) {
+        isValidGoalRelay.accept(isValid)
     }
 }

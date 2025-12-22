@@ -54,6 +54,26 @@ class BirthSelectViewController: UIViewController {
         return label
     }()
     
+    private let stackView: UIStackView = {
+        let sv = UIStackView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .equalSpacing
+        sv.spacing = 35
+        return sv
+    }()
+    
+    private let titleLabelStackView: UIStackView = {
+        let sv = UIStackView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .equalSpacing
+        sv.spacing = 12
+        return sv
+    }()
+    
     private let textField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "YYYYMMDD"
@@ -73,7 +93,7 @@ class BirthSelectViewController: UIViewController {
     
     private let textFieldBottomLine: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        view.backgroundColor = UIColor.primaryBlue700.withAlphaComponent(0.3)
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -97,25 +117,7 @@ class BirthSelectViewController: UIViewController {
         return label
     }()
     
-    private let stackView: UIStackView = {
-        let sv = UIStackView()
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.axis = .vertical
-        sv.alignment = .fill
-        sv.distribution = .equalSpacing
-        sv.spacing = 35
-        return sv
-    }()
     
-    private let titleLabelStackView: UIStackView = {
-        let sv = UIStackView()
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.axis = .vertical
-        sv.alignment = .fill
-        sv.distribution = .equalSpacing
-        sv.spacing = 12
-        return sv
-    }()
     
     private let nextButton: UIButton = {
         let button = UIButton()

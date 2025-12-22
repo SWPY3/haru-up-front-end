@@ -64,7 +64,7 @@ class NicknameSelectViewController: UIViewController {
     
     private let textFieldBottomLine: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        view.backgroundColor = UIColor.primaryBlue700.withAlphaComponent(0.3)
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
