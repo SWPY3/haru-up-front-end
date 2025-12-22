@@ -1,18 +1,16 @@
 //
-//  NicknameSelectViewModel.swift
+//  ForeignLanguageInputBottomSheetViewModel.swift
 //  HaruUp
 //
-//  Created by 하다현 on 12/19/25.
+//  Created by 하다현 on 12/22/25.
 //
 
-import UIKit
+import Foundation
 import RxSwift
 import RxCocoa
 
-
-final class NicknameSelectViewModel {
+final class ForeignLanguageInputBottomSheetViewModel {
     
-    //  유효성 검사 결과 타입 정의
     enum ValidationResult {
         case success
         case empty
@@ -23,7 +21,7 @@ final class NicknameSelectViewModel {
     }
     
     struct Input {
-        let nicknameInput: Observable<String>
+        let languageInput: Observable<String>
         let nextButtonTapped: Observable<Void>
     }
     
@@ -32,70 +30,106 @@ final class NicknameSelectViewModel {
         let buttonTapValidation: Driver<ValidationResult>
     }
     
-    private weak var coordinator: NicknameSelectCoordinator?
+    private let currentLanguage = BehaviorRelay<String>(value: "")
     private let disposeBag = DisposeBag()
     
-    private let currentNickname = BehaviorRelay<String>(value: "")
-    
-    init(coordinator: NicknameSelectCoordinator) {
-        self.coordinator = coordinator
-    }
-    
     func transform(input: Input) -> Output {
-        input.nicknameInput
-            .bind(to: currentNickname)
+        
+        input.languageInput
+            .bind(to: currentLanguage)
             .disposed(by: disposeBag)
         
-        // 실시간: 2~10글자 체크만
-        let isLengthValid = input.nicknameInput
+        let isLengthValid = input.languageInput
             .map { text -> Bool in
                 let trimmed = text.trimmingCharacters(in: .whitespaces)
                 let count = trimmed.count
-                return count >= 2 && count <= 10
+                return count >= 2 && count <= 15
             }
             .asDriver(onErrorJustReturn: false)
         
-        // 버튼 탭 시: 전체 유효성 검사
         let buttonTapValidation = input.nextButtonTapped
-            .withLatestFrom(currentNickname)
-            .map { [weak self] nickname -> ValidationResult in
+            .withLatestFrom(currentLanguage)
+            .map { [weak self] language -> ValidationResult in
                 guard let self = self else { return .empty }
-                return self.validateNickname(nickname)
+                return self.validateLanguage(language)
             }
             .asDriver(onErrorJustReturn: .empty)
         
-        // 유효성 검사 통과 시 화면 전환
         input.nextButtonTapped
-            .withLatestFrom(currentNickname)
-            .subscribe(onNext: { [weak self] nickname in
+            .withLatestFrom(currentLanguage)
+            .subscribe(onNext: { [weak self] language in
                 guard let self = self else { return }
                 
-                let trimmedNickname = nickname.trimmingCharacters(in: .whitespaces)
-                print("🔵 다음 버튼 탭됨 - 닉네임: \(trimmedNickname)")
+                let trimmedLanguage = language.trimmingCharacters(in: .whitespaces)
+                print("🔵 다음 버튼 탭됨 - 언어: \(trimmedLanguage)")
                 
-                let result = self.validateNickname(trimmedNickname)
+                let result = self.validateLanguage(trimmedLanguage)
                 print("🔍 유효성 검사 결과: \(result)")
                 
                 if case .success = result {
                     print("✅ 닉네임 입력 완료")
-                    self.coordinator?.showJobSelectFlow(selectedNickname: trimmedNickname)
                 } else {
                     print("❌ 유효성 검사 실패: \(result)")
                 }
             })
             .disposed(by: disposeBag)
         
-        return Output(
-            isLengthValid: isLengthValid,
-            buttonTapValidation: buttonTapValidation
-        )
+        return Output(isLengthValid: isLengthValid, buttonTapValidation: buttonTapValidation)
+        
+        //        // 텍스트 입력에 따른 검증 결과
+        //        let validationResult = input.languageInput
+        //            .map { [weak self] text -> (isValid: Bool, message: String?) in
+        //                return self?.validateInput(text) ?? (false, nil)
+        //            }
+        //            .share(replay: 1)
+        //
+        //        // 유효성 여부
+        //        let isValid = validationResult
+        //            .map { $0.isValid }
+        //            .asDriver(onErrorJustReturn: false)
+        //
+        //        // 경고 메시지
+        //        let warningMessage = validationResult
+        //            .map { $0.message }
+        //            .asDriver(onErrorJustReturn: nil)
+        //
+        //        // 클리어 버튼 탭 처리
+        //        let clearText = input.clearButtonTapped
+        //            .asDriver(onErrorDriveWith: .empty())
+        //
+        //        return Output(
+        //            isValid: isValid,
+        //            warningMessage: warningMessage,
+        //            clearText: clearText
+        //        )
     }
     
-    // MARK: - Validation Methods
+    // 입력 검증 로직
+    //    private func validateInput(_ text: String) -> (isValid: Bool, message: String?) {
+    //        let trimmed = text.trimmingCharacters(in: .whitespaces)
+    //
+    //        // 1. 비어있는 경우
+    //        if trimmed.isEmpty {
+    //            return (false, "*외국어를 입력해주세요.")
+    //        }
+    //
+    //        // 2. 자음/모음 섞여있는지 체크
+    //        if containsIncompleteKorean(trimmed) {
+    //            return (false, "*올바른 형태로 입력해주세요.")
+    //        }
+    //
+    //        // 3. 2~15자 이내 체크
+    //        if trimmed.count < 2 || trimmed.count > 15 {
+    //            return (false, "*2~15자 이내로 입력해주세요.")
+    //        }
+    //
+    //        // 모든 조건 통과
+    //        return (true, nil)
+    //    }
     
-    /// 전체 유효성 검사 (버튼 탭 시에만 실행)
-    private func validateNickname(_ nickname: String) -> ValidationResult {
-        let trimmed = nickname.trimmingCharacters(in: .whitespaces)
+    // 전체 유효성 검사 (버튼 탭 시에만 실행)
+    private func validateLanguage(_ language: String) -> ValidationResult {
+        let trimmed = language.trimmingCharacters(in: .whitespaces)
         
         // 1. 빈 문자열 체크
         if trimmed.isEmpty {
@@ -107,7 +141,7 @@ final class NicknameSelectViewModel {
             return .tooShort
         }
         
-        if trimmed.count > 10 {
+        if trimmed.count > 15 {
             return .tooLong
         }
         
@@ -124,7 +158,7 @@ final class NicknameSelectViewModel {
         return .success
     }
     
-    /// 한글만 포함되어 있는지 검사 (숫자, 영어, 특수문자 제외)
+    // 한글만 포함되어 있는지 검사 (숫자, 영어, 특수문자 제외)
     private func isOnlyKorean(_ text: String) -> Bool {
         let koreanPattern = "^[가-힣ㄱ-ㅎㅏ-ㅣ\\s]*$"
         let predicate = NSPredicate(format: "SELF MATCHES %@", koreanPattern)
@@ -169,70 +203,17 @@ final class NicknameSelectViewModel {
         
         return true
     }
+    
+    
+    // 한글 입력 체크 (자음/모음만 있는 경우)
+//    private func containsIncompleteKorean(_ text: String) -> Bool {
+//        for char in text {
+//            let scalar = char.unicodeScalars.first?.value ?? 0
+//            
+//            if (0x3131...0x314E).contains(scalar) || (0x314F...0x3163).contains(scalar) {
+//                return true
+//            }
+//        }
+//        return false
+//    }
 }
-
-
-//final class NicknameSelectViewModel {
-//
-//    struct Input {
-//        let nicknameInput: Observable<String>
-//        let nextButtonTapped: Observable<Void>
-//    }
-//
-//    struct Output {
-//        let isValid: Driver<Bool>
-//        let formattedNickname: Driver<String>
-//    }
-//
-//    private weak var coordinator: NicknameSelectCoordinator?
-//    private let disposeBag = DisposeBag()
-//
-//    private let currentNickname = BehaviorRelay<String>(value: "")
-//    private let maxLength = 10  // 닉네임 최대 길이
-//
-//    init(coordinator: NicknameSelectCoordinator) {
-//        self.coordinator = coordinator
-//    }
-//
-//    func transform(input: Input) -> Output {
-//        input.nicknameInput
-//            .bind(to: currentNickname)
-//            .disposed(by: disposeBag)
-//
-//        input.nextButtonTapped
-//            .withLatestFrom(currentNickname)
-//            .subscribe(onNext: { [weak self] nickname in
-//                guard let self = self else { return }
-//
-//                let trimmedNickname = nickname.trimmingCharacters(in: .whitespaces)
-//                print("🔵 다음 버튼 탭됨 - 닉네임: \(trimmedNickname)")
-//
-//
-//                if trimmedNickname.count >= 2 && trimmedNickname.count <= 10 {
-//                    print("✅ 닉네임 입력 완료")
-//                    self.coordinator?.showJobSelectFlow(selectedNickname: trimmedNickname)
-//                }
-//            })
-//            .disposed(by: disposeBag)
-//
-//        let isValid = input.nicknameInput
-//            .map { nickname in
-//                let trimmed = nickname.trimmingCharacters(in: .whitespaces)
-//                return trimmed.count >= 2 && trimmed.count <= 10
-//            }
-//            .asDriver(onErrorJustReturn: false)
-//
-//        // 닉네임 포맷팅 (최대 길이 제한)
-//        let formattedNickname = input.nicknameInput
-//            .map { [weak self] nickname -> String in
-//                guard let self = self else { return nickname }
-//                return String(nickname.prefix(self.maxLength))
-//            }
-//            .asDriver(onErrorJustReturn: "")
-//
-//        return Output(
-//            isValid: isValid,
-//            formattedNickname: formattedNickname
-//        )
-//    }
-//}

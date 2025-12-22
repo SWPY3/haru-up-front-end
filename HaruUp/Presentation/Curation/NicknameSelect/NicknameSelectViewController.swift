@@ -277,13 +277,6 @@ class NicknameSelectViewController: UIViewController {
             paddingLeft: 20
         )
         
-        //        nextButton.translatesAutoresizingMaskIntoConstraints = false
-        //        NSLayoutConstraint.activate([
-        //            nextButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20),
-        //            nextButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
-        //            nextButton.heightAnchor.constraint(equalToConstant: 56)
-        //        ])
-        
         nextButtonBottomConstraint = nextButton.bottomAnchor.constraint(
             equalTo: view.safeAreaLayoutGuide.bottomAnchor,
             constant: -5
@@ -381,22 +374,22 @@ class NicknameSelectViewController: UIViewController {
                     self.warningLabel.text = ""
                     
                 case .empty:
-                    self.warningLabel.text = "*닉네임을 입력해주세요."
+                    self.warningLabel.setStyle(Typography.body4, text: "*닉네임을 입력해주세요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
                 case .tooShort, .tooLong:
-                    self.warningLabel.text = "*2~10자로 입력해주세요."
+                    self.warningLabel.setStyle(Typography.body4, text: "*2~10자로 입력해주세요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
                 case .invalidCharacters:
-                    self.warningLabel.text = "*한글만 입력해주세요."
+                    self.warningLabel.setStyle(Typography.body4, text: "*한글만 입력해주세요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
                 case .incompleteKorean:
-                    self.warningLabel.text = "*올바른 형태로 입력해주세요."
+                    self.warningLabel.setStyle(Typography.body4, text: "*올바른 형태로 입력해주세요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                 }

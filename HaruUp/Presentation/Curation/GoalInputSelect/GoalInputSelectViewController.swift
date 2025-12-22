@@ -79,7 +79,6 @@ class GoalInputSelectViewController: UIViewController {
     // 선택된 관심사 표시 라벨
     private let selectedInterestLabel: UILabel = {
         let label = UILabel()
-//        label.text = "선택한 관심사 : "
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .left
         label.textColor = .systemBlue
@@ -373,7 +372,7 @@ class GoalInputSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 현재 닉네임 저장
+        // 현재 목표 저장
         textField.rx.text.orEmpty
             .subscribe(onNext: { [weak self] text in
                 self?.currentGoalInput = text.trimmingCharacters(in: .whitespaces)
@@ -431,17 +430,17 @@ class GoalInputSelectViewController: UIViewController {
                     
                     
                 case .empty:
-                    self.warningLabel.text = "*목표를 입력해주세요."
+                    self.warningLabel.setStyle(Typography.body4, text: "*목표를 입력해주세요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
                 case .tooShort, .tooLong:
-                    self.warningLabel.text = "*20자 이내로 입력해주세요."
+                    self.warningLabel.setStyle(Typography.body4, text: "*20자 이내로 입력해주세요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                     
                 case .invalidGoal:
-                    self.warningLabel.text = "*세부 관심사와 맞지 않는 목표예요."
+                    self.warningLabel.setStyle(Typography.body4, text: "*세부 관심사와 맞지 않는 목표예요.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                 }
