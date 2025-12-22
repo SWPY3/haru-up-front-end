@@ -58,7 +58,6 @@ final class GoalSelectCoordinator: Coordinator {
         print("관심사: \(curationData.interest ?? "없음")")
         print("세부 관심사: \(curationData.interestDetail ?? "없음")")
         print("목표: \(curationData.goal ?? "없음")")
-        print("직접 입력 목표: \(curationData.goalInput ?? "없음")")
         print("📦 ========================== 📦")
         
         // 온보딩 완료!!

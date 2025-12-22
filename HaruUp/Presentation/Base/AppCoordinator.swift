@@ -123,7 +123,6 @@ final class AppCoordinator: Coordinator {
             print("관심사: \(curationData.interest ?? "없음")")
             print("세부 관심사: \(curationData.interestDetail ?? "없음")")
             print("목표: \(curationData.goal ?? "없음")")
-            print("직접 입력 목표: \(curationData.goalInput ?? "없음")")
             print("📦 ========================== 📦")
             
             if let coordinator = characterSelectCoordinator,
@@ -131,9 +130,7 @@ final class AppCoordinator: Coordinator {
                 self?.childCoordinators.remove(at: index)
                 print("🗑️ CharacterSelectCoordinator 제거됨 (남은 자식: \(self?.childCoordinators.count ?? 0))")
             }
-            
-//            self?.saveCurationData(finalData)
-            self?.showMainTabFlow()
+            self?.showLoadingFlow()
         }
         
             
@@ -143,6 +140,12 @@ final class AppCoordinator: Coordinator {
     }
     
     
+    private func showLoadingFlow() {
+        let loadingCoordinator = LoadingCoordinator(navigationController: navigationController, curationData: curationData)
+        childCoordinators.append(loadingCoordinator)
+        
+        loadingCoordinator.start()
+    }
     
     private func showMainTabFlow() {
         let mainTabCoordinator = MainTabBarCoordinator(navigationController: navigationController)

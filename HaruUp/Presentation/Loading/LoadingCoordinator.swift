@@ -5,4 +5,29 @@
 //  Created by 하다현 on 12/23/25.
 //
 
-import Foundation
+import UIKit
+
+
+final class LoadingCoordinator: Coordinator {
+    let navigationController: UINavigationController
+    var childCoordinators: [any Coordinator] = []
+    
+    private var curationData: CurationData
+    
+    var onFinsh: (() -> Void)?
+    
+    init(navigationController: UINavigationController, curationData: CurationData) {
+        self.navigationController = navigationController
+        self.curationData = curationData
+    }
+    
+    func start() {
+        let loadingVM = LoadingViewModel()
+        let loadingVC = LoadingViewController(curationData: curationData, viewModel: loadingVM)
+        
+        navigationController.setViewControllers([loadingVC], animated: true)
+        
+        
+    }
+    
+}

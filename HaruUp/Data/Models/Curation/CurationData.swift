@@ -17,7 +17,6 @@ class CurationData {
     var interest: String?
     var interestDetail: String?
     var goal: String?
-    var goalInput: String?
     
     init() {}
     
@@ -32,8 +31,7 @@ class CurationData {
         birthDate != nil &&
         interest != nil &&
         interestDetail != nil && 
-        goal != nil &&
-        goalInput != nil
+        goal != nil
     }
     
     // 백엔드로 보낼 딕셔너리 형태로 변환
@@ -47,8 +45,7 @@ class CurationData {
                 "birthDate": birthDate ?? "",
                 "interest": interest ?? "",
                 "interestDetail": interestDetail ?? "",
-                "goal": goal ?? "",
-                "goalInput": goalInput ?? ""
+                "goal": goal ?? ""
             ]
         }
 }

@@ -29,7 +29,7 @@ class GoalInputSelectViewController: UIViewController {
     private var remainingSeconds = 0
     
     // 테스트용: API 응답 시뮬레이션
-    private var shouldPassValidation = false
+    private var shouldPassValidation = true
     
     
     private let backButton: UIButton = {
