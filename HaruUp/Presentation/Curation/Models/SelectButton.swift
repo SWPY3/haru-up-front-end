@@ -11,7 +11,6 @@ class SelectButton: UIButton {
     
     private var buttonIsSelected: Bool = false {
         didSet {
-//            print("버튼: \(self.titleLabel?.text ?? ""), 선택 상태: \(isSelected)")
             updateAppearance()
         }
     }
@@ -28,12 +27,12 @@ class SelectButton: UIButton {
     }
     
     private func setupButton() {
-        layer.cornerRadius = 12
+        layer.cornerRadius = 16
         layer.masksToBounds = true
         
-        backgroundColor = .systemGray6
+        backgroundColor = .neutral10
         
-        titleLabel?.font = .systemFont(ofSize: 16)
+        titleLabel?.setStyle(Typography.body1, text: "")
         setTitleColor(.black, for: .normal)
         
         
@@ -54,14 +53,22 @@ class SelectButton: UIButton {
     }
     
     private func updateAppearance() {
-            if buttonIsSelected {
-                layer.borderColor = UIColor.systemBlue.cgColor
-                layer.borderWidth = 2
-                backgroundColor = UIColor.systemBlue.withAlphaComponent(0.05)
-            } else {
-                layer.borderColor = nil
-                layer.borderWidth = 0
-                backgroundColor = .systemGray6
-            }
+        if buttonIsSelected {
+            
+            setTitleColor(.primaryBlue700, for: .selected)
+            
+            layer.borderWidth = 2
+            layer.borderColor = UIColor.cta.cgColor
+            
+            backgroundColor = .primaryBlue50
+        } else {
+
+//            setTitleColor(., for: .normal)
+            
+            layer.borderColor = nil
+            layer.borderWidth = 0
+            backgroundColor = .neutral10
         }
+    }
+    
 }

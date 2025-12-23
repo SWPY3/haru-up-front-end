@@ -98,7 +98,7 @@ class LoginViewController: UIViewController {
         configureUI()
         bind()
         
-        configureNextButton()
+//        configureNextButton()
     }
     
     private func configureNextButton() {
@@ -125,7 +125,7 @@ class LoginViewController: UIViewController {
         
         let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, naverLoginButton, appleLoginButton])
         stack.axis = .vertical
-        stack.spacing = 19
+        stack.spacing = 20
         
         view.addSubview(stack)
         
@@ -139,9 +139,9 @@ class LoginViewController: UIViewController {
             top: logoImageView.bottomAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 130,
-            paddingLeft: 28,
-            paddingRight: 28)
+            paddingTop: 160,
+            paddingLeft: 20,
+            paddingRight: 20)
         
     }
     

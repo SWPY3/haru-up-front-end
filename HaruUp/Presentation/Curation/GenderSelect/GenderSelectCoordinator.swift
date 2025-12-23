@@ -15,6 +15,7 @@ final class GenderSelectCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     private var curationData: CurationData
+    var onFinish: ((CurationData) -> Void)?
     
     init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
@@ -33,8 +34,17 @@ final class GenderSelectCoordinator: Coordinator {
         
         let birthSelectCoordinator = BirthSelectCoordinator(navigationController: navigationController, curationData: curationData)
         
-        
         curationData.gender = selectedGender
+        
+        birthSelectCoordinator.onFinish = { [weak self, weak birthSelectCoordinator] curationData in
+            if let coordinator = birthSelectCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+            }
+            
+            self?.onFinish?(curationData)
+        }
+        
         childCoordinators.append(birthSelectCoordinator)
         birthSelectCoordinator.start()
     }

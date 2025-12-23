@@ -11,21 +11,29 @@ import RxCocoa
 
 
 final class BirthSelectViewModel {
+    
+    enum ValidationResult {
+        case success    // 성공
+        case empty      // 빈 문자열
+        case tooShort
+        case tooLong
+        case invalid    // 유효하지 않은 날짜
+    }
+    
     struct Input {
         let birthInput: Observable<String>
         let nextButtonTapped: Observable<Void>
     }
     struct Output {
-        let isValid: Driver<Bool>
-        let formattedBirth: Driver<String>
-        let showInvalidDateAlert: Driver<Void>
+        let isLengthValid: Driver<Bool>
+        let buttonTapValidation: Driver<ValidationResult>
     }
     
     private weak var coordinator: BirthSelectCoordinator?
     private let disposeBag = DisposeBag()
     
     private let currentBirth = BehaviorRelay<String>(value: "")
-    private let invalidDateAlert = PublishSubject<Void>()
+
     
     init(coordinator: BirthSelectCoordinator) {
         self.coordinator = coordinator
@@ -37,47 +45,77 @@ final class BirthSelectViewModel {
             .bind(to: currentBirth)
             .disposed(by: disposeBag)
         
-        // 다음버튼 처리
+//        let isLengthValid = input.birthInput
+//            .map { text -> Bool in
+//                let trimmed = text.trimmingCharacters(in: .whitespaces)
+//                let count = trimmed.count
+//                return count == 8
+//            }
+//            .asDriver(onErrorJustReturn: false)
+        
+        // 8자리 글자 검사
+        let isLengthValid  = input.birthInput
+            .map { text -> Bool in
+                let trimmed = text.trimmingCharacters(in: .whitespaces)
+                let count = trimmed.count
+                return count == 8
+            }
+            .asDriver(onErrorJustReturn: false)
+        
+        
+        // 버튼 탭 시: 전체 유효성 검사
+        let buttonTapValidation = input.nextButtonTapped
+            .withLatestFrom(currentBirth)
+            .map { [weak self] birth -> ValidationResult in
+                guard let self = self else { return .empty }
+                return self.validateBirth(birth)
+            }
+            .asDriver(onErrorJustReturn: .empty)
+        
+        
+        // 유효성 검사 통과 시 화면 전환
         input.nextButtonTapped
             .withLatestFrom(currentBirth)
             .subscribe(onNext: { [weak self] birth in
+                guard let self = self else { return }
+                
+                let trimmedBirth = birth.trimmingCharacters(in: .whitespaces)
                 print("🔵 다음 버튼 탭됨 - 생년월일: \(birth)")
+                let result = self.validateBirth(trimmedBirth)
                 
-                
-                // 실제 날짜인지 검증
-                if ((self?.isValidDate(birth)) != nil) {
-                    print("✅ 유효한 날짜입니다")
-                    self?.coordinator?.showInterestSelectFlow(selectedBirth: birth)
+                if case .success = result {
+                    self.coordinator?.showInterestSelectFlow(selectedBirth: trimmedBirth)
                 } else {
-                    print("❌ 유효하지 않은 날짜입니다")
-                    self?.invalidDateAlert.onNext(())  // 에러 알림
+                    print("❌ 유효성 검사 실패: \(result)")
                 }
             })
             .disposed(by: disposeBag)
         
-        // 8자리 숫자 검사
-        let isValid = input.birthInput
-            .map { [weak self] birth in
-                guard let self = self else { return false }
-                
-                // 8자리이면서 실제 유효한 날짜인지 체크
-                return birth.count == 8 &&
-                birth.allSatisfy { $0.isNumber } &&
-                self.isValidDate(birth)
-            }
-            .asDriver(onErrorJustReturn: false)
+        return Output(isLengthValid: isLengthValid,
+                      buttonTapValidation: buttonTapValidation)
         
-        let formattedBirth = input.birthInput
-            .map { birth in
-                let numbers = birth.filter { $0.isNumber }
-                return String(numbers.prefix(8))
-            }
-            .asDriver(onErrorJustReturn: "")
+    }
+    
+    private func validateBirth(_ birth: String) -> ValidationResult {
+        let trimmed = birth.trimmingCharacters(in: .whitespaces)
         
-        return Output (isValid: isValid,
-                       formattedBirth: formattedBirth,
-                       showInvalidDateAlert: invalidDateAlert.asDriver(onErrorJustReturn: ())
-                       )
+        if trimmed.isEmpty {
+            return .empty
+        }
+        
+        if trimmed.count < 8 {
+            return .tooShort
+        }
+        
+        if trimmed.count > 8 {
+            return .tooLong
+        }
+        
+        if !isValidDate(trimmed) {
+            return .invalid
+        }
+        
+        return .success
     }
     
     // 생년월일 유효성 검사 (실제 날짜인지 확인)
@@ -91,20 +129,20 @@ final class BirthSelectViewModel {
               let month = Int(monthString),
               let day = Int(dayString) else {
             return false }
-            
-            // 연도 범위 체크 (1900년 ~ 현재년도)
-            let currentYear = Calendar.current.component(.year, from: Date())
-            guard year >= 1900 && year <= currentYear else { return false }
-            
-            // 월 범위 체크
-            guard month >= 1 && month <= 12 else { return false }
-            
-            // 일 범위 체크
-            guard day >= 1 && day <= 31 else { return false }
-            
-            // 실제 날짜 유효성 체크
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyyMMdd"
-            return dateFormatter.date(from: birth) != nil
-        }
+        
+        // 연도 범위 체크 (1900년 ~ 현재년도)
+        let currentYear = Calendar.current.component(.year, from: Date())
+        guard year >= 1900 && year <= currentYear else { return false }
+        
+        // 월 범위 체크
+        guard month >= 1 && month <= 12 else { return false }
+        
+        // 일 범위 체크
+        guard day >= 1 && day <= 31 else { return false }
+        
+        // 실제 날짜 유효성 체크
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd"
+        return dateFormatter.date(from: birth) != nil
     }
+}

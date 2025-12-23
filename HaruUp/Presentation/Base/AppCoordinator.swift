@@ -101,40 +101,69 @@ final class AppCoordinator: Coordinator {
                 self.childCoordinators.remove(at: index)
             }
             
-            self.createProfileFlow()
+            self.showCurationFlow()
         }
         
         childCoordinators.append(onboardingCoordinator)
         onboardingCoordinator.start()
     }
     
-    private func createProfileFlow() {
-        let createProfileCoordinator = CreateProfileCoordinator(navigationController: navigationController,
-                                                                curationData: curationData)
+    private func showCurationFlow() {
+        let characterSelectCoordinator = CharacterSelectCoordinator(navigationController: navigationController,
+                                                                    curationData: curationData)
         
-        createProfileCoordinator.onFinish = { [weak self, weak createProfileCoordinator] in
+        characterSelectCoordinator.onFinish = { [weak self, weak characterSelectCoordinator] curationData in
+            print("📦 ===== 최종 수집된 데이터 ===== 📦")
+            print("캐릭터 ID: \(curationData.characterId ?? -1)")
+            print("닉네임: \(curationData.nickname ?? "없음")")
+            print("직업: \(curationData.job ?? "없음")")
+            print("세부 직무: \(curationData.jobDetail ?? "없음")")
+            print("성별: \(curationData.gender ?? "없음")")
+            print("생년월일: \(curationData.birthDate ?? "없음")")
+            print("관심사: \(curationData.interest ?? "없음")")
+            print("세부 관심사: \(curationData.interestDetail ?? "없음")")
+            print("목표: \(curationData.goal ?? "없음")")
+            print("📦 ========================== 📦")
+            
+            if let coordinator = characterSelectCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+                print("🗑️ CharacterSelectCoordinator 제거됨 (남은 자식: \(self?.childCoordinators.count ?? 0))")
+            }
+            self?.showLoadingFlow()
+        }
+        
+            
+        
+        childCoordinators.append(characterSelectCoordinator)
+        characterSelectCoordinator.start()
+    }
+    
+    
+    private func showLoadingFlow() {
+        let loadingCoordinator = LoadingCoordinator(navigationController: navigationController, curationData: curationData)
+        
+        loadingCoordinator.onFinsh = { [weak self, weak loadingCoordinator] in
             guard let self = self else { return }
             
-            if let coordinator = createProfileCoordinator,
+            if let coordinator = loadingCoordinator,
                let index = self.childCoordinators.firstIndex(where: {$0 === coordinator}) {
                 self.childCoordinators.remove(at: index)
             }
             
-            self.showJobSelectFlow()
+            self.showLoadingCompleteFlow()
         }
+        childCoordinators.append(loadingCoordinator)
         
-        childCoordinators.append(createProfileCoordinator)
-        createProfileCoordinator.start()
+        loadingCoordinator.start()
     }
     
-    private func showJobSelectFlow() {
-        let jobSelectCoordinator = JobSelectCoordinator(navigationController: navigationController, curationData: curationData)
-        childCoordinators.append(jobSelectCoordinator)
+    private func showLoadingCompleteFlow() {
+        let loadingCompleteCoordinator = LoadingCompleteCoordinator(navigationController: navigationController)
+        childCoordinators.append(loadingCompleteCoordinator)
         
-        jobSelectCoordinator.start()
+        loadingCompleteCoordinator.start()
     }
-    
-    
     
     private func showMainTabFlow() {
         let mainTabCoordinator = MainTabBarCoordinator(navigationController: navigationController)

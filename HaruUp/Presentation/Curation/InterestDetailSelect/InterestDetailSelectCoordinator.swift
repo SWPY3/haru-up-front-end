@@ -16,6 +16,8 @@ final class InterestDetailSelectCoordinator: Coordinator {
     private var curationData: CurationData
     private let selectedInterest: String
     
+    var onFinish: ((CurationData) -> Void)?
+    
     init(navigationController: UINavigationController, selectedInterest: String, curationData: CurationData) {
         self.navigationController = navigationController
         self.selectedInterest = selectedInterest
@@ -40,7 +42,7 @@ final class InterestDetailSelectCoordinator: Coordinator {
     func showForeignLanguageInput() {
         print("🔵 외국어 입력 모달 표시")
         
-        let bottomSheet = ForeignLanguageInputBottomSheet()
+        let bottomSheet = ForeignLanguageInputBottomSheet(viewModel: ForeignLanguageInputBottomSheetViewModel())
         bottomSheet.modalPresentationStyle = .overFullScreen
         bottomSheet.modalTransitionStyle = .crossDissolve
         
@@ -62,6 +64,15 @@ final class InterestDetailSelectCoordinator: Coordinator {
         print("📦 저장된 데이터 - 상세직업: \(selectedInterestDetail)")
         
         let goalSelectCoordinator = GoalSelectCoordinator(navigationController: navigationController, selectedInterestDetail: selectedInterestDetail, curationData: curationData)
+        
+        goalSelectCoordinator.onFinish = { [weak self, weak goalSelectCoordinator] curationData in
+            if let coordinator = goalSelectCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+            }
+            
+            self?.onFinish?(curationData)
+        }
         
         childCoordinators.append(goalSelectCoordinator)
         
