@@ -23,11 +23,13 @@ final class LoadingCoordinator: Coordinator {
     
     func start() {
         let loadingVM = LoadingViewModel()
-        let loadingVC = LoadingViewController(curationData: curationData, viewModel: loadingVM)
+        let loadingVC = LoadingViewController(curationData: curationData, viewModel: loadingVM, coordinator: self)
         
         navigationController.setViewControllers([loadingVC], animated: true)
         
         
     }
+    
+    
     
 }

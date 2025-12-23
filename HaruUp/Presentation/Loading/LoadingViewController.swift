@@ -13,7 +13,7 @@ class LoadingViewController: UIViewController {
     let curationData: CurationData
     let viewModel: LoadingViewModel
     
-    
+    let coordinator: LoadingCoordinator
     
     private let backgroundImageView: UIImageView = {
         let iv = UIImageView()
@@ -62,9 +62,10 @@ class LoadingViewController: UIViewController {
     }()
     
     // MARK: - Init
-    init(curationData: CurationData, viewModel: LoadingViewModel) {
+    init(curationData: CurationData, viewModel: LoadingViewModel, coordinator: LoadingCoordinator) {
         self.curationData = curationData
         self.viewModel = viewModel
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -188,7 +189,7 @@ class LoadingViewController: UIViewController {
         }
         
         // 1단계 애니메이션 (0.5초 간격으로 하나씩)
-        animateBoxes(phase1Boxes, startDelay: 0.3, interval: 0.5) { [weak self] in
+        animateBoxes(phase1Boxes, startDelay: 0.4, interval: 0.7) { [weak self] in
             guard let self = self else { return }
             
             // 1단계 완료 후 1초 대기
@@ -198,7 +199,7 @@ class LoadingViewController: UIViewController {
                 
                 // 1단계 박스 제거
                 phase1Boxes.forEach { box in
-                    UIView.animate(withDuration: 0.3, animations: {
+                    UIView.animate(withDuration: 0.4, animations: {
                         box.alpha = 0
                         box.transform = CGAffineTransform(translationX: 0, y: -20)
                     }) { _ in
@@ -218,10 +219,10 @@ class LoadingViewController: UIViewController {
                     }
                     
                     // 2단계 애니메이션
-                    self.animateBoxes(phase2Boxes, startDelay: 0.3, interval: 0.5) {
+                    self.animateBoxes(phase2Boxes, startDelay: 0.4, interval: 0.7) {
                         // 모든 애니메이션 완료 후 1초 대기 후 다음 화면으로
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            self.navigateToMissionComplete()
+                            self.coordinator.onFinsh?()
                         }
                     }
                 }
@@ -234,7 +235,7 @@ class LoadingViewController: UIViewController {
             let delay = startDelay + (interval * Double(index))
             
             UIView.animate(
-                withDuration: 0.4,
+                withDuration: 0.6,
                 delay: delay,
                 usingSpringWithDamping: 0.8,
                 initialSpringVelocity: 0.5,

@@ -142,9 +142,27 @@ final class AppCoordinator: Coordinator {
     
     private func showLoadingFlow() {
         let loadingCoordinator = LoadingCoordinator(navigationController: navigationController, curationData: curationData)
+        
+        loadingCoordinator.onFinsh = { [weak self, weak loadingCoordinator] in
+            guard let self = self else { return }
+            
+            if let coordinator = loadingCoordinator,
+               let index = self.childCoordinators.firstIndex(where: {$0 === coordinator}) {
+                self.childCoordinators.remove(at: index)
+            }
+            
+            self.showLoadingCompleteFlow()
+        }
         childCoordinators.append(loadingCoordinator)
         
         loadingCoordinator.start()
+    }
+    
+    private func showLoadingCompleteFlow() {
+        let loadingCompleteCoordinator = LoadingCompleteCoordinator(navigationController: navigationController)
+        childCoordinators.append(loadingCompleteCoordinator)
+        
+        loadingCompleteCoordinator.start()
     }
     
     private func showMainTabFlow() {
