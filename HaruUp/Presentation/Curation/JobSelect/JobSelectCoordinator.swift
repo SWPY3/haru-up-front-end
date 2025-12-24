@@ -28,14 +28,14 @@ final class JobSelectCoordinator: Coordinator {
         navigationController.pushViewController(jobSelectVC, animated: true)
     }
     
-    func showjobDetailFlow(selectedJob: String) {
+    func showjobDetailFlow(selectedJob: Job) {
         let jobDetailSelectCoordinator = JobDetailSelectCoordinator(
             navigationController: navigationController,
             selectedJob: selectedJob,
             curationData: curationData
         )
         curationData.job = selectedJob
-        print("📦 저장된 데이터 - 직업: \(selectedJob)")
+        print("📦 저장된 데이터 - 직업: \(selectedJob.jobName), ID: \(selectedJob.id)")
         
         jobDetailSelectCoordinator.onFinish = { [weak self, weak jobDetailSelectCoordinator] curationData in
             if let coordinator = jobDetailSelectCoordinator,

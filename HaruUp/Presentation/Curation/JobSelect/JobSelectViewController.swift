@@ -15,9 +15,11 @@ class JobSelectViewController: UIViewController {
     
     private let disposeBag = DisposeBag()
     
-    private let jobSelectedSubject = PublishSubject<String>()
+    private let viewDidLoadSubject = PublishSubject<Void>()
+    private let jobSelectedSubject = PublishSubject<Job>()
+    
     private var jobButtons: [SelectButton] = []
-    private var jobs: [String] = []
+    private var jobs: [Job] = []
     
     private let backButton: UIButton = {
         let button = UIButton()
@@ -94,6 +96,14 @@ class JobSelectViewController: UIViewController {
         return btn
     }()
     
+    private let activityIndicator: UIActivityIndicatorView = {
+            let indicator = UIActivityIndicatorView(style: .large)
+            indicator.color = .primaryBlue700
+            indicator.hidesWhenStopped = true
+            indicator.translatesAutoresizingMaskIntoConstraints = false
+            return indicator
+        }()
+    
     
     
     // MARK: - Init
@@ -114,6 +124,8 @@ class JobSelectViewController: UIViewController {
         
         setupUI()
         bindViewModel()
+        
+        viewDidLoadSubject.onNext(())
     }
     
     
@@ -125,6 +137,7 @@ class JobSelectViewController: UIViewController {
         view.addSubview(stackView)
         view.addSubview(jobButtonsStackView)
         view.addSubview(nextButton)
+        view.addSubview(activityIndicator)
         
         stackView.addArrangedSubview(progressBar)
         
@@ -180,6 +193,9 @@ class JobSelectViewController: UIViewController {
             height: 56
         )
         
+        activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        
     }
     
     // MARK: - Binding ViewModel
@@ -193,10 +209,23 @@ class JobSelectViewController: UIViewController {
         
         
         let input = JobSelectViewModel.Input(
+            viewDidLoad: viewDidLoadSubject.asObservable(),
             jobSelected: jobSelectedSubject.asObservable(),
             nextButtonTapped: nextButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
+        
+        output.isLoading
+                    .drive(onNext: { [weak self] isLoading in
+                        if isLoading {
+                            self?.activityIndicator.startAnimating()
+                            self?.jobButtonsStackView.isHidden = true
+                        } else {
+                            self?.activityIndicator.stopAnimating()
+                            self?.jobButtonsStackView.isHidden = false
+                        }
+                    })
+                    .disposed(by: disposeBag)
         
         // 직업 목록 받아 버튼 생성
         output.jobs
@@ -212,7 +241,7 @@ class JobSelectViewController: UIViewController {
                 guard let self = self else { return }
                 
                 self.jobButtons.enumerated().forEach { index, button in
-                    let isSelected = self.jobs[index] == selectedJob
+                    let isSelected = self.jobs[index].id == selectedJob?.id
                     button.setSelected(isSelected)
                 }
             })
@@ -228,13 +257,13 @@ class JobSelectViewController: UIViewController {
             .disposed(by: disposeBag)
     }
     
-    private func createJobButtons(with jobs: [String]) {
+    private func createJobButtons(with jobs: [Job]) {
         jobButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         jobButtons.removeAll()
         
         jobs.forEach { job in
             let button = SelectButton()
-            button.setTitle(job, for: .normal)
+            button.setTitle(job.jobName, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             

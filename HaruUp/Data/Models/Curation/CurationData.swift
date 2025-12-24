@@ -10,8 +10,8 @@ import Foundation
 class CurationData {
     var characterId: Int?
     var nickname: String?
-    var job: String?
-    var jobDetail: String?
+    var job: Job?
+    var jobDetail: JobDetail?
     var gender: String?
     var birthDate: String?
     var interest: String?

@@ -65,27 +65,6 @@ final class NicknameSelectViewModel {
             }
             .asDriver(onErrorJustReturn: .empty)
         
-        // 유효성 검사 통과 시 화면 전환
-        //        input.nextButtonTapped
-        //            .withLatestFrom(currentNickname)
-        //            .subscribe(onNext: { [weak self] nickname in
-        //                guard let self = self else { return }
-        //
-        //                let trimmedNickname = nickname.trimmingCharacters(in: .whitespaces)
-        //                print("🔵 다음 버튼 탭됨 - 닉네임: \(trimmedNickname)")
-        //
-        //                let result = self.validateNickname(trimmedNickname)
-        //                print("🔍 유효성 검사 결과: \(result)")
-        //
-        //                if case .success = result {
-        //                    print("✅ 닉네임 입력 완료")
-        //                    self.coordinator?.showJobSelectFlow(selectedNickname: trimmedNickname)
-        //                } else {
-        //                    print("❌ 유효성 검사 실패: \(result)")
-        //                }
-        //            })
-        //            .disposed(by: disposeBag)
-        
         input.nextButtonTapped
             .withLatestFrom(currentNickname)
             .flatMapLatest { [weak self] nickname -> Observable<ValidationResult> in
