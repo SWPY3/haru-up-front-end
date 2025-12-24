@@ -269,9 +269,6 @@ final class NicknameSelectViewModel {
                             print("📛 HTTP Status Code: \(statusCode)")
                         }
                         
-                        // 네트워크 오류 시 일단 통과 처리
-                        observer.onNext(.success)
-                        observer.onCompleted()
                     }
                 }
             
