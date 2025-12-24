@@ -83,11 +83,27 @@ final class HomeHeaderView: UIView {
         return view
     }()
     
+    private let characterContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        
+        return view
+    }()
+    
     private let characterImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         imageView.image = .characterWhiteLevel1
+        
+        return imageView
+    }()
+    
+    private let characterShadowImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.clipsToBounds = true
+        imageView.image = .characterShadow
         
         return imageView
     }()
@@ -156,14 +172,10 @@ final class HomeHeaderView: UIView {
         return stackView
     }()
     
-    private let expProgressView: UIProgressView = {
-        let view = UIProgressView(progressViewStyle: .default)
-        view.trackTintColor = .neutral50
-        view.progressTintColor = .primaryBlue700
-        view.progress = 0.5
-        view.layer.cornerRadius = 6
-        view.clipsToBounds = true
-        
+    private let expProgressView: RoundedProgressView = {
+        let view = RoundedProgressView()
+        view.setColors(trackTintColor: .white, trackBorderColor: .neutral50, progressColor: .primaryBlue700)
+
         return view
     }()
     
@@ -226,6 +238,8 @@ final class HomeHeaderView: UIView {
         configureCharacterInfo()
         
         applyBackgroundAspect()
+        
+        expProgressView.progress = 0.5
     }
 
     private func applyBackgroundAspect() {
@@ -306,7 +320,22 @@ final class HomeHeaderView: UIView {
     private func configureCharacter() {
         stackView.setCustomSpacing(20, after: bubbleContainer)
         
-        stackView.addArrangedSubview(characterImageView)
+        stackView.addArrangedSubview(characterContainer)
+        
+        [characterShadowImageView, characterImageView].forEach {
+            characterContainer.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        NSLayoutConstraint.activate([
+            characterImageView.topAnchor.constraint(equalTo: characterContainer.topAnchor),
+            characterImageView.bottomAnchor.constraint(equalTo: characterContainer.bottomAnchor),
+            characterImageView.leadingAnchor.constraint(equalTo: characterContainer.leadingAnchor),
+            characterImageView.trailingAnchor.constraint(equalTo: characterContainer.trailingAnchor),
+            
+            characterShadowImageView.bottomAnchor.constraint(equalTo: characterImageView.bottomAnchor, constant: -3),
+            characterShadowImageView.leadingAnchor.constraint(equalTo: characterImageView.centerXAnchor, constant: -32)
+        ])
     }
     
     private func configureCharacterInfo() {

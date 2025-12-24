@@ -11,10 +11,24 @@ final class MainTabBarView: UIView {
 
     var onSelect: ((MainTab) -> Void)?
 
+    private let shadowContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.layer.masksToBounds = false
+        view.layer.shadowColor = UIColor.tabbarShadow.cgColor
+        view.layer.shadowOpacity = 1.0
+        view.layer.shadowOffset = CGSize(width: 0, height: -10)
+        view.layer.shadowRadius = 22 / 2 /// Figma의 Blur를 적용할 때 /2
+        
+        return view
+    }()
+    
     private let backgroundView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
-        view.layer.cornerRadius = 25
+        view.layer.borderWidth = 0.5
+        view.layer.borderColor = UIColor.neutral50.cgColor
+        view.layer.cornerRadius = 24
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner] // 왼쪽 위, 오른쪽 위
         view.layer.masksToBounds = true
         
@@ -41,6 +55,12 @@ final class MainTabBarView: UIView {
         setSelected(.home)
     }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        configureBackgroundShadow()
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -49,19 +69,37 @@ final class MainTabBarView: UIView {
         backgroundColor = .clear
         
         configureBackgroundView()
+        configureBackgroundShadow()
         configureStackView()
     }
     
     private func configureBackgroundView() {
-        addSubview(backgroundView)
+        addSubview(shadowContainerView)
+        shadowContainerView.addSubview(backgroundView)
+
+        shadowContainerView.translatesAutoresizingMaskIntoConstraints = false
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
-        
+
         NSLayoutConstraint.activate([
-            backgroundView.topAnchor.constraint(equalTo: topAnchor),
-            backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            shadowContainerView.topAnchor.constraint(equalTo: topAnchor),
+            shadowContainerView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            shadowContainerView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            shadowContainerView.bottomAnchor.constraint(equalTo:bottomAnchor),
+        
+            backgroundView.topAnchor.constraint(equalTo: shadowContainerView.topAnchor),
+            backgroundView.leadingAnchor.constraint(equalTo: shadowContainerView.leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: shadowContainerView.trailingAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: shadowContainerView.bottomAnchor),
         ])
+    }
+    
+    private func configureBackgroundShadow() {
+        let path = UIBezierPath(
+            roundedRect: shadowContainerView.bounds,
+            byRoundingCorners: [.topLeft, .topRight],
+            cornerRadii: CGSize(width: 24, height: 24)
+        )
+        shadowContainerView.layer.shadowPath = path.cgPath
     }
     
     private func configureStackView() {
