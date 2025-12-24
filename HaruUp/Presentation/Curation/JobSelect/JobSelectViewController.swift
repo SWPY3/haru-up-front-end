@@ -19,18 +19,26 @@ class JobSelectViewController: UIViewController {
     private var jobButtons: [SelectButton] = []
     private var jobs: [String] = []
     
+    private let backButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "chevron_left.png"), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 1.0 / 7.0
-        progressBar.tintColor = .systemBlue
+        progressBar.progress = 2.0 / 8.0
+        progressBar.tintColor = .primaryBlue700
+        progressBar.trackTintColor = .neutral50
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "현재 어떤 일을 하고 계신가요?"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
+        label.setStyle(Typography.title2, text: "현재 어떤 일을 하고 계신가요?")
         label.textAlignment = .left
         label.numberOfLines = 0
         label.textColor = .black
@@ -40,34 +48,11 @@ class JobSelectViewController: UIViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "적절한 관심사를 추천하기 위해 필요해요."
-        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.setStyle(Typography.body4, text: "적절한 관심사를 추천하기 위해 필요해요.")
         label.textAlignment = .left
-        label.textColor = .gray
+        label.textColor = .neutral700
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
-    }()
-    
-    private let jobButtonsStackView: UIStackView = {
-        let sv = UIStackView()
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.axis = .vertical
-        sv.alignment = .fill
-        sv.distribution = .fill
-        sv.spacing = 12
-        return sv
-    }()
-    
-    private let nextButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("다음", for: .normal)
-        button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 12
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.isEnabled = false
-        button.alpha = 0.5
-        return button
     }()
     
     private let stackView: UIStackView = {
@@ -90,6 +75,24 @@ class JobSelectViewController: UIViewController {
         return sv
     }()
     
+    private let jobButtonsStackView: UIStackView = {
+        let sv = UIStackView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .fill
+        sv.spacing = 12
+        return sv
+    }()
+    
+    private let nextButton: UIButton = {
+        let btn = UIButton()
+        btn.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.contentMode = .scaleAspectFit
+        btn.isEnabled = false
+        return btn
+    }()
     
     
     
@@ -109,7 +112,6 @@ class JobSelectViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
         setupUI()
         bindViewModel()
     }
@@ -117,8 +119,10 @@ class JobSelectViewController: UIViewController {
     
     // MARK: - Setup UI
     func setupUI() {
+        view.backgroundColor = .white
+        
+        view.addSubview(backButton)
         view.addSubview(stackView)
-        view.addSubview(titleLabelStackView)
         view.addSubview(jobButtonsStackView)
         view.addSubview(nextButton)
         
@@ -129,20 +133,32 @@ class JobSelectViewController: UIViewController {
         
         stackView.addArrangedSubview(titleLabelStackView)
         
+        backButton.anchor(
+            top: view.safeAreaLayoutGuide.topAnchor,
+            left: view.leftAnchor,
+            paddingTop: 10,
+            paddingLeft: 20,
+            width: 20,
+            height: 20
+        )
+        
         stackView.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 50,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
+        
+        progressBar.heightAnchor.constraint(equalToConstant: 6).isActive = true
+        
         titleLabelStackView.anchor(
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 20,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         jobButtonsStackView.anchor(
@@ -150,8 +166,8 @@ class JobSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 56,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         nextButton.anchor(
@@ -159,7 +175,7 @@ class JobSelectViewController: UIViewController {
             bottom: view.safeAreaLayoutGuide.bottomAnchor,
             right: view.rightAnchor,
             paddingLeft: 20,
-            paddingBottom: 20,
+            paddingBottom: 5,
             paddingRight: 20,
             height: 56
         )
@@ -168,6 +184,14 @@ class JobSelectViewController: UIViewController {
     
     // MARK: - Binding ViewModel
     private func bindViewModel() {
+        
+        backButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
+        
+        
         let input = JobSelectViewModel.Input(
             jobSelected: jobSelectedSubject.asObservable(),
             nextButtonTapped: nextButton.rx.tap.asObservable()
@@ -198,7 +222,8 @@ class JobSelectViewController: UIViewController {
             .map { $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
-                self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
+                let imageName = isEnabled ? "next_btn_blue" : "next_btn_gray"
+                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
             })
             .disposed(by: disposeBag)
     }
@@ -222,15 +247,5 @@ class JobSelectViewController: UIViewController {
             jobButtonsStackView.addArrangedSubview(button)
         }
     }
-    //
-    //     private func updateButtonSelection(selectedJob: String?) {
-    //         print("=== 선택된 직업: \(selectedJob ?? "없음") ===")
-    //         jobButtons.forEach { button in
-    //             let buttonTitle = button.titleLabel?.text
-    //             let isSelected = buttonTitle == selectedJob
-    //             print("버튼 '\(buttonTitle ?? "")' -> \(isSelected ? "선택" : "해제")")
-    //             button.setSelected(isSelected)
-    //         }
-    //    }
     
 }

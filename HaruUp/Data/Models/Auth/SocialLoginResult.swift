@@ -10,14 +10,11 @@ import Foundation
 
 struct SocialLoginResult {
     let success: Bool
-    // 기존 회원의 온보딩 완료 여부
-    let onboardingCompleted: Bool?
-    // 신규 회원의 온보딩 완료 여부
-    let onboardingRequired: Bool?
+    // 온보딩 완료 여부
+    let onboardingCompleted: Bool
     
-    init(success: Bool, onboardingCompleted: Bool? = nil, onboardingRequired: Bool? = nil) {
+    init(success: Bool, onboardingCompleted: Bool) {
         self.success = success
         self.onboardingCompleted = onboardingCompleted
-        self.onboardingRequired = onboardingRequired
     }
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		480A9BDE2EF9E63F00E9B443 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 480A9BDD2EF9E63F00E9B443 /* Lottie */; };
 		48894DCB2EE180BE00782FA3 /* NidThirdPartyLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 48894DCA2EE180BE00782FA3 /* NidThirdPartyLogin */; };
 		4893D23B2ED9771B0018D43A /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23A2ED9771B0018D43A /* KakaoSDKAuth */; };
 		4893D23D2ED9771B0018D43A /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23C2ED9771B0018D43A /* KakaoSDKCommon */; };
@@ -46,6 +47,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4893D23D2ED9771B0018D43A /* KakaoSDKCommon in Frameworks */,
+				480A9BDE2EF9E63F00E9B443 /* Lottie in Frameworks */,
 				4893D23B2ED9771B0018D43A /* KakaoSDKAuth in Frameworks */,
 				4893D2472ED985650018D43A /* RxSwift in Frameworks */,
 				4893D2452ED985650018D43A /* RxCocoa in Frameworks */,
@@ -99,6 +101,7 @@
 				4893D2442ED985650018D43A /* RxCocoa */,
 				4893D2462ED985650018D43A /* RxSwift */,
 				48894DCA2EE180BE00782FA3 /* NidThirdPartyLogin */,
+				480A9BDD2EF9E63F00E9B443 /* Lottie */,
 			);
 			productName = HaruUp;
 			productReference = 4893D1EC2ED6E2AE0018D43A /* HaruUp.app */;
@@ -132,6 +135,7 @@
 				4893D2392ED9771B0018D43A /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 				4893D2432ED985650018D43A /* XCRemoteSwiftPackageReference "RxSwift" */,
 				48894DC92EE180BE00782FA3 /* XCRemoteSwiftPackageReference "naveridlogin-sdk-ios-swift" */,
+				480A9BDC2EF9E63F00E9B443 /* XCRemoteSwiftPackageReference "lottie-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4893D1ED2ED6E2AE0018D43A /* Products */;
@@ -373,6 +377,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		480A9BDC2EF9E63F00E9B443 /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
 		48894DC92EE180BE00782FA3 /* XCRemoteSwiftPackageReference "naveridlogin-sdk-ios-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/naver/naveridlogin-sdk-ios-swift";
@@ -400,6 +412,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		480A9BDD2EF9E63F00E9B443 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 480A9BDC2EF9E63F00E9B443 /* XCRemoteSwiftPackageReference "lottie-spm" */;
+			productName = Lottie;
+		};
 		48894DCA2EE180BE00782FA3 /* NidThirdPartyLogin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 48894DC92EE180BE00782FA3 /* XCRemoteSwiftPackageReference "naveridlogin-sdk-ios-swift" */;

@@ -15,7 +15,7 @@ final class GoalInputSelectCoordinator: Coordinator {
     
     private var curationData: CurationData
     
-    var onFinish: (() -> Void)?
+    var onFinish: ((CurationData) -> Void)?
     
     init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
@@ -39,7 +39,14 @@ final class GoalInputSelectCoordinator: Coordinator {
         print("선택된 관심사: \(curationData.interest ?? "없음"), 작성한 목표: \(selectedGoalInput)")
         
         
-        curationData.goalInput = selectedGoalInput
+        curationData.goal = selectedGoalInput
+        
+        
+        // 온보딩 완료
+        TokenStorageService.shared.saveOnboardingCompleted(true)
+        print("✅온보딩 완료!! - onboardingCompleted: \(TokenStorageService.shared.isOnboardingCompleted)")
+        
+        
         print("📦 저장된 데이터 - 작성 목표: \(selectedGoalInput)")
         
         print("📦 ===== 최종 수집된 데이터 ===== 📦")
@@ -52,9 +59,9 @@ final class GoalInputSelectCoordinator: Coordinator {
         print("관심사: \(curationData.interest ?? "없음")")
         print("세부 관심사: \(curationData.interestDetail ?? "없음")")
         print("목표: \(curationData.goal ?? "없음")")
-        print("직접 입력 목표: \(curationData.goalInput ?? "없음")")
         print("📦 ========================== 📦")
         
+        onFinish?(curationData)
     }
 }
 

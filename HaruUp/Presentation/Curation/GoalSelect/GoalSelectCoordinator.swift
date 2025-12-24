@@ -16,7 +16,7 @@ final class GoalSelectCoordinator: Coordinator {
     private var curationData: CurationData
     private let selectedInterestDetail: String
     
-    var onFinish: (() -> Void)?
+    var onFinish: ((CurationData) -> Void)?
     
     init(navigationController: UINavigationController, selectedInterestDetail: String, curationData: CurationData) {
         self.navigationController = navigationController
@@ -58,17 +58,28 @@ final class GoalSelectCoordinator: Coordinator {
         print("관심사: \(curationData.interest ?? "없음")")
         print("세부 관심사: \(curationData.interestDetail ?? "없음")")
         print("목표: \(curationData.goal ?? "없음")")
-        print("직접 입력 목표: \(curationData.goalInput ?? "없음")")
         print("📦 ========================== 📦")
         
+        // 온보딩 완료!!
+        TokenStorageService.shared.saveOnboardingCompleted(true)
+        print("✅온보딩 완료!! - onboardingCompleted: \(TokenStorageService.shared.isOnboardingCompleted)")
         
-        onFinish?()
+        onFinish?(curationData)
     }
     
     func showGoalInputFlow(selectedGoal: String) {
         let goalInputCoordinator = GoalInputSelectCoordinator(navigationController: navigationController, curationData: curationData)
         
         curationData.goal = selectedGoal
+        
+        goalInputCoordinator.onFinish = { [weak self, weak goalInputCoordinator] curationData in
+            if let coordinator = goalInputCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+            }
+            
+            self?.onFinish?(curationData)
+        }
         
         childCoordinators.append(goalInputCoordinator)
         goalInputCoordinator.start()

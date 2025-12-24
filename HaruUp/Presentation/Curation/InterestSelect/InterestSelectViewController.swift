@@ -21,16 +21,17 @@ class InterestSelectViewController: UIViewController {
     
     private let backButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        button.tintColor = .black
+        button.setImage(UIImage(named: "chevron_left.png"), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
     private let progressBar: UIProgressView = {
         let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 5.0 / 7.0
-        progressBar.tintColor = .systemBlue
+        progressBar.progress = 6.0 / 8.0
+        progressBar.tintColor = .primaryBlue700
+        progressBar.trackTintColor = .neutral50
         progressBar.translatesAutoresizingMaskIntoConstraints = false
         return progressBar
     }()
@@ -38,9 +39,8 @@ class InterestSelectViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "관심사는 무엇인가요?"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
+        label.setStyle(Typography.title2, text: "관심사는 무엇인가요?")
         label.textAlignment = .left
-        label.numberOfLines = 0
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -48,35 +48,12 @@ class InterestSelectViewController: UIViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "적절한 목표를 추천하기 위해 필요해요.\n가장 우선순위가 높은 관심사를 1개 골라주세요."
-        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.setStyle(Typography.body4, text: "적절한 목표를 추천하기 위해 필요해요.\n가장 우선순위가 높은 관심사를 1개 골라주세요.")
         label.textAlignment = .left
         label.numberOfLines = 0
-        label.textColor = .gray
+        label.textColor = .neutral700
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
-    }()
-    
-    private let interestButtonsStackView: UIStackView = {
-        let sv = UIStackView()
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.axis = .vertical
-        sv.alignment = .fill
-        sv.distribution = .fill
-        sv.spacing = 12
-        return sv
-    }()
-    
-    private let nextButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("다음", for: .normal)
-        button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 12
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.isEnabled = false
-        button.alpha = 0.5
-        return button
     }()
     
     private let stackView: UIStackView = {
@@ -97,6 +74,23 @@ class InterestSelectViewController: UIViewController {
         sv.distribution = .equalSpacing
         sv.spacing = 12
         return sv
+    }()
+    
+    private let interestButtonsStackView: UIStackView = {
+        let sv = UIStackView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .fill
+        sv.spacing = 12
+        return sv
+    }()
+    
+    private let nextButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
     
     
@@ -143,10 +137,10 @@ class InterestSelectViewController: UIViewController {
         backButton.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
-            paddingTop: 5,
-            paddingLeft: 15,
-            width: 47,
-            height: 47
+            paddingTop: 10,
+            paddingLeft: 20,
+            width: 20,
+            height: 20
         )
         
         stackView.anchor(
@@ -154,16 +148,18 @@ class InterestSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 50,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
+        
+        progressBar.heightAnchor.constraint(equalToConstant: 6).isActive = true
         
         titleLabelStackView.anchor(
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 20,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         interestButtonsStackView.anchor(
@@ -171,8 +167,8 @@ class InterestSelectViewController: UIViewController {
             left: view.leftAnchor,
             right: view.rightAnchor,
             paddingTop: 56,
-            paddingLeft: 30,
-            paddingRight: 30
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         nextButton.anchor(
@@ -180,7 +176,7 @@ class InterestSelectViewController: UIViewController {
             bottom: view.safeAreaLayoutGuide.bottomAnchor,
             right: view.rightAnchor,
             paddingLeft: 20,
-            paddingBottom: 20,
+            paddingBottom: 5,
             paddingRight: 20,
             height: 56
         )
@@ -222,7 +218,8 @@ class InterestSelectViewController: UIViewController {
             .map { $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
-                self?.nextButton.alpha = isEnabled ? 1.0 : 0.5
+                let imageName = isEnabled ? "next_btn_blue" : "next_btn_gray"
+                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
             })
             .disposed(by: disposeBag)
     }

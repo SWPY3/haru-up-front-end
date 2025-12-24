@@ -16,6 +16,8 @@ final class JobDetailSelectCoordinator: Coordinator {
     private var curationData: CurationData
     private let selectedJob: String
     
+    var onFinish: ((CurationData) -> Void)?
+    
     init(navigationController: UINavigationController, selectedJob: String, curationData: CurationData) {
         self.navigationController = navigationController
         self.selectedJob = selectedJob
@@ -45,6 +47,17 @@ final class JobDetailSelectCoordinator: Coordinator {
         
         curationData.jobDetail = selectedJobDetail
         print("📦 저장된 데이터 - 상세직업: \(selectedJobDetail)")
+        
+        genderSelectCoordinator.onFinish = { [weak self, weak genderSelectCoordinator] curationData in
+            if let coordinator = genderSelectCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+            }
+            
+            self?.onFinish?(curationData)
+        }
+        
+        
         childCoordinators.append(genderSelectCoordinator)
         
         genderSelectCoordinator.start()

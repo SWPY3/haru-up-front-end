@@ -32,12 +32,14 @@ enum Typography {
     
     // Body
     static let body1 = FontStyle(font: .pretendard(size: 16, weight: .medium))
-    static let body2 = FontStyle(font: .pretendard(size: 14, weight: .semiBold))
-    static let body3 = FontStyle(font: .pretendard(size: 14, weight: .medium))
+    static let body2 = FontStyle(font: .pretendard(size: 14, weight: .bold))
+    static let body3 = FontStyle(font: .pretendard(size: 14, weight: .semiBold))
+    static let body4 = FontStyle(font: .pretendard(size: 14, weight: .medium))
     
     // Caption
-    static let caption1 = FontStyle(font: .pretendard(size: 12, weight: .medium))
-    static let caption2 = FontStyle(font: .pretendard(size: 12, weight: .regular))
+    static let caption1 = FontStyle(font: .pretendard(size: 12, weight: .semiBold))
+    static let caption2 = FontStyle(font: .pretendard(size: 12, weight: .medium))
+    static let caption3 = FontStyle(font: .pretendard(size: 12, weight: .regular))
     
     // Level
     static let level = FontStyle(font: .pretendard(size: 13, weight: .semiBold))

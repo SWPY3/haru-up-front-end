@@ -84,9 +84,3 @@ extension UIView {
     }
 }
 
-// MARK: - UIColor
-extension UIColor {
-    static var naverGreen: UIColor {
-        return UIColor(red: 3/255, green: 199/255, blue: 90/255, alpha: 1.0)
-    }
-}
