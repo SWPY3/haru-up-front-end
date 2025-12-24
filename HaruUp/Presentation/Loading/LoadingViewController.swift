@@ -169,7 +169,7 @@ class LoadingViewController: UIViewController {
         let phase1Boxes = [
             createInfoBox(title: "성별", content: "\(curationData.gender ?? "")"),
             createInfoBox(title: "나이", content: "\(calculateAge())살"),
-            createInfoBox(title: "직업", content: curationData.jobDetail?.jobDetailName ?? "")
+            createInfoBox(title: "직업", content: curationData.jobDetail?.jobDetailName ?? curationData.job?.jobName ?? "")
         ]
         // 2단계: 관심사와 목표 박스들
         let phase2Boxes = [

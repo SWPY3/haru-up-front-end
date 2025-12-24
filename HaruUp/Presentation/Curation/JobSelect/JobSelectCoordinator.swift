@@ -37,6 +37,11 @@ final class JobSelectCoordinator: Coordinator {
         curationData.job = selectedJob
         print("📦 저장된 데이터 - 직업: \(selectedJob.jobName), ID: \(selectedJob.id)")
         
+        if selectedJob.id == 2 {
+            showGenderSelectFlow()
+            return 
+        }
+        
         jobDetailSelectCoordinator.onFinish = { [weak self, weak jobDetailSelectCoordinator] curationData in
             if let coordinator = jobDetailSelectCoordinator,
                let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
@@ -48,5 +53,26 @@ final class JobSelectCoordinator: Coordinator {
         
         childCoordinators.append(jobDetailSelectCoordinator)
         jobDetailSelectCoordinator.start()
+    }
+    
+    
+    func showGenderSelectFlow() {
+        let genderSelectCoordinator = GenderSelectCoordinator(
+            navigationController: navigationController,
+            curationData: curationData)
+        
+        genderSelectCoordinator.onFinish = { [weak self, weak genderSelectCoordinator] curationData in
+            if let coordinator = genderSelectCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+            }
+            
+            self?.onFinish?(curationData)
+        }
+        
+        
+        childCoordinators.append(genderSelectCoordinator)
+        
+        genderSelectCoordinator.start()
     }
 }
