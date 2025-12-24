@@ -41,6 +41,7 @@ class TodayMissionListViewController: UIViewController {
         tableView.separatorStyle = .none
         tableView.bounces = false
         tableView.sectionHeaderTopPadding = 0
+        tableView.allowsMultipleSelection = true
         
         tableView.register(SkeletonMissionCell.self, forCellReuseIdentifier: SkeletonMissionCell.identifier)
         tableView.register(TodayMissionTableViewCell.self, forCellReuseIdentifier: TodayMissionTableViewCell.identifier)
@@ -214,6 +215,7 @@ class TodayMissionListViewController: UIViewController {
                 if isLoading {
                     return Array(repeating: .skeleton, count: 5)
                 } else {
+                    print("missions: \(missions)")
                     return missions.map { .mission($0) }
                 }
             }
@@ -234,7 +236,16 @@ class TodayMissionListViewController: UIViewController {
                 case .mission(let mission):
                     let cell = tableView.dequeueReusableCell(withIdentifier: TodayMissionTableViewCell.identifier, for: indexPath) as! TodayMissionTableViewCell
                     
-                    cell.configure(title: mission.content)
+                    guard let difficulty = MissionDifficultyModel(rawValue: mission.difficulty) else {
+                        // TODO: 파악할 수 없는 난이도 error 대응 필요
+                        print("파악할 수 없는 난이도")
+                        return UITableViewCell()
+                    }
+                    
+                    let data = Mission(title: mission.content, difficulty: difficulty, exp: 150)
+                    print("data: \(data)")
+                    
+                    cell.configure(mission: data)
                     
                     return cell
                 }

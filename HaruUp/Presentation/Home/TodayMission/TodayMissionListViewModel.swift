@@ -36,7 +36,9 @@ final class TodayMissionListViewModel {
     private let dummyMissions: [RecommendedMissionDTO] = [
         .init(seqNo: 1, content: "스쿼트 20회", relatedInterest: "근력키우기", difficulty: 1),
         .init(seqNo: 2, content: "플랭크 1분", relatedInterest: "근력키우기", difficulty: 2),
-        .init(seqNo: 3, content: "달리기 20분", relatedInterest: "유산소", difficulty: 3)
+        .init(seqNo: 3, content: "달리기 20분", relatedInterest: "유산소", difficulty: 3),
+        .init(seqNo: 4, content: "크로스핏 1시간 20분", relatedInterest: "유산소", difficulty: 4),
+        .init(seqNo: 5, content: "클라이빙 3시간", relatedInterest: "유산소", difficulty: 5)
     ]
     
     init(missionService: MissionServiceProtocol) {
@@ -56,9 +58,9 @@ final class TodayMissionListViewModel {
             .flatMapLatest { [weak self] _ -> Observable<[RecommendedMissionDTO]> in
                 guard let self = self else { return .empty() }
                 
-                let request: Observable<[RecommendedMissionDTO]> = Observable
-                    .just(self.dummyMissions)
-                    .delay(.seconds(100), scheduler: MainScheduler.instance)
+//                let request: Observable<[RecommendedMissionDTO]> = Observable
+//                    .just(self.dummyMissions)
+//                    .delay(.seconds(3), scheduler: MainScheduler.instance)
                 
                 /*
                  let request: Observable<[RecommendedMissionDTO]> = self.missionService
@@ -67,15 +69,26 @@ final class TodayMissionListViewModel {
                  .map { $0.missions }
                  */
                 
-                return request
-                    .do(
-                        onSubscribe: { [weak self] in self?.loadingRelay.accept(true) },
-                        onDispose: { [weak self] in self?.loadingRelay.accept(false) }
-                    )
-                    .catch { [weak self] error in
-                        self?.errorRelay.accept(error.localizedDescription)
-                        return .just([]) // 에러 시 빈 배열로
-                    }
+//                return request
+//                    .do(
+//                        onSubscribe: { [weak self] in self?.loadingRelay.accept(true) },
+//                        onDispose: { [weak self] in self?.loadingRelay.accept(false) }
+//                    )
+//                    .catch { [weak self] error in
+//                        self?.errorRelay.accept(error.localizedDescription)
+//                        return .just([]) // 에러 시 빈 배열로
+//                    }
+                
+                // 2. 3초 딜레이 시뮬레이션 (서버 요청 대기 시간)
+                return Observable.just(self.dummyMissions)
+                    .delay(.seconds(1), scheduler: MainScheduler.instance) // ★ 3초 뒤에 데이터 방출
+                    .do(onNext: { _ in
+                        // 3. 데이터가 도착하면 로딩 종료 (스켈레톤 숨기고 데이터 보여주기)
+                        loadingSubject.onNext(false)
+                    }, onError: { _ in
+                        // 에러 발생 시에도 로딩 종료
+                        loadingSubject.onNext(false)
+                    })
             }
             .share(replay: 1)
         

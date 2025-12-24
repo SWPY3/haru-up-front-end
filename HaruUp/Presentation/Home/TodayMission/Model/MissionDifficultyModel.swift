@@ -7,8 +7,12 @@
 
 import UIKit
 
-enum MissionDifficultyModel: CaseIterable {
-    case veryHigh, high, mediumHigh, medium, low
+enum MissionDifficultyModel: Int, CaseIterable {
+    case veryHigh = 5
+    case high = 4
+    case mediumHigh = 3
+    case medium = 2
+    case low = 1
     
     var title: String {
         switch self {
