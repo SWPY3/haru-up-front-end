@@ -383,9 +383,8 @@ class NicknameSelectViewController: UIViewController {
                     self.warningLabel.text = ""
                     
                 case .empty:
-                    //                    self.warningLabel.setStyle(Typography.body4, text: "*닉네임을 입력해주세요.")
-                    //                    self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    
                 case .tooShort, .tooLong:
                     self.warningLabel.setStyle(Typography.body4, text: "*2~10자로 입력해주세요.")
                     self.warningLabel.isHidden = false
@@ -398,6 +397,11 @@ class NicknameSelectViewController: UIViewController {
                     
                 case .incompleteKorean:
                     self.warningLabel.setStyle(Typography.body4, text: "*올바른 형태로 입력해주세요.")
+                    self.warningLabel.isHidden = false
+                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    
+                case .duplicated:
+                    self.warningLabel.setStyle(Typography.body4, text: "*이미 존재하는 닉네임입니다.")
                     self.warningLabel.isHidden = false
                     self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
                 }

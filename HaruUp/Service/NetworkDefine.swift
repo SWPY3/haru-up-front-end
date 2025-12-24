@@ -44,4 +44,19 @@ enum NetworkDefine {
             return APIEnvironment.baseURL + self.path
         }
     }
+    
+    enum ProfileAPI {
+            case nicknameDuplicateCheck
+            
+            var path: String {
+                switch self {
+                case .nicknameDuplicateCheck:
+                    return "api/member/profile/nickName_duplicate_check"
+                }
+            }
+            
+            var url: String {
+                return APIEnvironment.baseURL + self.path
+            }
+        }
 }
