@@ -19,37 +19,32 @@ class TodayMissionListViewController: UIViewController {
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let refreshTapSubject = PublishSubject<Void>()
     
-    private let activityIndicator = UIActivityIndicatorView(style: .large)
-    
-    private let titleStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 10
+    private let topContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
         
-        return stackView
+        return view
     }()
     
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "오늘의 AI 추천 미션"
-        label.textAlignment = .center
+    private let closeButton: UIButton = {
+        let button = UIButton()
+        button.setImage(.iconXmark, for: .normal)
         
-        return label
-    }()
-    
-    private let descriptionLabel: UILabel = {
-        let label = UILabel()
-        label.text = "하루 최대 5개까지 선택할 수 있어요."
-        label.textAlignment = .center
-        
-        return label
+        return button
     }()
     
     private let tableView: UITableView = {
-        let tableView = UITableView()
-        tableView.backgroundColor = .clear
-        tableView.register(TodayMissionTableViewCell.self, forCellReuseIdentifier: TodayMissionTableViewCell.identifier)
+        let tableView = UITableView(frame: .zero, style: .plain)
+        tableView.backgroundColor = .neutral10
         tableView.rowHeight = UITableView.automaticDimension
+        tableView.contentInsetAdjustmentBehavior = .never
+        tableView.separatorStyle = .none
+        tableView.bounces = false
+        tableView.sectionHeaderTopPadding = 0
+        tableView.allowsMultipleSelection = true
+        
+        tableView.register(SkeletonMissionCell.self, forCellReuseIdentifier: SkeletonMissionCell.identifier)
+        tableView.register(TodayMissionTableViewCell.self, forCellReuseIdentifier: TodayMissionTableViewCell.identifier)
         
         return tableView
     }()
@@ -70,6 +65,41 @@ class TodayMissionListViewController: UIViewController {
         return button
     }()
     
+    private let bottomViewContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        
+        return view
+    }()
+    
+    private let bottomStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.alignment = .fill
+        
+        return stackView
+    }()
+    
+    private let loadingButtonView: LoadingButtonView = {
+        let view = LoadingButtonView()
+        
+        return view
+    }()
+    
+    private let selectedButtonView: TodayMissionSelectView = {
+        let view = TodayMissionSelectView()
+        view.isHidden = true
+        
+        return view
+    }()
+    
+    private let refreshFooterView: TodayMissionRefreshFooterView = {
+        let view = TodayMissionRefreshFooterView(frame: CGRect(x: 0, y: 0, width: 0, height: 84))
+        
+        return view
+    }()
+    
     init(viewModel: TodayMissionListViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -88,38 +118,40 @@ class TodayMissionListViewController: UIViewController {
         viewDidLoadSubject.onNext(())
     }
     
-    private func setupView() {
-        view.backgroundColor = .lightGray
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
-        configureActivityIndicator()
-        configureTitle()
-        configureCompleteButton()
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    private func setupView() {
+        view.backgroundColor = .neutral10
+        
+//        configureCompleteButton()
+        configureCloseButton()
+        configureBottomView()
         configureTableview()
     }
     
-    private func configureActivityIndicator() {
-        view.addSubview(activityIndicator)
-        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+    private func configureCloseButton() {
+        view.addSubview(topContainerView)
+        topContainerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        topContainerView.addSubview(closeButton)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
         
         NSLayoutConstraint.activate([
-            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
-    }
-    
-    private func configureTitle() {
-        view.addSubview(titleStackView)
-        titleStackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        [titleLabel, descriptionLabel].forEach { label in
-            titleStackView.addArrangedSubview(label)
-            label.translatesAutoresizingMaskIntoConstraints = false
-        }
-        
-        NSLayoutConstraint.activate([
-            titleStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            titleStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            titleStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            topContainerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            topContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            topContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            
+            closeButton.topAnchor.constraint(equalTo: topContainerView.topAnchor, constant: 5),
+            closeButton.bottomAnchor.constraint(equalTo: topContainerView.bottomAnchor, constant: -5),
+            closeButton.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
+            closeButton.heightAnchor.constraint(equalToConstant: 44),
+            closeButton.widthAnchor.constraint(equalToConstant: 44)
         ])
     }
     
@@ -143,11 +175,38 @@ class TodayMissionListViewController: UIViewController {
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
+        tableView.delegate = self
+        
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: titleStackView.bottomAnchor, constant: 20),
+            tableView.topAnchor.constraint(equalTo: topContainerView.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: refreshButton.topAnchor, constant: -20),
+            tableView.bottomAnchor.constraint(equalTo: bottomViewContainer.topAnchor),
+        ])
+    }
+    
+    private func configureBottomView() {
+        view.addSubview(bottomViewContainer)
+        bottomViewContainer.translatesAutoresizingMaskIntoConstraints = false
+        
+        bottomViewContainer.addSubview(bottomStackView)
+        bottomStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        [loadingButtonView, selectedButtonView].forEach {
+            bottomStackView.addArrangedSubview($0)
+        }
+        
+        NSLayoutConstraint.activate([
+            bottomViewContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            bottomViewContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bottomViewContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            
+            bottomStackView.topAnchor.constraint(equalTo: bottomViewContainer.topAnchor),
+            bottomStackView.bottomAnchor.constraint(equalTo: bottomViewContainer.safeAreaLayoutGuide.bottomAnchor),
+            bottomStackView.leadingAnchor.constraint(equalTo: bottomViewContainer.leadingAnchor),
+            bottomStackView.trailingAnchor.constraint(equalTo: bottomViewContainer.trailingAnchor),
+            loadingButtonView.heightAnchor.constraint(equalToConstant: 75),
+            selectedButtonView.heightAnchor.constraint(equalToConstant: 86),
         ])
     }
     
@@ -160,48 +219,65 @@ class TodayMissionListViewController: UIViewController {
         
         let output = viewModel.transform(input: input)
         
-        let missions = output.missions
-            .observe(on: MainScheduler.instance)
-            .share(replay: 1) // 같은 스트림을 여러 곳에서 쓰기 위한 공유
-
-        missions
-            .bind(to: tableView.rx.items(
-                cellIdentifier: TodayMissionTableViewCell.identifier,
-                cellType: TodayMissionTableViewCell.self
-            )) { row, mission, cell in
-                cell.configure(title: mission.content)
-            }
-            .disposed(by: disposeBag)
-
-        missions
-            .subscribe(onNext: { missions in
-                print("recommend Mission API")
-                print("받은 미션 개수: \(missions.count)")
-
-                missions.forEach { mission in
-                    print("----")
-                    print("seqNo: \(mission.seqNo)")
-                    print("content: \(mission.content)")
-                    print("relatedInterest: \(mission.relatedInterest)")
-                    print("difficulty: \(mission.difficulty)")
+        let items = Observable
+            .combineLatest(
+                output.isLoading.distinctUntilChanged(),
+                output.missions.startWith([])
+            )
+            .map { isLoading, missions -> [RecommendMissionRow] in
+                if isLoading {
+                    return Array(repeating: .skeleton, count: 5)
+                } else {
+                    print("missions: \(missions)")
+                    return missions.map { .mission($0) }
                 }
-            }, onError: { error in
-                print("추천 미션 API 에러: \(error)")
-            })
+            }
+            .observe(on: MainScheduler.instance)
+        
+        items
+            .bind(to: tableView.rx.items) { (tableView: UITableView, row: Int, item: RecommendMissionRow) in
+                let indexPath = IndexPath(row: row, section: 0)
+                
+                switch item {
+                case .skeleton:
+                    let cell = tableView.dequeueReusableCell(withIdentifier: SkeletonMissionCell.identifier, for: indexPath) as! SkeletonMissionCell
+                    
+                    cell.configure(index: row)
+                    
+                    return cell
+                    
+                case .mission(let mission):
+                    let cell = tableView.dequeueReusableCell(withIdentifier: TodayMissionTableViewCell.identifier, for: indexPath) as! TodayMissionTableViewCell
+                    
+                    guard let difficulty = MissionDifficultyModel(rawValue: mission.difficulty) else {
+                        // TODO: 파악할 수 없는 난이도 error 대응 필요
+                        print("파악할 수 없는 난이도")
+                        return UITableViewCell()
+                    }
+                    
+                    let data = Mission(title: mission.content, difficulty: difficulty, exp: 150)
+                    print("data: \(data)")
+                    
+                    cell.configure(mission: data)
+                    
+                    return cell
+                }
+            }
             .disposed(by: disposeBag)
         
         output.isLoading
             .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] isLoading in
-                // TODO: reset Button등 다른 버튼 동작 제한
-                if isLoading {
-                    print("로딩 시작")
-                    self?.activityIndicator.startAnimating()
-                } else {
-                    print("로딩 종료")
-                    self?.activityIndicator.stopAnimating()
-                }
+                print("loading? : \(isLoading)")
+                self?.bottomViewContainer.backgroundColor = isLoading ? .clear : .white
+                self?.loadingButtonView.isHidden = !isLoading
+                self?.selectedButtonView.isHidden = isLoading
+                
+                self?.refreshButton.isEnabled = !isLoading
+                self?.completeButton.isEnabled = !isLoading
+                
+                self?.tableView.tableFooterView = isLoading ? nil : self?.refreshFooterView
             })
             .disposed(by: disposeBag)
         
@@ -220,5 +296,17 @@ class TodayMissionListViewController: UIViewController {
                 self?.onComplete?()
             })
             .disposed(by: disposeBag)
+    }
+    
+    @objc private func closeButtonTapped() {
+        onComplete?()
+    }
+}
+
+extension TodayMissionListViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let header = TodayMissionSectionHeaderView()
+        
+        return header
     }
 }
