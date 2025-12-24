@@ -58,12 +58,7 @@ final class MainTabBarView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        let path = UIBezierPath(
-            roundedRect: shadowContainerView.bounds,
-            byRoundingCorners: [.topLeft, .topRight],
-            cornerRadii: CGSize(width: 24, height: 24)
-        )
-        shadowContainerView.layer.shadowPath = path.cgPath
+        configureBackgroundShadow()
     }
     
     required init?(coder: NSCoder) {
@@ -74,14 +69,8 @@ final class MainTabBarView: UIView {
         backgroundColor = .clear
         
         configureBackgroundView()
+        configureBackgroundShadow()
         configureStackView()
-        
-        let path = UIBezierPath(
-            roundedRect: shadowContainerView.bounds,
-            byRoundingCorners: [.topLeft, .topRight],
-            cornerRadii: CGSize(width: 24, height: 24)
-        )
-        shadowContainerView.layer.shadowPath = path.cgPath
     }
     
     private func configureBackgroundView() {
@@ -102,6 +91,15 @@ final class MainTabBarView: UIView {
             backgroundView.trailingAnchor.constraint(equalTo: shadowContainerView.trailingAnchor),
             backgroundView.bottomAnchor.constraint(equalTo: shadowContainerView.bottomAnchor),
         ])
+    }
+    
+    private func configureBackgroundShadow() {
+        let path = UIBezierPath(
+            roundedRect: shadowContainerView.bounds,
+            byRoundingCorners: [.topLeft, .topRight],
+            cornerRadii: CGSize(width: 24, height: 24)
+        )
+        shadowContainerView.layer.shadowPath = path.cgPath
     }
     
     private func configureStackView() {

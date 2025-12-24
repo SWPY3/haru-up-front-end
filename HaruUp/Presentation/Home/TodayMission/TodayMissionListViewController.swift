@@ -67,9 +67,18 @@ class TodayMissionListViewController: UIViewController {
     
     private let bottomViewContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .green
+        view.backgroundColor = .clear
         
         return view
+    }()
+    
+    private let bottomStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.alignment = .fill
+        
+        return stackView
     }()
     
     private let loadingButtonView: LoadingButtonView = {
@@ -78,9 +87,8 @@ class TodayMissionListViewController: UIViewController {
         return view
     }()
     
-    private let selectedButtonView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .red
+    private let selectedButtonView: TodayMissionSelectView = {
+        let view = TodayMissionSelectView()
         view.isHidden = true
         
         return view
@@ -175,25 +183,24 @@ class TodayMissionListViewController: UIViewController {
         view.addSubview(bottomViewContainer)
         bottomViewContainer.translatesAutoresizingMaskIntoConstraints = false
         
+        bottomViewContainer.addSubview(bottomStackView)
+        bottomStackView.translatesAutoresizingMaskIntoConstraints = false
+        
         [loadingButtonView, selectedButtonView].forEach {
-            bottomViewContainer.addSubview($0)
-            $0.translatesAutoresizingMaskIntoConstraints = false
+            bottomStackView.addArrangedSubview($0)
         }
         
         NSLayoutConstraint.activate([
-            bottomViewContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            bottomViewContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             bottomViewContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomViewContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
-            loadingButtonView.topAnchor.constraint(equalTo: bottomViewContainer.topAnchor),
-            loadingButtonView.bottomAnchor.constraint(equalTo: bottomViewContainer.bottomAnchor),
-            loadingButtonView.leadingAnchor.constraint(equalTo: bottomViewContainer.leadingAnchor),
-            loadingButtonView.trailingAnchor.constraint(equalTo: bottomViewContainer.trailingAnchor),
-            
-            selectedButtonView.topAnchor.constraint(equalTo: bottomViewContainer.topAnchor),
-            selectedButtonView.bottomAnchor.constraint(equalTo: bottomViewContainer.bottomAnchor),
-            selectedButtonView.leadingAnchor.constraint(equalTo: bottomViewContainer.leadingAnchor),
-            selectedButtonView.trailingAnchor.constraint(equalTo: bottomViewContainer.trailingAnchor)
+            bottomStackView.topAnchor.constraint(equalTo: bottomViewContainer.topAnchor),
+            bottomStackView.bottomAnchor.constraint(equalTo: bottomViewContainer.safeAreaLayoutGuide.bottomAnchor),
+            bottomStackView.leadingAnchor.constraint(equalTo: bottomViewContainer.leadingAnchor),
+            bottomStackView.trailingAnchor.constraint(equalTo: bottomViewContainer.trailingAnchor),
+            loadingButtonView.heightAnchor.constraint(equalToConstant: 75),
+            selectedButtonView.heightAnchor.constraint(equalToConstant: 86),
         ])
     }
     
@@ -257,6 +264,7 @@ class TodayMissionListViewController: UIViewController {
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] isLoading in
                 print("loading? : \(isLoading)")
+                self?.bottomViewContainer.backgroundColor = isLoading ? .clear : .white
                 self?.loadingButtonView.isHidden = !isLoading
                 self?.selectedButtonView.isHidden = isLoading
                 
