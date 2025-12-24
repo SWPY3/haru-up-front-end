@@ -31,6 +31,7 @@ final class HomeCoordinator: Coordinator {
     private func showTodayMissionFlow() {
         let modalNavigationController = UINavigationController()
         modalNavigationController.modalPresentationStyle = .overFullScreen
+        modalNavigationController.modalTransitionStyle = .crossDissolve
 
         let coordinator = TodayMissionCoordinator(navigationController: modalNavigationController, missionService: missionService)
 
