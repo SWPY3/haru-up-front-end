@@ -8,7 +8,12 @@
 import UIKit
 
 final class MissionToolTipView: UIView {
-    // MARK: - UI Components
+    
+    enum ArrowPosition {
+        case left
+        case right
+    }
+    
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .black
@@ -20,18 +25,22 @@ final class MissionToolTipView: UIView {
     
     private let label: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.body3, text: "오늘의 미션은 자정이 지나면 사라져요")
+        label.font = Typography.body3.font
         label.textColor = .white
-        label.numberOfLines = 1 // 한줄로 고정
+        label.numberOfLines = 1
         
         return label
     }()
     
     private let triangleView = TriangleView()
+    private let arrowPosition: ArrowPosition
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    // MARK: - Init 수정 (텍스트와 위치를 받도록 변경)
+    init(text: String, arrowPosition: ArrowPosition = .left) {
+        self.arrowPosition = arrowPosition
+        super.init(frame: .zero)
         
+        label.setStyle(Typography.body3, text: text)
         setupView()
     }
     
@@ -74,11 +83,19 @@ final class MissionToolTipView: UIView {
         
         NSLayoutConstraint.activate([
             triangleView.topAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -4),
-            triangleView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
             triangleView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
             triangleView.heightAnchor.constraint(equalToConstant: 14),
             triangleView.widthAnchor.constraint(equalToConstant: 18)
         ])
+        
+        // 위치별 제약조건 (왼쪽 vs 오른쪽)
+        switch arrowPosition {
+        case .left:
+            triangleView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24).isActive = true
+            
+        case .right:
+            triangleView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -7).isActive = true
+        }
     }
 }
 

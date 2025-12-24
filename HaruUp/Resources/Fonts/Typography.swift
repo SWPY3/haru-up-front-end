@@ -46,4 +46,7 @@ enum Typography {
     static let difficulty = FontStyle(font: .pretendard(size: 14, weight: .medium), lineHeight: 1.40)
     // Exp
     static let exp = FontStyle(font: .pretendard(size: 14, weight: .medium), lineHeight: 1.40)
+    
+    // retry Button
+    static let retryButton = FontStyle(font: .pretendard(size: 14, weight: .medium), lineHeight: 1.40)
 }

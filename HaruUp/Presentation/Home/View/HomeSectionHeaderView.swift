@@ -46,7 +46,9 @@ final class HomeSectionHeaderView: UIView {
     }()
     
     private let tooltipView: MissionToolTipView = {
-        let view = MissionToolTipView()
+        let view = MissionToolTipView(
+            text: "오늘의 미션은 자정이 지나면 사라져요.",
+            arrowPosition: .left)
         view.isHidden = true
         view.alpha = 0
         

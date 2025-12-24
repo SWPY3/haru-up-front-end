@@ -94,6 +94,12 @@ class TodayMissionListViewController: UIViewController {
         return view
     }()
     
+    private let refreshFooterView: TodayMissionRefreshFooterView = {
+        let view = TodayMissionRefreshFooterView(frame: CGRect(x: 0, y: 0, width: 0, height: 84))
+        
+        return view
+    }()
+    
     init(viewModel: TodayMissionListViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -270,6 +276,8 @@ class TodayMissionListViewController: UIViewController {
                 
                 self?.refreshButton.isEnabled = !isLoading
                 self?.completeButton.isEnabled = !isLoading
+                
+                self?.tableView.tableFooterView = isLoading ? nil : self?.refreshFooterView
             })
             .disposed(by: disposeBag)
         
