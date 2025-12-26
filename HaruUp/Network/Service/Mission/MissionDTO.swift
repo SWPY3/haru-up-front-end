@@ -96,4 +96,29 @@ enum MemberMission {
         let data: [Int]
         let errorMessage: String?
     }
+    
+    // MARK: 미션 목록
+    struct FetchMissionRequestDTO: Encodable {
+        let missionStatus: String = "ACTIVE,COMPLETED"
+    }
+    
+    struct FetchMissionResponseDTO: Decodable {
+        let success: Bool
+        let data: [MissionListDTO]
+        let errorMessage: String?
+    }
+    
+    struct MissionListDTO: Decodable {
+        let id: Int
+        let memberId: Int
+        let missionId: Int
+        let memberInterestId: Int
+        let missionStatus: String
+        let expEarned: Int
+        let targetDate: String
+        let missionContent: String
+        let difficulty: Int
+        let fullPath: [String]
+        let directFullPath: [String]
+    }
 }

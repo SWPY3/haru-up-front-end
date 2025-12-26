@@ -76,16 +76,26 @@ final class HomeViewModel {
 
     // MARK: - Temp loader (서버 붙이면 여기만 교체)
     private func loadSelectedMissions() -> Observable<[Mission]> {
-//        // TODO: Mission List 조회
-//        // empty dummy
-//        return Observable.just([])
-        // mission 1개 dummy
-        let dummy: [Mission] = [
-            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .veryHigh, exp: 200),
-            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .high, exp: 150),
-            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .mediumHigh, exp: 100)
-        ]
-        return Observable.just(dummy)
+        return missionService.fetchMissionList()
+            .asObservable()
+            .do(
+                onSubscribe: { [weak self] in self?.loadingRelay.accept(true) },
+                onDispose:   { [weak self] in self?.loadingRelay.accept(false) }
+            )
+            .map { [weak self] response -> [Mission] in
+                let missions = response.data
+
+                return missions.map { mission in
+                    Mission(
+                        title: mission.missionContent,
+                        difficulty: MissionDifficultyModel(rawValue: mission.difficulty) ?? .low,
+                        exp: mission.expEarned
+                    )
+                }
+            }
+            .catch { [weak self] err in
+                self?.errorRelay.accept(err)
+                return .just([])
+            }
     }
 }
-

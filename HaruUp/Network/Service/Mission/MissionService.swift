@@ -19,6 +19,8 @@ protocol MissionServiceProtocol {
     // 미션 선택 완료
     func selectMissions(missionIDs: [Int]) -> Single<MemberMission.SelectMissionResponseDTO>
     func markTodayMissionSelected() // UserDefaults 갱신
+    // 미션 목록 표시
+    func fetchMissionList() -> Single<MemberMission.FetchMissionResponseDTO>
 }
 
 final class MissionService: Service, MissionServiceProtocol {
@@ -61,6 +63,19 @@ final class MissionService: Service, MissionServiceProtocol {
         let body = MemberMission.SelectMissionRequestDTO(memberMissionIds: missionIDs)
         
         return request(url, method: .post, header: headers, body: body)
+    }
+    
+    func fetchMissionList() -> Single<MemberMission.FetchMissionResponseDTO> {
+        
+        let url: String = NetworkDefine.MissionAPI.list.url
+        
+        var headers: HTTPHeaders = ["Accept": "application/json"]
+
+        headers["Authorization"] = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwibmFtZSI6IiIsInR5cGUiOiJBQ0NFU1MiLCJpYXQiOjE3NjY1NjM5NjQsImV4cCI6MTc3NTIwMzk2NH0.azu1SOj9BQdQkYQeQ17Dv05sShVGXJYogmOEqZYAZjM"
+        
+        let query = MemberMission.FetchMissionRequestDTO()
+
+        return request(url, method: .get, header: headers, query: query)
     }
 }
 
