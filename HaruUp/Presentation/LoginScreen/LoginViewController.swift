@@ -6,10 +6,8 @@
 //
 
 import UIKit
-
 import RxSwift
 import RxCocoa
-
 import AuthenticationServices
 
 class LoginViewController: UIViewController {
@@ -18,11 +16,9 @@ class LoginViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel: LoginViewModel
     
-//    let naverLoginButton = NaverLoginButton()
-    
     var onFinish: ((SocialLoginResult) -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
     
-    // MARK: Home 화면으로 이동하는 코드 Devlop Merge할 때 삭제
+    // MARK: TEST Home 화면으로 이동하는 코드 Devlop Merge할 때 삭제
     var goToHome: (() -> Void)?
     
     private let logoImageView: UIImageView = {
@@ -66,8 +62,6 @@ class LoginViewController: UIViewController {
 //        return button
 //    }()
     
-    
-    
     // MARK: 로그인 완료 후 온보딩으로 넘어가는 onFinish 클로저 작동용 버튼
     private let nextButton: UIButton = {
         let button = UIButton()
@@ -76,9 +70,6 @@ class LoginViewController: UIViewController {
         
         return button
     }()
-    
-    
-    
     
     private var indicatorView: UIActivityIndicatorView = UIActivityIndicatorView(style: .medium)
     
@@ -111,17 +102,10 @@ class LoginViewController: UIViewController {
         ])
     }
     
-    // MARK: - Selectors
-    
-    
-    
     // MARK: - Helpers
     func configureUI() {
         view.backgroundColor = .white
-        
         view.addSubview(logoImageView)
-        
-        //        logoImageView.setDimensions(width: 150, height: 150)
         
         let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, naverLoginButton, appleLoginButton])
         stack.axis = .vertical
@@ -151,7 +135,6 @@ class LoginViewController: UIViewController {
             kakaoLoginTapped: kakaoLoginButton.rx.tap.asObservable(),
             appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable(),
             naverLoginTapped: naverLoginButton.rx.tap.asObservable()
-            
         )
         
         nextButton.rx.tap

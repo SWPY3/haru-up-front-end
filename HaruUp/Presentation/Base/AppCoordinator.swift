@@ -33,7 +33,6 @@ final class AppCoordinator: Coordinator {
         splashCoordinator.onFinish = { [weak self, weak splashCoordinator] result in
             guard let self = self else { return }
             
-            
             // SplashCoordinator 메모리 정리
             if let splash = splashCoordinator, let index = self.childCoordinators.firstIndex(where: { $0 === splash }) {
                 self.childCoordinators.remove(at: index)
@@ -48,10 +47,9 @@ final class AppCoordinator: Coordinator {
                 showMainTabFlow()
             }
         }
+        
         splashCoordinator.start()
     }
-    
-    
     
     private func showLoginFlow() {
         let loginCoordinator = LoginCoordinator(navigationController: navigationController)

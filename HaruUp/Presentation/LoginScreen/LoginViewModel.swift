@@ -108,19 +108,14 @@ final class LoginViewModel {
                                 return .just(SocialLoginResult(success: false, onboardingCompleted: false))
                             }
                     }
-                    // false는 성공으로 보지 않도록 필터링
-                    .filter { $0.success }
+                    .filter { $0.success } // false는 성공으로 보지 않도록 필터링
                     .bind(to: loginSuccessRelay)
                     .disposed(by: disposeBag)
 
-        
         return Output(
             isLoading: isLoadingRelay.asDriver(),
             errorMessage: errorRelay.asSignal(),
             loginSuccess: loginSuccessRelay.asSignal()
         )
     }
-    
-    
-    
 }

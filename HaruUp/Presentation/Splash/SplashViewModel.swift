@@ -9,7 +9,6 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-
 enum SplashResult {
     case needLogin
     case onboardingRequired
@@ -21,10 +20,8 @@ final class SplashViewModel {
     private let disposeBag = DisposeBag()
     private let minDisplayTime: TimeInterval = 0.5
     
-    
     func checkAuthStatus() -> Observable<SplashResult> {
         let start = Date()
-        
         
 #if DEBUG
         print("=== Splash 상태 확인 ===")
