@@ -59,7 +59,7 @@ class CharacterSelectViewController: UIViewController {
     
     private let characterShadowImageView: UIImageView = {
        let iv = UIImageView()
-        iv.image = UIImage(named: "character_shadow.png")
+        iv.image = UIImage(named: "character_shadow2.png")
         iv.contentMode = .scaleAspectFit
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv

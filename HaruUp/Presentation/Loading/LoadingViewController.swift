@@ -275,7 +275,7 @@ class LoadingViewController: UIViewController {
         containerView.transform = CGAffineTransform(translationX: 0, y: 20)
         
         let checkmarkImageView = UIImageView()
-        checkmarkImageView.image = UIImage(named: "small_check")
+        checkmarkImageView.image = UIImage(named: "icon_small_check")
         checkmarkImageView.contentMode = .scaleAspectFit
         checkmarkImageView.translatesAutoresizingMaskIntoConstraints = false
         
