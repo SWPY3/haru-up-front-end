@@ -225,7 +225,7 @@ class TodayMissionListViewController: UIViewController {
         let input = TodayMissionListViewModel.Input(
             viewDidLoad: viewDidLoadSubject.asObservable(),
             refreshTap: refreshButton.rx.tap.asObservable(),
-            completeTap: completeButton.rx.tap.asObservable(),
+            completeTap: selectedButtonView.button.rx.tap.asObservable(),
             missionSelected: missionSelected,
             retryRecommend: refreshFooterView.refreshButton.rx.tap.asObservable()
         )

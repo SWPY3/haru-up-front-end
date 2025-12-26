@@ -122,9 +122,6 @@ final class TodayMissionListViewModel {
         /// Mission 선택
         input.missionSelected
             .withLatestFrom(selectedMissionIDRelay) { (id, currentSet) -> Set<Int> in
-                
-                print("id: \(id)")
-                print("currentSet: \(currentSet)")
                 var newSet = currentSet
                 
                 // 이미 있으면 선택 해제
@@ -136,7 +133,6 @@ final class TodayMissionListViewModel {
                     }
                 }
                 
-                print("newSet: \(newSet)")
                 return newSet
             }
             .bind(to: selectedMissionIDRelay)
@@ -147,10 +143,35 @@ final class TodayMissionListViewModel {
             .share(replay: 1)
         
         let missionCompleted = input.completeTap
-            .do(onNext: { [weak self] in
-                self?.missionService.markTodayMissionSelected()
-            })
-            .map { _ in () }
+            .withLatestFrom(selectedMissionIDRelay)
+            .map { Array($0) }
+            .flatMapLatest { [weak self] ids -> Observable<Void> in
+                guard let self = self else { return .empty() }
+                
+                loadingSubject.onNext(true)
+                
+                return self.missionService.selectMissions(missionIDs: ids)
+                    .asObservable()
+                    .map { response -> Bool in
+                        return response.success
+                    }
+                    .do(onNext: { [weak self] isSuccess in
+                        loadingSubject.onNext(false)
+                        
+                        if isSuccess {
+                            self?.missionService.markTodayMissionSelected()
+                        }
+                    }, onError: { _ in
+                        loadingSubject.onNext(false)
+                    })
+                    .catch { error in
+                        errorSubject.onNext(error.localizedDescription)
+                        return .just(false)
+                    }
+                    .filter { $0 }
+                    .map { _ in () }
+            }
+            .share(replay: 1)
         
         return Output(
             missions: currentMissionsRelay.asObservable(),

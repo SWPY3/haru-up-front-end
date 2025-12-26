@@ -54,7 +54,7 @@ final class TodayMissionSelectView: UIView {
         return label
     }()
     
-    private let button: UIButton = {
+    let button: UIButton = {
         let button = UIButton()
         button.setTitle("선택 완료", for: .normal)
         button.titleLabel?.font = Typography.subtitle2.font

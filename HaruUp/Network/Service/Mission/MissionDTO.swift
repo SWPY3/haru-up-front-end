@@ -85,4 +85,15 @@ enum MemberMission {
             )
         }
     }
+    
+    // MARK: 미션 선택
+    struct SelectMissionRequestDTO: Encodable {
+        let memberMissionIds: [Int]
+    }
+    
+    struct SelectMissionResponseDTO: Decodable {
+        let success: Bool
+        let data: [Int]
+        let errorMessage: String?
+    }
 }
