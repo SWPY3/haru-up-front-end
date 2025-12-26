@@ -16,6 +16,8 @@ protocol MissionServiceProtocol {
     func markTodayMissionSelected()
     // 미션 추천
     func fetchRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO>
+    // 미션 재추천
+    func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]) -> Single<MemberMission.RetryRecommendResponseDTO>
 }
 
 final class MissionService: Service, MissionServiceProtocol {
@@ -32,6 +34,19 @@ final class MissionService: Service, MissionServiceProtocol {
         let query = MemberMission.RecommendRequestDTO(memberInterestId: memberInterestId)
 
         return request(url, method: .get, header: headers, query: query)
+    }
+    
+    func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]) -> Single<MemberMission.RetryRecommendResponseDTO> {
+        let url: String = NetworkDefine.MissionAPI.retry.url
+        
+        var headers: HTTPHeaders = ["Content-Type": "application/json"]
+        headers["Accept"] = "application/json"
+
+        headers["Authorization"] = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwibmFtZSI6IiIsInR5cGUiOiJBQ0NFU1MiLCJpYXQiOjE3NjY1NjM5NjQsImV4cCI6MTc3NTIwMzk2NH0.azu1SOj9BQdQkYQeQ17Dv05sShVGXJYogmOEqZYAZjM"
+        
+        let body = MemberMission.RetryRecommendRequestDTO(memberInterestId: memberInterestId, excludeMemberMissionIds: missionsId)
+        
+        return request(url, method: .post, header: headers, body: body)
     }
 }
 
@@ -55,4 +70,3 @@ extension MissionService {
         return dateFormatter.string(from: Date())
     }
 }
-

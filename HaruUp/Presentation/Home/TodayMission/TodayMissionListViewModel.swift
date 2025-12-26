@@ -14,6 +14,8 @@ final class TodayMissionListViewModel {
         let viewDidLoad: Observable<Void>
         let refreshTap: Observable<Void>
         let completeTap: Observable<Void>
+        let missionSelected: Observable<Int> // mision 선택 이벤트
+        let retryRecommend: Observable<Void> // mission 재추천
     }
     
     struct Output {
@@ -21,6 +23,8 @@ final class TodayMissionListViewModel {
         let isLoading: Observable<Bool>
         let errorMessage: Observable<String>
         let missionCompleted: Observable<Void>
+        let selectedMissionCount: Observable<Int>
+        let selectedIDs: Observable<Set<Int>> // 선택된 Cell을 구분하기 위해
     }
     
     private let missionService: MissionServiceProtocol
@@ -28,6 +32,8 @@ final class TodayMissionListViewModel {
     
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorRelay = PublishRelay<String>()
+    private let currentMissionsRelay = BehaviorRelay<[MemberMission.MissionDTO]>(value: [])
+    private let selectedMissionIDRelay = BehaviorRelay<Set<Int>>(value: [])
     
     private let disposeBag = DisposeBag()
     
@@ -44,31 +50,101 @@ final class TodayMissionListViewModel {
         let loadingSubject = BehaviorSubject<Bool>(value: false)
         let errorSubject = PublishSubject<String>()
         
+        /// 서버로부터 미션 조회
         // 화면 진입 + 새로고침을 하나의 트리거
-        let trigger = Observable.merge(input.viewDidLoad, input.refreshTap)
+        let initialLoad = Observable.merge(input.viewDidLoad, input.refreshTap)
         
-        let missions: Observable<[MemberMission.MissionDTO]> = trigger
-               .flatMapLatest { [weak self] _ -> Observable<[MemberMission.MissionDTO]> in
-                   guard let self else { return .empty() }
-
-                   loadingSubject.onNext(true)
-                   
-                   return self.resolveMemberInterestId()
-                       .flatMap { id in
-                           self.missionService.fetchRecommendedMissions(memberInterestId: id)
-                       }
-                       .asObservable()
-                       .map { $0.data.missions }
-                       .do(
-                        onNext: { _ in loadingSubject.onNext(false) },
-                        onError: { _ in loadingSubject.onNext(false) }
-                       )
-                       .catch { err in
-                           errorSubject.onNext(err.localizedDescription)
-                           return .just([])
-                       }
-               }
-               .share(replay: 1)
+        initialLoad
+            .withUnretained(self)
+            .flatMapLatest { [weak self] _ -> Observable<[MemberMission.MissionDTO]> in
+                guard let self else { return .empty() }
+                
+                loadingSubject.onNext(true)
+                
+                return self.resolveMemberInterestId()
+                    .flatMap { id in
+                        self.missionService.fetchRecommendedMissions(memberInterestId: id)
+                    }
+                    .asObservable()
+                    .map { $0.data.missions }
+                    .catch { err in
+                        errorSubject.onNext(err.localizedDescription)
+                        return .just([])
+                    }
+                    .do(onDispose: { loadingSubject.onNext(false) })
+            }
+            .subscribe(onNext: { [weak self] missions in
+                loadingSubject.onNext(false)
+                self?.currentMissionsRelay.accept(missions) // mission 데이터 보관
+                self?.selectedMissionIDRelay.accept([]) // 미션 새로 고침을 하였으니 선택 상태 해제
+            })
+            .disposed(by: disposeBag)
+        
+        input.retryRecommend
+            .withLatestFrom(Observable.combineLatest(selectedMissionIDRelay, currentMissionsRelay))
+            .flatMapLatest { [weak self] (selectedIDs, currentMissions) -> Observable<[MemberMission.MissionDTO]> in
+                guard let self = self else { return .empty() }
+                loadingSubject.onNext(true)
+                
+                let selectedMissions = currentMissions.filter { selectedIDs.contains($0.memberMissionId) }
+                
+                let selectedMissionsIds = selectedMissions.map { $0.memberMissionId }
+                
+                return self.resolveMemberInterestId()
+                    .flatMap { id -> Single<MemberMission.RetryRecommendResponseDTO> in
+                        // API 호출: 선택된 미션들의 ID를 보냄
+                        self.missionService.retryRecommendMissions(memberInterestId: id, excludeMissionIDs: selectedMissionsIds)
+                    }
+                    .asObservable()
+                    .map { (response: MemberMission.RetryRecommendResponseDTO) -> [MemberMission.MissionDTO] in
+                        let newRetryMissions = response.data.missions.first?.data ?? [] // 현재 가장 첫번째 값으로 구현
+                        let newMissions = newRetryMissions.map { $0.toMissionDTO() }
+                        
+                        let needCount = max(0, 5 - selectedMissions.count)
+                        let missionsToAdd = Array(newMissions.prefix(needCount))
+                        
+                        return selectedMissions + missionsToAdd
+                    }
+                    .catch { err in
+                        // 에러 발생 시 최소한 기존 선택된 것들은 유지
+                        errorSubject.onNext(err.localizedDescription)
+                        return .just(selectedMissions)
+                    }
+                    .do(onDispose: { loadingSubject.onNext(false) })
+            }
+            .subscribe(onNext: { [weak self] combinedMissions in
+                loadingSubject.onNext(false)
+                // 화면 갱신
+                self?.currentMissionsRelay.accept(combinedMissions)
+            })
+            .disposed(by: disposeBag)
+        
+        /// Mission 선택
+        input.missionSelected
+            .withLatestFrom(selectedMissionIDRelay) { (id, currentSet) -> Set<Int> in
+                
+                print("id: \(id)")
+                print("currentSet: \(currentSet)")
+                var newSet = currentSet
+                
+                // 이미 있으면 선택 해제
+                if newSet.contains(id) {
+                    newSet.remove(id)
+                } else {
+                    if newSet.count < 5 { // 5개 미만일 때만 추가
+                        newSet.insert(id)
+                    }
+                }
+                
+                print("newSet: \(newSet)")
+                return newSet
+            }
+            .bind(to: selectedMissionIDRelay)
+            .disposed(by: disposeBag)
+        
+        let selectedCount = selectedMissionIDRelay
+            .map { $0.count }
+            .share(replay: 1)
         
         let missionCompleted = input.completeTap
             .do(onNext: { [weak self] in
@@ -77,10 +153,12 @@ final class TodayMissionListViewModel {
             .map { _ in () }
         
         return Output(
-            missions: missions,
+            missions: currentMissionsRelay.asObservable(),
             isLoading: loadingSubject.asObservable(),
             errorMessage: errorSubject.asObservable(),
-            missionCompleted: missionCompleted
+            missionCompleted: missionCompleted,
+            selectedMissionCount: selectedCount,
+            selectedIDs: selectedMissionIDRelay.asObservable()
         )
     }
     

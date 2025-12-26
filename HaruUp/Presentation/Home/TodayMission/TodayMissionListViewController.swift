@@ -211,30 +211,47 @@ class TodayMissionListViewController: UIViewController {
     }
     
     private func bind() {
+        let selected = tableView.rx.modelSelected(RecommendMissionRow.self).asObservable()
+        let deselected = tableView.rx.modelDeselected(RecommendMissionRow.self).asObservable()
+        
+        let missionSelected = Observable.merge(selected, deselected)
+            .compactMap { row -> Int? in
+                if case .mission(let dto) = row {
+                    return dto.memberMissionId
+                }
+                return nil
+            }
+        
         let input = TodayMissionListViewModel.Input(
             viewDidLoad: viewDidLoadSubject.asObservable(),
             refreshTap: refreshButton.rx.tap.asObservable(),
-            completeTap: completeButton.rx.tap.asObservable()
+            completeTap: completeButton.rx.tap.asObservable(),
+            missionSelected: missionSelected,
+            retryRecommend: refreshFooterView.refreshButton.rx.tap.asObservable()
         )
         
         let output = viewModel.transform(input: input)
         
-        let items = Observable
-            .combineLatest(
-                output.isLoading.distinctUntilChanged(),
-                output.missions.startWith([])
-            )
-            .map { isLoading, missions -> [RecommendMissionRow] in
-                if isLoading {
-                    return Array(repeating: .skeleton, count: 5)
-                } else {
-                    print("missions: \(missions)")
-                    return missions.map { .mission($0) }
-                }
+        let loadingItems = output.isLoading
+            .filter { $0 } // 로딩이 시작될 때만 통과
+            .withLatestFrom(Observable.combineLatest(output.missions, output.selectedIDs))
+            .map { missions, selectedIDs -> [RecommendMissionRow] in
+                let keptMissions = missions.filter { selectedIDs.contains($0.memberMissionId) }
+                let keptRows = keptMissions.map { RecommendMissionRow.mission($0) }
+                
+                let needCount = max(0, 5 - keptRows.count)
+                let skeletonRows = Array(repeating: RecommendMissionRow.skeleton, count: needCount)
+                
+                return keptRows + skeletonRows
             }
-            .observe(on: MainScheduler.instance)
         
-        items
+        let missionItems = output.missions
+            .map { missions -> [RecommendMissionRow] in
+                return missions.map { .mission($0) }
+            }
+        
+        Observable.merge(loadingItems, missionItems)
+            .observe(on: MainScheduler.instance)
             .bind(to: tableView.rx.items) { (tableView: UITableView, row: Int, item: RecommendMissionRow) in
                 let indexPath = IndexPath(row: row, section: 0)
                 
@@ -288,12 +305,19 @@ class TodayMissionListViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        
         output.missionCompleted
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] in
                 print("미션 선택 완료 -> 홈 화면 이동")
                 self?.onComplete?()
+            })
+            .disposed(by: disposeBag)
+        
+        output.selectedMissionCount
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] count in
+                print("count : \(count)")
+                self?.selectedButtonView.updateSelectionCount(count)
             })
             .disposed(by: disposeBag)
     }
