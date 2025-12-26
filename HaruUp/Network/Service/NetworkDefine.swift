@@ -30,13 +30,29 @@ enum NetworkDefine {
         }
     }
     
+    /// api/member
     enum MissionAPI {
-        case recommend
+        case recommend /// 오늘의 미션 추천
         
         var path: String {
             switch self {
             case .recommend:
-                return "api/mission/recommend"
+                return "api/member/mission/recommend"
+            }
+        }
+        
+        var url: String {
+            return APIEnvironment.baseURL + self.path
+        }
+    }
+    
+    enum InterestsAPI {
+        case member
+        
+        var path: String {
+            switch self {
+            case .member:
+                return "api/interests/member"
             }
         }
         

@@ -14,10 +14,12 @@ final class TodayMissionCoordinator: Coordinator {
     var onFinish: (() -> Void)? // 미션 선택 완료 후 동작
     
     private let missionService: MissionServiceProtocol
+    private let interestsService: InterestsService
     
-    init(navigationController: UINavigationController, missionService: MissionServiceProtocol) {
+    init(navigationController: UINavigationController, missionService: MissionServiceProtocol, interestsService: InterestsService) {
         self.navigationController = navigationController
         self.missionService = missionService
+        self.interestsService = interestsService
     }
     
     func start() {
@@ -37,7 +39,7 @@ final class TodayMissionCoordinator: Coordinator {
     }
     
     private func showMissionList() {
-        let viewModel = TodayMissionListViewModel(missionService: missionService)
+        let viewModel = TodayMissionListViewModel(missionService: missionService, interestsService: interestsService)
         let viewController = TodayMissionListViewController(viewModel: viewModel)
         
         viewController.onComplete = { [weak self] in

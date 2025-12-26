@@ -7,5 +7,5 @@
 
 enum RecommendMissionRow {
     case skeleton
-    case mission(RecommendedMissionDTO)
+    case mission(MemberMission.MissionDTO)
 }
