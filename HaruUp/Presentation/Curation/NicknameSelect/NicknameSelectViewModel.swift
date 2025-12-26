@@ -56,51 +56,31 @@ final class NicknameSelectViewModel {
             }
             .asDriver(onErrorJustReturn: false)
         
-        // 버튼 탭 시: 전체 유효성 검사
-        let buttonTapValidation = input.nextButtonTapped
+        let finalValidation = input.nextButtonTapped
             .withLatestFrom(currentNickname)
-            .map { [weak self] nickname -> ValidationResult in
-                guard let self = self else { return .empty }
-                return self.validateNickname(nickname)
-            }
-            .asDriver(onErrorJustReturn: .empty)
-        
-        input.nextButtonTapped
-            .withLatestFrom(currentNickname)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
             .flatMapLatest { [weak self] nickname -> Observable<ValidationResult> in
                 guard let self = self else { return .just(.empty) }
                 
-                let trimmedNickname = nickname.trimmingCharacters(in: .whitespaces)
-                print("🔵 다음 버튼 탭됨 - 닉네임: \(trimmedNickname)")
+                let basic = self.validateNickname(nickname)
+                guard case .success = basic else { return .just(basic) }
                 
-                // 1단계: 기본 유효성 검사
-                let basicValidation = self.validateNickname(trimmedNickname)
-                
-                if case .success = basicValidation {
-                    // 2단계: 중복 체크 API 호출
-                    print("✅ 기본 유효성 통과 → 중복 체크 시작")
-                    return self.checkNicknameDuplicate(trimmedNickname)
-                } else {
-                    print("❌ 기본 유효성 실패: \(basicValidation)")
-                    return .just(basicValidation)
-                }
+                return self.checkNicknameDuplicate(nickname)
             }
-            .subscribe(onNext: { [weak self] result in
-                guard let self = self else { return }
-                
-                print("🔍 최종 검사 결과: \(result)")
-                
-                if case .success = result {
-                    print("✅ 모든 검사 통과 → 다음 화면 이동")
-                    let finalNickname = self.currentNickname.value.trimmingCharacters(in: .whitespaces)
-                    self.coordinator?.showJobSelectFlow(selectedNickname: finalNickname)
-                }
+            .share(replay: 1)
+    
+        finalValidation
+            .filter { $0 == .success }
+            .withLatestFrom(currentNickname)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .subscribe(onNext: { [weak self] nick in
+                self?.coordinator?.showJobSelectFlow(selectedNickname: nick)
             })
             .disposed(by: disposeBag)
         
         return Output(
             isLengthValid: isLengthValid,
-            buttonTapValidation: buttonTapValidation
+            buttonTapValidation: finalValidation.asDriver(onErrorJustReturn: .empty)
         )
     }
     
@@ -188,8 +168,6 @@ final class NicknameSelectViewModel {
         return Observable.create { observer in
             let urlString = NetworkDefine.ProfileAPI.nicknameDuplicateCheck.url
             
-            // 요청 파라미터
-            let parameters: [String: String] = ["nickname": nickname]
             
             guard let refreshToken = TokenStorageService.shared.getRefreshToken() else {
                 print("❌ refreshToken이 없습니다")
@@ -206,11 +184,13 @@ final class NicknameSelectViewModel {
                 "jwt-token": refreshToken
             ]
             
+            let requestDTO = UpdateNicknameRequest(nickName: nickname)
+            
             let request = AF.request(
                 urlString,
                 method: .post,
-                parameters: parameters,
-                encoding: JSONEncoding.default,
+                parameters: requestDTO,
+                encoder: JSONParameterEncoder.default,
                 headers: headers
             )
                 .validate()

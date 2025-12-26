@@ -92,4 +92,19 @@ enum NetworkDefine {
                 return APIEnvironment.baseURL + self.path
             }
         }
+    
+    enum CurationAPI {
+        case initialCuration
+        
+        var path: String {
+            switch self {
+            case .initialCuration:
+                return "api/member/curation/initial"
+            }
+        }
+        
+        var url: String {
+            return APIEnvironment.baseURL + self.path
+        }
+    }
 }

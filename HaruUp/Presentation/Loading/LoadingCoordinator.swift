@@ -31,5 +31,12 @@ final class LoadingCoordinator: Coordinator {
     }
     
     
+    func showLoadingComplete() {
+            print("🎬 LoadingCompleteViewController로 전환")
+            let loadingCompleteVC = LoadingCompleteViewController()
+            navigationController.setViewControllers([loadingCompleteVC], animated: true)
+        }
+    
+    
     
 }

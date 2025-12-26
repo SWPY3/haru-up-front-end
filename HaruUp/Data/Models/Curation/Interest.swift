@@ -17,6 +17,8 @@ struct InterestResponse: Codable {
 struct InterestData: Codable, Sendable {
     let id: Int
     let name: String
+    var parentId: Int? = nil
+    var directFullPath: [String]? = nil
 }
 
 

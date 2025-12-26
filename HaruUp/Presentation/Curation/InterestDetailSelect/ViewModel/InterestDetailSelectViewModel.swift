@@ -62,7 +62,7 @@ final class InterestDetailSelectViewModel {
                 
                 print("🔵 선택된 세부 관심사: \(selectedInterestDetail.name), ID: \(selectedInterestDetail.id)")
                 
-                if selectedInterestDetail.name == "기타 외국어" {
+                if selectedInterestDetail.name == "기타" {
                     self?.coordinator?.showForeignLanguageInput()
                 } else {
                     self?.coordinator?.showGoalSelectFlow(selectedInterestDetail: selectedInterestDetail)
