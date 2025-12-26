@@ -12,13 +12,22 @@ import RxCocoa
 
 class GoalSelectViewController: UIViewController {
     private let viewModel: GoalSelectViewModel
-    
     private let disposeBag = DisposeBag()
     
     
-    private let goalSelectedSubject = PublishSubject<String>()
+    private let viewDidLoadSubject = PublishSubject<Void>()
+    private let goalSelectedSubject = PublishSubject<InterestData>()
     private var goalButtons: [SelectButton] = []
-    private var goals: [String] = []
+    private var goals: [InterestData] = []
+    
+    
+    private let activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .primaryBlue700
+        indicator.hidesWhenStopped = true
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        return indicator
+    }()
     
     private let backButton: UIButton = {
         let button = UIButton()
@@ -90,11 +99,11 @@ class GoalSelectViewController: UIViewController {
         button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.contentMode = .scaleAspectFit
-//        button.isEnabled = false
+        //        button.isEnabled = false
         return button
     }()
     
-
+    
     
     init(viewModel: GoalSelectViewModel) {
         self.viewModel = viewModel
@@ -112,6 +121,8 @@ class GoalSelectViewController: UIViewController {
         
         setupUI()
         bindViewmodel()
+        
+        viewDidLoadSubject.onNext(())
     }
     
     
@@ -123,6 +134,8 @@ class GoalSelectViewController: UIViewController {
         view.addSubview(stackView)
         view.addSubview(goalButtonsStackView)
         view.addSubview(nextButton)
+        view.addSubview(activityIndicator)
+        
         
         stackView.addArrangedSubview(progressBar)
         stackView.addArrangedSubview(titleLabelStackView)
@@ -131,6 +144,8 @@ class GoalSelectViewController: UIViewController {
         titleLabelStackView.addArrangedSubview(titleLabel)
         titleLabelStackView.addArrangedSubview(subtitleLabel)
         
+        activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
         
         
         backButton.anchor(
@@ -191,10 +206,23 @@ class GoalSelectViewController: UIViewController {
             .disposed(by: disposeBag)
         
         let input = GoalSelectViewModel.Input(
+            viewDidLoad: viewDidLoadSubject.asObservable(),
             goalSelected: goalSelectedSubject.asObservable(),
             nextButtonTapped: nextButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
+        
+        output.isLoading
+                    .drive(onNext: { [weak self] isLoading in
+                        if isLoading {
+                            self?.activityIndicator.startAnimating()
+                            self?.goalButtonsStackView.isHidden = true
+                        } else {
+                            self?.activityIndicator.stopAnimating()
+                            self?.goalButtonsStackView.isHidden = false
+                        }
+                    })
+                    .disposed(by: disposeBag)
         
         
         output.goals
@@ -209,7 +237,7 @@ class GoalSelectViewController: UIViewController {
                 guard let self = self else { return }
                 
                 self.goalButtons.enumerated().forEach { index, button in
-                    let isSelected = self.goals[index] == selectedGoal
+                    let isSelected = self.goals[index].id == selectedGoal?.id
                     button.setSelected(isSelected)
                 }
             })
@@ -226,13 +254,13 @@ class GoalSelectViewController: UIViewController {
             .disposed(by: disposeBag)
     }
     
-    private func createGoalButtons(with interestDetails: [String]) {
+    private func createGoalButtons(with interestDetails: [InterestData]) {
         goalButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         goalButtons.removeAll()
         
         goals.forEach { goal in
             let button = SelectButton()
-            button.setTitle(goal, for: .normal)
+            button.setTitle(goal.name, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             
@@ -246,5 +274,5 @@ class GoalSelectViewController: UIViewController {
         }
     }
     
-
+    
 }

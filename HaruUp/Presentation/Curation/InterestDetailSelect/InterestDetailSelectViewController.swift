@@ -13,10 +13,20 @@ class InterestDetailSelectViewController: UIViewController {
     private let viewModel: InterestDetailSelectViewModel
     private let disposeBag = DisposeBag()
     
-    
-    private let interestDetailSelectedSubject = PublishSubject<String>()
+    private let viewDidLoadSubject = PublishSubject<Void>()
+    private let interestDetailSelectedSubject = PublishSubject<InterestData>()
     private var interestDetailButtons: [SelectButton] = []
-    private var interestDetails: [String] = []
+    private var interestDetails: [InterestData] = []
+    
+    
+    private let activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .primaryBlue700
+        indicator.hidesWhenStopped = true
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        return indicator
+    }()
+    
     
     private let backButton: UIButton = {
         let button = UIButton()
@@ -88,7 +98,6 @@ class InterestDetailSelectViewController: UIViewController {
         button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.contentMode = .scaleAspectFit
-//        button.isEnabled = false
         return button
     }()
     
@@ -111,6 +120,8 @@ class InterestDetailSelectViewController: UIViewController {
         
         setupUI()
         bindViewModel()
+        
+        viewDidLoadSubject.onNext(())
     }
     
     
@@ -121,6 +132,7 @@ class InterestDetailSelectViewController: UIViewController {
         view.addSubview(stackView)
         view.addSubview(interestDetailButtonsStackView)
         view.addSubview(nextButton)
+        view.addSubview(activityIndicator)
         
         stackView.addArrangedSubview(progressBar)
         stackView.addArrangedSubview(titleLabelStackView)
@@ -128,7 +140,8 @@ class InterestDetailSelectViewController: UIViewController {
         titleLabelStackView.addArrangedSubview(titleLabel)
         titleLabelStackView.addArrangedSubview(subtitleLabel)
         
-        
+        activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
         
         backButton.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
@@ -187,10 +200,25 @@ class InterestDetailSelectViewController: UIViewController {
             .disposed(by: disposeBag)
         
         let input = InterestDetailSelectViewModel.Input(
+            viewDidLoad: viewDidLoadSubject.asObservable(),
             interestDetailSelected: interestDetailSelectedSubject.asObservable(),
             nextButtonTapped: nextButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
+        
+        output.isLoading
+                    .drive(onNext: { [weak self] isLoading in
+                        if isLoading {
+                            self?.activityIndicator.startAnimating()
+                            self?.interestDetailButtonsStackView.isHidden = true
+                        } else {
+                            self?.activityIndicator.stopAnimating()
+                            self?.interestDetailButtonsStackView.isHidden = false
+                        }
+                    })
+                    .disposed(by: disposeBag)
+        
+        
         
         output.interestDetails
             .drive(onNext: { [weak self] interestDetails in
@@ -204,7 +232,7 @@ class InterestDetailSelectViewController: UIViewController {
                 guard let self = self else { return }
                 
                 self.interestDetailButtons.enumerated().forEach { index, button in
-                    let isSelected = self.interestDetails[index] == selectedInterestDetail
+                    let isSelected = self.interestDetails[index].id == selectedInterestDetail?.id
                     button.setSelected(isSelected)
                 }
             })
@@ -223,13 +251,13 @@ class InterestDetailSelectViewController: UIViewController {
         
     }
     
-    private func createInterestDetailButtons(with interestDetails: [String]) {
+    private func createInterestDetailButtons(with interestDetails: [InterestData]) {
         interestDetailButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         interestDetailButtons.removeAll()
         
         interestDetails.forEach { interestDetail in
             let button = SelectButton()
-            button.setTitle(interestDetail, for: .normal)
+            button.setTitle(interestDetail.name, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             

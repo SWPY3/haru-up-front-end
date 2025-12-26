@@ -14,11 +14,11 @@ final class GoalSelectCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     private var curationData: CurationData
-    private let selectedInterestDetail: String
+    private let selectedInterestDetail: InterestData
     
     var onFinish: ((CurationData) -> Void)?
     
-    init(navigationController: UINavigationController, selectedInterestDetail: String, curationData: CurationData) {
+    init(navigationController: UINavigationController, selectedInterestDetail: InterestData, curationData: CurationData) {
         self.navigationController = navigationController
         self.selectedInterestDetail = selectedInterestDetail
         self.curationData = curationData
@@ -40,12 +40,12 @@ final class GoalSelectCoordinator: Coordinator {
     }
     
     // 다음 화면으로 이동
-    func showNextFlow(selectedGoal: String) {
+    func showNextFlow(selectedGoal: InterestData) {
         print("선택된 세부 직무: \(selectedInterestDetail), 선택된 목표: \(selectedGoal)")
         
         
         curationData.goal = selectedGoal
-        print("📦 저장된 데이터 - 목표: \(selectedGoal)")
+        print("📦 저장된 데이터 - 목표: \(selectedGoal.name), ID: \(selectedGoal.id)")
         
         
         print("📦 ===== 최종 수집된 데이터 ===== 📦")
@@ -55,9 +55,9 @@ final class GoalSelectCoordinator: Coordinator {
         print("세부 직무: \(curationData.jobDetail?.jobDetailName ?? "없음")")
         print("성별: \(curationData.gender ?? "없음")")
         print("생년월일: \(curationData.birthDate ?? "없음")")
-        print("관심사: \(curationData.interest ?? "없음")")
-        print("세부 관심사: \(curationData.interestDetail ?? "없음")")
-        print("목표: \(curationData.goal ?? "없음")")
+        print("관심사: \(curationData.interest?.name ?? "없음")")
+        print("세부 관심사: \(curationData.interestDetail?.name ?? "없음")")
+        print("목표: \(curationData.goal?.name ?? "없음")")
         print("📦 ========================== 📦")
         
         // 온보딩 완료!!
@@ -67,7 +67,7 @@ final class GoalSelectCoordinator: Coordinator {
         onFinish?(curationData)
     }
     
-    func showGoalInputFlow(selectedGoal: String) {
+    func showGoalInputFlow(selectedGoal: InterestData) {
         let goalInputCoordinator = GoalInputSelectCoordinator(navigationController: navigationController, curationData: curationData)
         
         curationData.goal = selectedGoal

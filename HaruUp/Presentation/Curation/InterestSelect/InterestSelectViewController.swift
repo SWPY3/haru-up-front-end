@@ -14,9 +14,19 @@ class InterestSelectViewController: UIViewController {
     private let viewModel:  InterestSelectViewModel
     private let disposeBag = DisposeBag()
     
-    private let interestSelectedSubject = PublishSubject<String>()
+    private let viewDidLoadSubject = PublishSubject<Void>()
+    private let interestSelectedSubject = PublishSubject<Interest>()
     private var interestButtons: [InterestButton] = []
     private var interests: [Interest] = []
+    
+    
+    private let activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .primaryBlue700
+        indicator.hidesWhenStopped = true
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        return indicator
+    }()
     
     
     private let backButton: UIButton = {
@@ -112,6 +122,8 @@ class InterestSelectViewController: UIViewController {
         
         setupUI()
         bindViewModel()
+        
+        viewDidLoadSubject.onNext(())
     }
     
     
@@ -125,6 +137,7 @@ class InterestSelectViewController: UIViewController {
 
         view.addSubview(interestButtonsStackView)
         view.addSubview(nextButton)
+        view.addSubview(activityIndicator)
         
         stackView.addArrangedSubview(progressBar)
         stackView.addArrangedSubview(titleLabelStackView)
@@ -132,6 +145,8 @@ class InterestSelectViewController: UIViewController {
         titleLabelStackView.addArrangedSubview(titleLabel)
         titleLabelStackView.addArrangedSubview(subtitleLabel)
         
+        activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
         
         
         backButton.anchor(
@@ -191,9 +206,23 @@ class InterestSelectViewController: UIViewController {
             .disposed(by: disposeBag)
         
         let input = InterestSelectViewModel.Input(
-            interestSelected: interestSelectedSubject.asObservable(), nextButtonTapped: nextButton.rx.tap.asObservable()
+            viewDidLoad: viewDidLoadSubject.asObservable(),
+            interestSelected: interestSelectedSubject.asObservable(),
+            nextButtonTapped: nextButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
+        
+        output.isLoading
+            .drive(onNext: { [weak self] isLoading in
+                if isLoading {
+                    self?.activityIndicator.startAnimating()
+                    self?.interestButtonsStackView.isHidden = true
+                } else {
+                    self?.activityIndicator.stopAnimating()
+                    self?.interestButtonsStackView.isHidden = false
+                }
+            })
+            .disposed(by: disposeBag)
         
         output.interests
             .drive(onNext: { [weak self] interests in
@@ -208,7 +237,7 @@ class InterestSelectViewController: UIViewController {
                 guard let self = self else { return }
                 
                 self.interestButtons.enumerated().forEach { index, button in
-                    let isSelected = self.interests[index].title == selectedInterest
+                    let isSelected = self.interests[index].id == selectedInterest?.id
                     button.setSelected(isSelected)
                 }
             })
@@ -235,7 +264,7 @@ class InterestSelectViewController: UIViewController {
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             
             button.rx.tap
-                .map { interest.title }
+                .map { interest }
                 .bind(to: interestSelectedSubject)
                 .disposed(by: disposeBag)
             

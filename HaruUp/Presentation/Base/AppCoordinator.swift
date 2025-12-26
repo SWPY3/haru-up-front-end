@@ -120,9 +120,9 @@ final class AppCoordinator: Coordinator {
             print("세부 직무: \(curationData.jobDetail?.jobDetailName ?? "없음")")
             print("성별: \(curationData.gender ?? "없음")")
             print("생년월일: \(curationData.birthDate ?? "없음")")
-            print("관심사: \(curationData.interest ?? "없음")")
-            print("세부 관심사: \(curationData.interestDetail ?? "없음")")
-            print("목표: \(curationData.goal ?? "없음")")
+            print("관심사: \(curationData.interest?.name ?? "없음")")
+            print("세부 관심사: \(curationData.interestDetail?.name ?? "없음")")
+            print("목표: \(curationData.goal?.name ?? "없음")")
             print("📦 ========================== 📦")
             
             if let coordinator = characterSelectCoordinator,

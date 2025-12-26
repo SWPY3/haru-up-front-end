@@ -30,9 +30,12 @@ final class InterestSelectCoordinator: Coordinator {
         
     }
     
-    func showInterestDetailSelectFlow(selectedInterest: String) {
-        curationData.interest = selectedInterest
-        print("📦 저장된 데이터 - 관심사: \(selectedInterest)")
+    func showInterestDetailSelectFlow(selectedInterest: Interest) {
+        
+        let interestData = InterestData(id: selectedInterest.id, name: selectedInterest.title)
+        
+        curationData.interest = interestData
+        print("📦 저장된 데이터 - 관심사: \(selectedInterest.title), ID: \(selectedInterest.id),,,, \(interestData)")
         
         let interestDetailCoordinator = InterestDetailSelectCoordinator(navigationController: navigationController, selectedInterest: selectedInterest, curationData: curationData)
         

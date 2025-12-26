@@ -344,7 +344,7 @@ class GoalInputSelectViewController: UIViewController {
             paddingRight: 10
         )
         
-        selectedInterestDetailLabel.setStyle(Typography.caption1, text: "\(curationData.interestDetail ?? "")")
+        selectedInterestDetailLabel.setStyle(Typography.caption1, text: "\(curationData.interestDetail?.name ?? "")")
         
         textFieldContainer.anchor(
             top: selectedInterestContainerView.bottomAnchor,

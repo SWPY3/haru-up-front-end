@@ -77,4 +77,19 @@ enum NetworkDefine {
             return APIEnvironment.baseURL + self.path
         }
     }
+    
+    
+    enum InterestAPI {
+            case getInterestList
+            case getInterestDetail(parentId: Int)
+            case getGoalList(parentId: Int)
+            
+            var path: String {
+                return "api/interests/data"
+            }
+            
+            var url: String {
+                return APIEnvironment.baseURL + self.path
+            }
+        }
 }

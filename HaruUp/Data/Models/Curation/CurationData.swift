@@ -14,9 +14,9 @@ class CurationData {
     var jobDetail: JobDetail?
     var gender: String?
     var birthDate: String?
-    var interest: String?
-    var interestDetail: String?
-    var goal: String?
+    var interest: InterestData?
+    var interestDetail: InterestData?
+    var goal: InterestData?
     
     init() {}
     

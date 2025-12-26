@@ -173,9 +173,9 @@ class LoadingViewController: UIViewController {
         ]
         // 2단계: 관심사와 목표 박스들
         let phase2Boxes = [
-            createInfoBox(title: "관심사", content: curationData.interest ?? ""),
-            createInfoBox(title: "세부 관심사", content: curationData.interestDetail ?? ""),
-            createInfoBox(title: "목표", content: curationData.goal ?? "")
+            createInfoBox(title: "관심사", content: curationData.interest?.name ?? ""),
+            createInfoBox(title: "세부 관심사", content: curationData.interestDetail?.name ?? ""),
+            createInfoBox(title: "목표", content: curationData.goal?.name ?? "")
         ]
         
         // 1단계 박스 추가
