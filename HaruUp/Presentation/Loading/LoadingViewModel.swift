@@ -33,11 +33,13 @@ final class LoadingViewModel {
         var receivedSteps: Set<String> = []
         var emittedBoxIndexes: Set<Int> = []
         
+        print("yhjo curationData : \(curationData)")
+        
         func emitBoxOnce(_ index: Int) {
-                    guard !emittedBoxIndexes.contains(index) else { return }
-                    emittedBoxIndexes.insert(index)
-                    showBoxRelay.accept(index)
-                }
+            guard !emittedBoxIndexes.contains(index) else { return }
+            emittedBoxIndexes.insert(index)
+            showBoxRelay.accept(index)
+        }
         
         input.viewDidAppear
             .flatMapLatest { [weak self] _ -> Observable<CurationStreamEvent> in
@@ -67,9 +69,9 @@ final class LoadingViewModel {
                             case .jobSet, .jobDetailSet:
                                 // 두 단계 모두 받았을 때만 3번째 박스 표시
                                 if receivedSteps.contains(LoadingStep.jobSet.rawValue),
-                                                               receivedSteps.contains(LoadingStep.jobDetailSet.rawValue) {
-                                                                emitBoxOnce(2)
-                                                            }
+                                   receivedSteps.contains(LoadingStep.jobDetailSet.rawValue) {
+                                    showBoxRelay.accept(2)
+                                }
                                 
                             case .interestSet:
                                 showBoxRelay.accept(3)
@@ -78,13 +80,14 @@ final class LoadingViewModel {
                                 showBoxRelay.accept(4)
                                 
                             case .completed:
-                                showBoxRelay.accept(5)
+//                                emitBoxOnce(5)
+                                loadingCompletedRelay.accept([])
                             }
                         }
                         
                     case .completed(let memberInterestIds):
                         print("🏁 최종 완료! memberInterestIds: \(memberInterestIds)")
-                        emitBoxOnce(5)
+//                        emitBoxOnce(5)
                         loadingCompletedRelay.accept(memberInterestIds)
                     }
                 },
@@ -102,3 +105,4 @@ final class LoadingViewModel {
         )
     }
 }
+

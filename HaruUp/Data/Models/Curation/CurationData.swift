@@ -123,7 +123,7 @@ extension CurationData {
         }
         
         // ✅ interestId는 interestDetail의 id
-        guard let interestId = interestDetail?.id else {
+        guard let interestId = goal?.id else {
             print("❌ interestDetail.id가 없습니다")
             return nil
         }
