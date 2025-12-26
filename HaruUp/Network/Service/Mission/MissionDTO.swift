@@ -121,4 +121,20 @@ enum MemberMission {
         let fullPath: [String]
         let directFullPath: [String]
     }
+    
+    // MARK: 미션 상태
+    struct MissionStatusRequestDTO: Encodable {
+        let missions: [MemberMissionDTO]
+    }
+    
+    struct MemberMissionDTO: Encodable {
+        let memberMissionId: Int
+        let missionStatus: String
+    }
+    
+    struct MissionStatusResponseDTO: Decodable {
+        let success: Bool
+        let data: String
+        let errorMessage: String?
+    }
 }

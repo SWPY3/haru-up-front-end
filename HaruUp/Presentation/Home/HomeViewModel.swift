@@ -87,9 +87,11 @@ final class HomeViewModel {
 
                 return missions.map { mission in
                     Mission(
+                        id: mission.id,
                         title: mission.missionContent,
                         difficulty: MissionDifficultyModel(rawValue: mission.difficulty) ?? .low,
-                        exp: mission.expEarned
+                        exp: mission.expEarned,
+                        isCompleted: mission.missionStatus == "COMPLETED"
                     )
                 }
             }

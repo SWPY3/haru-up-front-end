@@ -26,6 +26,10 @@ final class HomeCoordinator: Coordinator {
             self.showTodayMissionFlow()
         }
         
+        homeVC.onShowBottomSheet = { [weak self] mission in
+            self?.presentMissionBottomSheet(mission: mission)
+        }
+        
         navigationController.setViewControllers([homeVC], animated: false)
     }
     
@@ -52,4 +56,15 @@ final class HomeCoordinator: Coordinator {
         coordinator.start()
         navigationController.present(modalNavigationController, animated: true)
     }
+
+    private func presentMissionBottomSheet(mission: Mission) {
+        let bottomSheetViewModel = MissionBottomSheetViewModel(
+            mission: mission,
+            missionService: self.missionService
+        )
+        let bottomSheetVC = MissionBottomSheetViewController(viewModel: bottomSheetViewModel)
+        
+        navigationController.present(bottomSheetVC, animated: false)
+    }
 }
+

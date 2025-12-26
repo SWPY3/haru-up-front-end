@@ -272,7 +272,7 @@ class TodayMissionListViewController: UIViewController {
                         return UITableViewCell()
                     }
                     
-                    let data = Mission(title: mission.content, difficulty: difficulty, exp: 150)
+                    let data = Mission(id:mission.memberMissionId, title: mission.content, difficulty: difficulty, exp: 150, isCompleted: false)
                     print("data: \(data)")
                     
                     cell.configure(mission: data)

@@ -18,6 +18,7 @@ class HomeViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     var onSelectTodayMission: (() -> Void)? // Coordinator와의 연결은 단순히 클로저 사용
+    var onShowBottomSheet: ((Mission) -> Void)?
     
     private let tableView: UITableView = {
         let tableView = UITableView()
@@ -146,8 +147,8 @@ class HomeViewController: UIViewController {
                     
                     cell.configure(mission: mission)
                     cell.onTapSetting = { [weak self] in
-                        // TODO: Mission 완료여부 기능
-                        print("Setting Button 동작")
+                        print("setting tap")
+                        self?.onShowBottomSheet?(mission)
                     }
                     
                     return cell
