@@ -25,10 +25,36 @@ class LoginViewController: UIViewController {
     // MARK: Home 화면으로 이동하는 코드 Devlop Merge할 때 삭제
     var goToHome: (() -> Void)?
     
+    private let backgroundImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.image = .imageHomeBackgroundDay
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+    
     private let logoImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.image = UIImage(named: "haruUp_logo")
+        iv.image = UIImage(named: "haruUp_login")
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+    
+    private let characterImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.image = .foxWhiteLevel4
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+    
+    private let smallCharacterImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.clipsToBounds = true
+        iv.image = .foxYellow
+        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -37,7 +63,8 @@ class LoginViewController: UIViewController {
         button.setBackgroundImage(UIImage(named: "kakao_login"), for: .normal)
         button.tintColor = .clear
         button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
@@ -46,7 +73,8 @@ class LoginViewController: UIViewController {
         button.setBackgroundImage(UIImage(named: "naver_login"), for: .normal)
         button.tintColor = .clear
         button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
@@ -55,18 +83,10 @@ class LoginViewController: UIViewController {
         button.setBackgroundImage(UIImage(named: "apple_login"), for: .normal)
         button.tintColor = .clear
         button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
-    
-//    private lazy var appleLoginButton: ASAuthorizationAppleIDButton = {
-//        let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
-//        button.cornerRadius = 8
-//        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
-//        return button
-//    }()
-    
-    
     
     // MARK: 로그인 완료 후 온보딩으로 넘어가는 onFinish 클로저 작동용 버튼
     private let nextButton: UIButton = {
@@ -76,9 +96,6 @@ class LoginViewController: UIViewController {
         
         return button
     }()
-    
-    
-    
     
     private var indicatorView: UIActivityIndicatorView = UIActivityIndicatorView(style: .medium)
     
@@ -118,10 +135,10 @@ class LoginViewController: UIViewController {
     // MARK: - Helpers
     func configureUI() {
         view.backgroundColor = .white
-        
-        view.addSubview(logoImageView)
-        
-        //        logoImageView.setDimensions(width: 150, height: 150)
+    
+        [backgroundImageView, logoImageView, characterImageView, smallCharacterImageView].forEach {
+            view.addSubview($0)
+        }
         
         let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, naverLoginButton, appleLoginButton])
         stack.axis = .vertical
@@ -129,18 +146,35 @@ class LoginViewController: UIViewController {
         
         view.addSubview(stack)
         
-        logoImageView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 160),
+            backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor, constant: 10),
+            backgroundImageView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            backgroundImageView.rightAnchor.constraint(equalTo: view.rightAnchor)
+        ])
+        
+
+        NSLayoutConstraint.activate([
+            logoImageView.topAnchor.constraint(equalTo: view.topAnchor, constant: 123),
             logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         ])
         
+        NSLayoutConstraint.activate([
+            characterImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            characterImageView.topAnchor.constraint(equalTo: view.topAnchor, constant: 281)
+        ])
+        
+        NSLayoutConstraint.activate([
+            smallCharacterImageView.topAnchor.constraint(equalTo: view.topAnchor, constant: 333),
+            smallCharacterImageView.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 329)
+        ])
+    
+        
         stack.anchor(
-            top: logoImageView.bottomAnchor,
             left: view.leftAnchor,
+            bottom: view.bottomAnchor,
             right: view.rightAnchor,
-            paddingTop: 160,
             paddingLeft: 20,
+            paddingBottom: 100,
             paddingRight: 20)
         
     }

@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "kakao.png",
+      "filename" : "fox-white-level4.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "kakao@2x.png",
+      "filename" : "fox-white-level4@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "kakao@3x.png",
+      "filename" : "fox-white-level4@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
