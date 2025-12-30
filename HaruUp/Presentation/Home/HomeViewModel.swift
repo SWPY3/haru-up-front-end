@@ -36,7 +36,24 @@ final class HomeViewModel {
     }
 
     func transform(input: Input) -> Output {
-        Observable.merge(input.viewDidLoad)
+        // 1) 오늘 미션 플로우 필요 여부를 1번만 확인해서 공유
+        let needShow = input.viewDidAppear
+            .take(1)
+            .flatMapLatest { [weak self] _ -> Observable<Bool> in
+                guard let self else { return .empty() }
+                return self.missionService.needShowTodayMissionFlow().asObservable()
+            }
+            .share(replay: 1, scope: .whileConnected)
+        
+        // 2) 필요하면 플로우만 띄우기
+        let showTodayMissionFlow = needShow
+            .filter { $0 }
+            .map { _ in () }
+            .asSignal(onErrorSignalWith: .empty())
+        
+        // 3) 필요하지 않을 때만 미션 로드
+        needShow
+            .filter { !$0 }
             .flatMapLatest { [weak self] _ -> Observable<[Mission]> in
                 guard let self else { return .empty() }
                 return self.loadSelectedMissions()
@@ -55,16 +72,6 @@ final class HomeViewModel {
                 }
             }
             .asDriver(onErrorJustReturn: [.empty])
-
-        let showTodayMissionFlow = input.viewDidAppear
-            .take(1) // 앱 실행후 한번만 확인
-            .flatMapLatest { [weak self] _ -> Observable<Bool> in
-                guard let self else { return .empty() }
-                return self.missionService.needShowTodayMissionFlow().asObservable()
-            }
-            .filter { $0 }
-            .map { _ in () }
-            .asSignal(onErrorSignalWith: .empty())
 
         return Output(
             rows: rows,
