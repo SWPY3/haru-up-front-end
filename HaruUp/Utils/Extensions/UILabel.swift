@@ -36,7 +36,7 @@ extension UILabel {
     }
     
     /// 전체 스타일(폰트/라인하이트) 적용 + 특정 텍스트만 색 변경
-    func setStyledText(_ style: FontStyle, fullText: String, highlightedText: String,highlightedColor: UIColor, defaultColor: UIColor) {
+    func setStyledText(_ style: FontStyle, fullText: String, highlightedText: String, highlightedColor: UIColor, defaultColor: UIColor) {
         self.textColor = defaultColor
         self.numberOfLines = 0
 
