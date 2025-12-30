@@ -134,6 +134,10 @@ final class NicknameSelectViewController: UIViewController {
         setupLayout()
         bindViewModel()
         setupKeyboardHandling()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         
         self.textField.becomeFirstResponder()
     }
