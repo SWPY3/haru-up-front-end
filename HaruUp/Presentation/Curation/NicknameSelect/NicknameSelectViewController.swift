@@ -138,10 +138,13 @@ final class NicknameSelectViewController: UIViewController {
         self.textField.becomeFirstResponder()
     }
     
-    // 화면 탭 시 키보드 내리기
-    private func setupTapGesture() {
+    // MARK: - Setup Methods
+    private func setupAttributes() {
+        view.backgroundColor = .white
+        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tapGesture.cancelsTouchesInView = false
+        tapGesture.delegate = self
         view.addGestureRecognizer(tapGesture)
     }
     
@@ -312,4 +315,41 @@ final class NicknameSelectViewController: UIViewController {
     }
 }
 
+// MARK: - Keyboard Handling Extension
+extension NicknameSelectViewController: UIGestureRecognizerDelegate {
+    
+    private func setupKeyboardHandling() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
+    @objc private func keyboardWillShow(_ notification: Notification) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
+        
+        // safeArea 고려하지 않고 키보드 바로 위로 붙이기
+        nextButtonBottomConstraint?.constant = -(keyboardFrame.height - view.safeAreaInsets.bottom + 10)
+        
+        UIView.animate(withDuration: duration) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
+        
+        nextButtonBottomConstraint?.constant = -5
+        
+        UIView.animate(withDuration: duration) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if touch.view is UIButton {
+            return false
+        }
+        
+        return true
+    }
 }
