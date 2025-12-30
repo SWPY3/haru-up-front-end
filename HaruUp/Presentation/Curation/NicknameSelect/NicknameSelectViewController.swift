@@ -9,28 +9,21 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-
-
-class NicknameSelectViewController: UIViewController {
-    private let viewModel: NicknameSelectViewModel
-    private let disposeBag = DisposeBag()
+final class NicknameSelectViewController: UIViewController {
     
-    private let nicknameInputSubject = PublishSubject<String>()
-    
-    private var nextButtonBottomConstraint: NSLayoutConstraint?
-    
+    // MARK: - UI Components
     private let progressBar: UIProgressView = {
-        let progressBar = UIProgressView(progressViewStyle: .default)
-        progressBar.progress = 1.0 / 8.0
-        progressBar.tintColor = .primaryBlue700
-        progressBar.trackTintColor = .neutral50
-        progressBar.translatesAutoresizingMaskIntoConstraints = false
-        return progressBar
+        let view = UIProgressView(progressViewStyle: .default)
+        view.progress = 1.0 / 8.0
+        view.tintColor = .cta
+        view.trackTintColor = .neutral50
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.title2, text:  "닉네임을 지어주세요")
+        label.setStyle(Typography.title2, text: "닉네임을 지어주세요")
         label.textAlignment = .left
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -39,34 +32,32 @@ class NicknameSelectViewController: UIViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.body4, text: "하루업에서 불리고 싶은 이름을 지어주세요.")
+        label.setStyle(Typography.body4, text: "하루업에서 불리고 싶은 이름을 적어주세요.")
         label.textAlignment = .left
         label.textColor = .neutral700
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
+    private lazy var titleStackView: UIStackView = {
+        let sv = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
+        sv.axis = .vertical
+        sv.alignment = .fill
+        sv.distribution = .equalSpacing
+        sv.spacing = 8
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        return sv
+    }()
+    
     private let textField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "2~10자의 한글만 입력해주세요."
-        tf.font = UIFont.pretendard(size: 16, weight: .medium)
+        tf.setPlaceholder(color: .neutral300)
+        tf.font = Typography.body1.font
         tf.borderStyle = .none
+        tf.textColor = .neutral1000
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
-    }()
-    
-    private let textFieldContainer: UIView = {
-        let view = UIView()
-        view.backgroundColor = .clear
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    private let textFieldBottomLine: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.primaryBlue700.withAlphaComponent(0.3)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
     }()
     
     private let clearButton: UIButton = {
@@ -77,10 +68,22 @@ class NicknameSelectViewController: UIViewController {
         return button
     }()
     
+    private let textFieldBottomLine: UIView = {
+        let view = UIView()
+        view.backgroundColor = .cta
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let textFieldContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private let warningLabel: UILabel = {
         let label = UILabel()
-        label.text = ""
-        label.setStyle(Typography.body4, text: "")
         label.textColor = .secondaryRed200
         label.textAlignment = .left
         label.isHidden = true
@@ -88,35 +91,31 @@ class NicknameSelectViewController: UIViewController {
         return label
     }()
     
-    private let stackView: UIStackView = {
-        let sv = UIStackView()
-        sv.translatesAutoresizingMaskIntoConstraints = false
+    // 전체 구성을 담을 메인 스택뷰
+    private lazy var mainStackView: UIStackView = {
+        let sv = UIStackView(arrangedSubviews: [progressBar, titleStackView])
         sv.axis = .vertical
         sv.alignment = .fill
-        sv.distribution = .equalSpacing
-        sv.spacing = 35
-        return sv
-    }()
-    
-    private let titleLabelStackView: UIStackView = {
-        let sv = UIStackView()
+        sv.spacing = 42
         sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.axis = .vertical
-        sv.alignment = .fill
-        sv.distribution = .equalSpacing
-        sv.spacing = 12
         return sv
     }()
     
     private let nextButton: UIButton = {
         let btn = UIButton()
-        btn.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
+        btn.setTitle("다음", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .neutral200
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
         btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.contentMode = .scaleAspectFit
         return btn
     }()
     
-    
+    // MARK: - Properties
+    private let viewModel: NicknameSelectViewModel
+    private let disposeBag = DisposeBag()
+    private var nextButtonBottomConstraint: NSLayoutConstraint?
     
     // MARK: - Init
     init(viewModel: NicknameSelectViewModel) {
@@ -128,226 +127,118 @@ class NicknameSelectViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
-    
     // MARK: - LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        setupUI()
+        setupAttributes()
+        setupLayout()
         bindViewModel()
-        setupKeyboardObservers()
-        setupTapGesture()
-        
-        // 키보드 자동으로 올라오게
-        textField.becomeFirstResponder()
+        setupKeyboardHandling()
     }
     
-    // 화면 탭 시 키보드 내리기
-    private func setupTapGesture() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tapGesture.cancelsTouchesInView = false
-        view.addGestureRecognizer(tapGesture)
-    }
-    @objc private func dismissKeyboard() {
-        view.endEditing(true)
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        self.textField.becomeFirstResponder()
     }
     
-    private func setupKeyboardObservers() {
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
-        
-    }
-    
-    
-    // 키보드가 올라올 때
-    @objc private func keyboardWillShow(_ notification: Notification) {
-        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
-              let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else {
-            return
-        }
-        
-        let keyboardHeight = keyboardFrame.height
-        
-        // nextButton을 키보드 위로 이동 (safeArea bottom 대신 키보드 높이만큼)
-        nextButtonBottomConstraint?.constant = -(keyboardHeight + 0)
-        
-        UIView.animate(withDuration: duration) {
-            self.view.layoutIfNeeded()
-        }
-    }
-    
-    // 키보드가 내려갈 때
-    @objc private func keyboardWillHide(_ notification: Notification) {
-        guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else {
-            return
-        }
-        
-        // nextButton을 원래 위치로 복원
-        nextButtonBottomConstraint?.constant = -5
-        
-        UIView.animate(withDuration: duration) {
-            self.view.layoutIfNeeded()
-        }
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    // MARK: - Setup UI
-    
-    private func setupUI() {
+    // MARK: - Setup Methods
+    private func setupAttributes() {
         view.backgroundColor = .white
         
-        textFieldContainer.addSubview(textField)
-        textFieldContainer.addSubview(textFieldBottomLine)
-        textFieldContainer.addSubview(clearButton)
-        
-        
-        view.addSubview(stackView)
-        view.addSubview(textFieldContainer)
-        view.addSubview(warningLabel)
-        view.addSubview(nextButton)
-        
-        titleLabelStackView.addArrangedSubview(titleLabel)
-        titleLabelStackView.addArrangedSubview(subtitleLabel)
-        
-        stackView.addArrangedSubview(progressBar)
-        stackView.addArrangedSubview(titleLabelStackView)
-        
-        
-        stackView.anchor(
-            top: view.safeAreaLayoutGuide.topAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingTop: 50,
-            paddingLeft: 20,
-            paddingRight: 20
-        )
-        
-        progressBar.heightAnchor.constraint(equalToConstant: 6).isActive = true
-        
-        titleLabelStackView.anchor(
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingTop: 20,
-            paddingLeft: 20,
-            paddingRight: 20
-        )
-        
-        textFieldContainer.anchor(
-            top: subtitleLabel.bottomAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingTop: 40,
-            paddingLeft: 20,
-            paddingRight: 20,
-            height: 50
-        )
-        
-        textField.anchor(
-            top: textFieldContainer.topAnchor,
-            left: textFieldContainer.leftAnchor,
-            bottom: textFieldContainer.bottomAnchor,
-            right: textFieldContainer.rightAnchor,
-            paddingLeft: 9,
-            paddingRight: 9
-            
-        )
-        
-        clearButton.anchor(
-            bottom: textField.bottomAnchor,
-            right: textFieldContainer.rightAnchor,
-            paddingBottom: 10
-        )
-        
-        textFieldBottomLine.anchor(
-            left: textFieldContainer.leftAnchor,
-            bottom: textFieldContainer.bottomAnchor,
-            right: textFieldContainer.rightAnchor,
-            height: 2
-        )
-        
-        warningLabel.anchor(
-            top: textFieldContainer.bottomAnchor,
-            left: view.leftAnchor,
-            paddingTop: 8,
-            paddingLeft: 20
-        )
-        
-        nextButtonBottomConstraint = nextButton.bottomAnchor.constraint(
-            equalTo: view.safeAreaLayoutGuide.bottomAnchor,
-            constant: -5
-        )
-        
-        nextButton.anchor(
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingLeft: 20,
-            paddingRight: 20,
-            height: 56
-        )
-        
-        
-        nextButtonBottomConstraint?.isActive = true
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        tapGesture.delegate = self
+        view.addGestureRecognizer(tapGesture)
     }
     
+    private func setupLayout() {
+        // Add Subviews
+        [textField, clearButton, textFieldBottomLine].forEach { textFieldContainer.addSubview($0) }
+        [mainStackView, textFieldContainer, warningLabel, nextButton].forEach { view.addSubview($0) }
+        
+        // Layout Constraints
+        nextButtonBottomConstraint = nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -5)
+        
+        NSLayoutConstraint.activate([
+            // Main StackView (Progress + Titles)
+            mainStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 44),
+            mainStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            mainStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            progressBar.heightAnchor.constraint(equalToConstant: 6),
+            
+            // TextField Container
+            textFieldContainer.topAnchor.constraint(equalTo: mainStackView.bottomAnchor, constant: 40),
+            textFieldContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            textFieldContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            textFieldContainer.heightAnchor.constraint(equalToConstant: 50),
+            
+            // TextField Internal
+            textField.topAnchor.constraint(equalTo: textFieldContainer.topAnchor),
+            textField.leadingAnchor.constraint(equalTo: textFieldContainer.leadingAnchor),
+            textField.trailingAnchor.constraint(equalTo: clearButton.leadingAnchor, constant: -10),
+            textField.bottomAnchor.constraint(equalTo: textFieldContainer.bottomAnchor),
+            
+            clearButton.centerYAnchor.constraint(equalTo: textFieldContainer.centerYAnchor),
+            clearButton.trailingAnchor.constraint(equalTo: textFieldContainer.trailingAnchor),
+            clearButton.widthAnchor.constraint(equalToConstant: 24), // 터치 영역 확보 필요 시 조정
+            clearButton.heightAnchor.constraint(equalToConstant: 24),
+            
+            textFieldBottomLine.leadingAnchor.constraint(equalTo: textFieldContainer.leadingAnchor),
+            textFieldBottomLine.trailingAnchor.constraint(equalTo: textFieldContainer.trailingAnchor),
+            textFieldBottomLine.bottomAnchor.constraint(equalTo: textFieldContainer.bottomAnchor),
+            textFieldBottomLine.heightAnchor.constraint(equalToConstant: 2),
+            
+            // Warning Label
+            warningLabel.topAnchor.constraint(equalTo: textFieldContainer.bottomAnchor, constant: 8),
+            warningLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            warningLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            // Next Button
+            nextButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            nextButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            nextButton.heightAnchor.constraint(equalToConstant: 56),
+            nextButtonBottomConstraint!
+        ])
+    }
     
-    
-    // MARK: - Bind ViewModel
+    // MARK: - Binding
     private func bindViewModel() {
         
-        // Input 준비
-        textField.rx.text.orEmpty
-            .bind(to: nicknameInputSubject)
-            .disposed(by: disposeBag)
-        
+        // 1. Input 생성 (Subject 제거하고 바로 바인딩)
         let input = NicknameSelectViewModel.Input(
-            nicknameInput: nicknameInputSubject.asObservable(),
+            nicknameInput: textField.rx.text.orEmpty.asObservable(),
             nextButtonTapped: nextButton.rx.tap.asObservable()
         )
         
         let output = viewModel.transform(input: input)
         
-        // 1. clearButton 표시/숨김
-        textField.rx.text.orEmpty
-            .map { !$0.isEmpty }
-            .subscribe(onNext: { [weak self] hasText in
-                UIView.animate(withDuration: 0.2) {
-                    self?.clearButton.isHidden = !hasText
-                }
-            })
-            .disposed(by: disposeBag)
+        // 2. UI Event Bindings
         
-        // 2. clearButton 탭
+        // Clear Button 동작
         clearButton.rx.tap
-            .subscribe(onNext: { [weak self] in
-                self?.textField.text = ""
-                self?.textField.sendActions(for: .editingChanged)
-                self?.warningLabel.isHidden = true
+            .subscribe(with: self, onNext: { owner, _ in
+                owner.resetTextField()
             })
             .disposed(by: disposeBag)
         
-        // 3. 텍스트필드 포커스 상태
-        textField.rx.controlEvent(.editingDidBegin)
-            .subscribe(onNext: { [weak self] in
-                UIView.animate(withDuration: 0.3) {
-                    self?.textFieldBottomLine.backgroundColor = .systemBlue
-                }
+        // 텍스트 유무에 따른 ClearButton 표시
+        textField.rx.text.orEmpty
+            .map { $0.isEmpty }
+            .distinctUntilChanged()
+            .bind(to: clearButton.rx.isHidden)
+            .disposed(by: disposeBag)
+            
+        // 포커스 애니메이션 (ControlEvent 활용)
+        textField.rx.controlEvent([.editingDidBegin, .editingDidEnd])
+            .asDriver()
+            .drive(onNext: { [weak self] _ in
+                self?.animateBottomLine()
             })
             .disposed(by: disposeBag)
         
-        textField.rx.controlEvent(.editingDidEnd)
-            .subscribe(onNext: { [weak self] in
-                UIView.animate(withDuration: 0.3) {
-                    self?.textFieldBottomLine.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
-                }
-            })
-            .disposed(by: disposeBag)
-        
-        // 4. 텍스트 입력 시 경고 메시지 숨김
+        // 타이핑 시작하면 경고 숨김
         textField.rx.text.orEmpty
             .skip(1)
             .subscribe(onNext: { [weak self] _ in
@@ -355,58 +246,114 @@ class NicknameSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 5. 실시간 글자 수 체크 (2~10자)
+        // 3. Output Bindings
+        
+        // 길이 유효성 (버튼 색상)
         output.isLengthValid
             .drive(onNext: { [weak self] isValid in
-                let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
+                self?.nextButton.backgroundColor = isValid ? .cta : .neutral200
+                self?.nextButton.isEnabled = isValid
             })
             .disposed(by: disposeBag)
         
-        // 텍스트 여부에 따른 버튼 활성화 제어
-        textField.rx.text.orEmpty
-            .map { !$0.isEmpty }
-            .distinctUntilChanged()
-            .subscribe(onNext: { [weak self] hasText in
-                self?.nextButton.isEnabled = hasText
-            })
-            .disposed(by: disposeBag)
-        
-        // 6. 다음 버튼 탭 시 전체 유효성 검사
+        // 최종 검증 결과 처리
         output.buttonTapValidation
             .drive(onNext: { [weak self] result in
-                guard let self = self else { return }
+                self?.handleValidationResult(result)
                 
-                switch result {
-                case .success:
-                    self.warningLabel.isHidden = true
-                    self.warningLabel.text = ""
-                    
-                case .empty:
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-                    
-                case .tooShort, .tooLong:
-                    self.warningLabel.setStyle(Typography.body4, text: "*2~10자로 입력해주세요.")
-                    self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-                    
-                case .invalidCharacters:
-                    self.warningLabel.setStyle(Typography.body4, text: "*한글만 입력해주세요.")
-                    self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-                    
-                case .incompleteKorean:
-                    self.warningLabel.setStyle(Typography.body4, text: "*올바른 형태로 입력해주세요.")
-                    self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
-                    
-                case .duplicated:
-                    self.warningLabel.setStyle(Typography.body4, text: "*이미 존재하는 닉네임입니다.")
-                    self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                if case .success = result {
+                    self?.view.endEditing(true)
                 }
             })
             .disposed(by: disposeBag)
     }
     
+    // MARK: - Private Helper Methods
+    
+    // 복잡한 Switch문 분리
+    private func handleValidationResult(_ result: ValidationResult) { // Enum 타입 추론
+        switch result {
+        case .success:
+            warningLabel.isHidden = true
+            // 다음 화면 이동 로직 등 추가
+            
+        case .empty:
+            // Empty일 때는 보통 버튼이 비활성화 되어있겠지만 예외처리
+            break
+            
+        case .tooShort, .tooLong:
+            showWarning("*2~10자로 입력해주세요.")
+            
+        case .invalidCharacters:
+            showWarning("*한글만 입력해주세요.")
+            
+        case .incompleteKorean:
+            showWarning("*올바른 형태로 입력해주세요.")
+            
+        case .duplicated:
+            showWarning("*이미 존재하는 닉네임입니다.")
+        }
+    }
+    
+    private func showWarning(_ text: String) {
+        warningLabel.setStyle(Typography.body4, text: text)
+        warningLabel.isHidden = false
+        nextButton.backgroundColor = .neutral200
+    }
+    
+    private func animateBottomLine() {
+        let isFocused = textField.isFirstResponder
+        UIView.animate(withDuration: 0.3) {
+            self.textFieldBottomLine.backgroundColor = isFocused ? .systemBlue : UIColor.primaryBlue700.withAlphaComponent(0.3)
+        }
+    }
+    
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+    
+    private func resetTextField() {
+        textField.text = ""
+        textField.sendActions(for: .editingChanged) // Rx에 '빈 값'임을 알림
+        warningLabel.isHidden = true
+    }
+}
+
+// MARK: - Keyboard Handling Extension
+extension NicknameSelectViewController: UIGestureRecognizerDelegate {
+    
+    private func setupKeyboardHandling() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
+    @objc private func keyboardWillShow(_ notification: Notification) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
+        
+        // safeArea 고려하지 않고 키보드 바로 위로 붙이기
+        nextButtonBottomConstraint?.constant = -(keyboardFrame.height - view.safeAreaInsets.bottom + 10)
+        
+        UIView.animate(withDuration: duration) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
+        
+        nextButtonBottomConstraint?.constant = -5
+        
+        UIView.animate(withDuration: duration) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if touch.view is UIButton {
+            return false
+        }
+        
+        return true
+    }
 }

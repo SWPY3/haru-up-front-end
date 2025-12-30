@@ -17,6 +17,7 @@ class SelectButton: UIButton {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        
         setupButton()
     }
     
@@ -38,30 +39,41 @@ class SelectButton: UIButton {
             bottom: 16,
             trailing: 20
         )
-        contentHorizontalAlignment = .left
+        
+        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            
+            outgoing.font = Typography.body1.font
+            return outgoing
+        }
+        
         self.configuration = configuration
+        self.contentHorizontalAlignment = .left
+        
+        self.configuration?.baseForegroundColor = .neutral1000
     }
     
     func setSelected(_ selected: Bool) {
-        buttonIsSelected = selected
+        self.buttonIsSelected = selected
     }
     
     private func updateAppearance() {
+        guard var config = self.configuration else { return }
+        
         if buttonIsSelected {
-            
-            setTitleColor(.primaryBlue700, for: .selected)
-            
+            backgroundColor = .primaryBlue50
             layer.borderWidth = 2
             layer.borderColor = UIColor.cta.cgColor
             
-            backgroundColor = .primaryBlue50
+            config.baseForegroundColor = .cta
         } else {
-            
-            setTitleColor(.black, for: .selected)
-            
+            backgroundColor = .neutral10
             layer.borderColor = nil
             layer.borderWidth = 0
-            backgroundColor = .neutral10
+            
+            config.baseForegroundColor = .neutral1000
         }
+        
+        self.configuration = config
     }
 }

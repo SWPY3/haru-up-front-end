@@ -91,12 +91,15 @@ class CharacterSelectViewController: UIViewController {
     
     private let nextButton: UIButton = {
         let btn = UIButton()
-        btn.setImage(UIImage(named: "next_btn_blue.png"), for: .normal)
+        btn.setTitle("다음", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .cta
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
         btn.translatesAutoresizingMaskIntoConstraints = false
+        
         return btn
     }()
-    
-    
     
     // MARK: - Init
     init(viewModel: CharacterSelectViewModel) {
@@ -205,7 +208,7 @@ class CharacterSelectViewController: UIViewController {
             bottom: view.safeAreaLayoutGuide.bottomAnchor,
             right: view.rightAnchor,
             paddingLeft: 20,
-            paddingBottom: 5,
+            paddingBottom: 10,
             paddingRight: 20,
             height: 56
         )

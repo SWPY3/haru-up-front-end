@@ -89,20 +89,22 @@ class JobSelectViewController: UIViewController {
     
     private let nextButton: UIButton = {
         let btn = UIButton()
-        btn.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
+        btn.setTitle("다음", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .neutral200
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
         btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.contentMode = .scaleAspectFit
-        btn.isEnabled = false
         return btn
     }()
     
     private let activityIndicator: UIActivityIndicatorView = {
-            let indicator = UIActivityIndicatorView(style: .large)
-            indicator.color = .primaryBlue700
-            indicator.hidesWhenStopped = true
-            indicator.translatesAutoresizingMaskIntoConstraints = false
-            return indicator
-        }()
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .primaryBlue700
+        indicator.hidesWhenStopped = true
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        return indicator
+    }()
     
     // MARK: - Init
     init(viewModel: JobSelectViewModel) {
@@ -211,16 +213,16 @@ class JobSelectViewController: UIViewController {
         let output = viewModel.transform(input: input)
         
         output.isLoading
-                    .drive(onNext: { [weak self] isLoading in
-                        if isLoading {
-                            self?.activityIndicator.startAnimating()
-                            self?.jobButtonsStackView.isHidden = true
-                        } else {
-                            self?.activityIndicator.stopAnimating()
-                            self?.jobButtonsStackView.isHidden = false
-                        }
-                    })
-                    .disposed(by: disposeBag)
+            .drive(onNext: { [weak self] isLoading in
+                if isLoading {
+                    self?.activityIndicator.startAnimating()
+                    self?.jobButtonsStackView.isHidden = true
+                } else {
+                    self?.activityIndicator.stopAnimating()
+                    self?.jobButtonsStackView.isHidden = false
+                }
+            })
+            .disposed(by: disposeBag)
         
         // 직업 목록 받아 버튼 생성
         output.jobs
@@ -246,8 +248,7 @@ class JobSelectViewController: UIViewController {
             .map { $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
-                let imageName = isEnabled ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
+                self?.nextButton.backgroundColor = isEnabled ? .cta : .neutral200
             })
             .disposed(by: disposeBag)
     }
@@ -259,8 +260,6 @@ class JobSelectViewController: UIViewController {
         jobs.forEach { job in
             let button = SelectButton()
             button.setTitle(job.jobName, for: .normal)
-            button.titleLabel?.font = Typography.body1.font
-            button.setTitleColor(.black, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             
@@ -273,5 +272,4 @@ class JobSelectViewController: UIViewController {
             jobButtonsStackView.addArrangedSubview(button)
         }
     }
-    
 }

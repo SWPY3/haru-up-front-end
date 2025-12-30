@@ -7,9 +7,6 @@
 
 import Foundation
 
-
-
-
 final class TokenStorageService {
     static let shared = TokenStorageService()
     
@@ -62,9 +59,6 @@ final class TokenStorageService {
         UserDefaults.standard.removeObject(forKey: tokenExpiresAtKey)
     }
     
-    
-    
-    
     func saveMemberId(_ id: String) {
         UserDefaults.standard.set(id, forKey: memberIdKey)
     }
@@ -73,38 +67,30 @@ final class TokenStorageService {
         return UserDefaults.standard.string(forKey: memberIdKey)
     }
     
-    
-    
-    
     // MARK: - Apple Login
-        func saveAppleUserInfo(userId: String, email: String?, fullName: String?) {
-            UserDefaults.standard.set(userId, forKey: appleUserIdKey)
-            UserDefaults.standard.set(email, forKey: appleEmailKey)
-            UserDefaults.standard.set(fullName, forKey: appleFullNameKey)
-        }
-        
-        func getAppleUserId() -> String? {
-            return UserDefaults.standard.string(forKey: appleUserIdKey)
-        }
-        
-        func getAppleEmail() -> String? {
-            return UserDefaults.standard.string(forKey: appleEmailKey)
-        }
-        
-        func getAppleFullName() -> String? {
-            return UserDefaults.standard.string(forKey: appleFullNameKey)
-        }
-        
-        private func clearAppleLoginInfo() {
-            UserDefaults.standard.removeObject(forKey: appleUserIdKey)
-            UserDefaults.standard.removeObject(forKey: appleEmailKey)
-            UserDefaults.standard.removeObject(forKey: appleFullNameKey)
-        }
+    func saveAppleUserInfo(userId: String, email: String?, fullName: String?) {
+        UserDefaults.standard.set(userId, forKey: appleUserIdKey)
+        UserDefaults.standard.set(email, forKey: appleEmailKey)
+        UserDefaults.standard.set(fullName, forKey: appleFullNameKey)
+    }
     
+    func getAppleUserId() -> String? {
+        return UserDefaults.standard.string(forKey: appleUserIdKey)
+    }
     
+    func getAppleEmail() -> String? {
+        return UserDefaults.standard.string(forKey: appleEmailKey)
+    }
     
+    func getAppleFullName() -> String? {
+        return UserDefaults.standard.string(forKey: appleFullNameKey)
+    }
     
-    
+    private func clearAppleLoginInfo() {
+        UserDefaults.standard.removeObject(forKey: appleUserIdKey)
+        UserDefaults.standard.removeObject(forKey: appleEmailKey)
+        UserDefaults.standard.removeObject(forKey: appleFullNameKey)
+    }
     
     func saveOnboardingCompleted(_ completed: Bool) {
         UserDefaults.standard.set(completed, forKey: onboardingCompletedKey)
@@ -132,29 +118,20 @@ final class TokenStorageService {
     
     // 온보딩 상태 완전 초기화 (로그아웃 시 호출)
     func clearOnboardingState() {
-            UserDefaults.standard.removeObject(forKey: onboardingCompletedKey)
-            UserDefaults.standard.removeObject(forKey: onboardingCompletedMemberIdKey)
-            print("🗑️ 온보딩 상태 완전 초기화")
-        }
+        UserDefaults.standard.removeObject(forKey: onboardingCompletedKey)
+        UserDefaults.standard.removeObject(forKey: onboardingCompletedMemberIdKey)
+        print("🗑️ 온보딩 상태 완전 초기화")
+    }
     
     // 모든 데이터 초기화 (로그아웃 시)
-        func clearAll() {
-            clearTokens()
-            clearOnboardingState()
-            clearAppleLoginInfo()
-            UserDefaults.standard.removeObject(forKey: memberIdKey)
-            print("🗑️ 모든 저장 데이터 초기화(로그아웃)")
-        }
+    func clearAll() {
+        clearTokens()
+        clearOnboardingState()
+        clearAppleLoginInfo()
+        UserDefaults.standard.removeObject(forKey: memberIdKey)
+        print("🗑️ 모든 저장 데이터 초기화(로그아웃)")
+    }
     
-//    func resetOnboardingStatus() {
-//            UserDefaults.standard.removeObject(forKey: "onboardingRequired")
-//            UserDefaults.standard.removeObject(forKey: "onboardingCompleted")
-//            UserDefaults.standard.removeObject(forKey: onboardingCompletedKey)
-//            UserDefaults.standard.removeObject(forKey: onboardingCompletedMemberIdKey)
-//            print("🔄 온보딩 상태 리셋 (테스트용)")
-//        }
-    
-#if DEBUG
     func printCurrentStatus() {
         print("=== Token Status ===")
         print("Access Token: \(getAccessToken() ?? "nil")")
@@ -162,5 +139,4 @@ final class TokenStorageService {
         print("Onboarding Completed: \(isOnboardingCompleted())")
         print("===================")
     }
-#endif
 }

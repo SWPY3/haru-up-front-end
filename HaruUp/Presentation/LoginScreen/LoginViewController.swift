@@ -18,55 +18,30 @@ class LoginViewController: UIViewController {
     
     var onFinish: ((SocialLoginResult) -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
     
-    // MARK: TEST Home 화면으로 이동하는 코드 Devlop Merge할 때 삭제
-    var goToHome: (() -> Void)?
+    /// background Image의 사이즈를 비율에 따라 맞춰서 정하기 위해 구현
+    private var backgroundAspectConstraint: NSLayoutConstraint?
     
     private let logoImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.image = UIImage(named: "haruUp_logo")
+        iv.image = .imageLoginBackground
+
         return iv
     }()
     
-    private let kakaoLoginButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setBackgroundImage(UIImage(named: "kakao_login"), for: .normal)
-        button.tintColor = .clear
-        button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
-        return button
+    private let buttonStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 16
+        
+        return stackView
     }()
     
-    private let naverLoginButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setBackgroundImage(UIImage(named: "naver_login"), for: .normal)
-        button.tintColor = .clear
-        button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
-        return button
-    }()
-    
-    private let appleLoginButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setBackgroundImage(UIImage(named: "apple_login"), for: .normal)
-        button.tintColor = .clear
-        button.backgroundColor = .clear
-        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
-        return button
-    }()
-    
-//    private lazy var appleLoginButton: ASAuthorizationAppleIDButton = {
-//        let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
-//        button.cornerRadius = 8
-//        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
-//        return button
-//    }()
-    
-    // MARK: 로그인 완료 후 온보딩으로 넘어가는 onFinish 클로저 작동용 버튼
-    private let nextButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("onboarding", for: .normal)
-        button.backgroundColor = .green
+    private let kakaoLoginButton = KakaoLoginButton()
+    private let naverLoginButton = NaverLoginButton()
+    private let appleLoginButton: UIControl = {
+        let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
+        button.cornerRadius = 16
         
         return button
     }()
@@ -86,47 +61,61 @@ class LoginViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        configureUI()
+        setupView()
         bind()
-        
-        configureNextButton()
     }
     
-    private func configureNextButton() {
-        view.addSubview(nextButton)
-        nextButton.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
-            nextButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
-        ])
-    }
-    
-    // MARK: - Helpers
-    func configureUI() {
+    func setupView() {
         view.backgroundColor = .white
+        
+        configureTitle()
+        configureButton()
+        
+        applyBackgroundAspect()
+    }
+    
+    private func applyBackgroundAspect() {
+        guard let backgroundImage = logoImageView.image else { return }
+        
+        let ratio = backgroundImage.size.height / backgroundImage.size.width
+        backgroundAspectConstraint?.isActive = false
+        backgroundAspectConstraint = logoImageView.heightAnchor.constraint(
+            equalTo: logoImageView.widthAnchor,
+            multiplier: ratio
+        )
+        backgroundAspectConstraint?.priority = .required
+        backgroundAspectConstraint?.isActive = true
+    }
+    
+    private func configureTitle() {
         view.addSubview(logoImageView)
-        
-        let stack = UIStackView(arrangedSubviews: [kakaoLoginButton, naverLoginButton, appleLoginButton])
-        stack.axis = .vertical
-        stack.spacing = 20
-        
-        view.addSubview(stack)
-        
         logoImageView.translatesAutoresizingMaskIntoConstraints = false
+        
         NSLayoutConstraint.activate([
-            logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 160),
-            logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            logoImageView.topAnchor.constraint(equalTo: view.topAnchor),
+            logoImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            logoImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
+    }
+    
+    private func configureButton() {
+        view.addSubview(buttonStackView)
+        buttonStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        stack.anchor(
-            top: logoImageView.bottomAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingTop: 160,
-            paddingLeft: 20,
-            paddingRight: 20)
+        [kakaoLoginButton, naverLoginButton, appleLoginButton].forEach {
+            buttonStackView.addArrangedSubview($0)
+        }
         
+        NSLayoutConstraint.activate([
+            buttonStackView.topAnchor.constraint(equalTo: logoImageView.bottomAnchor, constant: 36),
+            buttonStackView.bottomAnchor.constraint(lessThanOrEqualTo: view.bottomAnchor, constant: -96),
+            buttonStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            buttonStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            kakaoLoginButton.heightAnchor.constraint(equalToConstant: 54),
+            naverLoginButton.heightAnchor.constraint(equalToConstant: 54),
+            appleLoginButton.heightAnchor.constraint(equalToConstant: 54),
+        ])
     }
     
     // MARK: - bind
@@ -136,12 +125,6 @@ class LoginViewController: UIViewController {
             appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable(),
             naverLoginTapped: naverLoginButton.rx.tap.asObservable()
         )
-        
-        nextButton.rx.tap
-            .bind { [weak self] in
-                guard let self else { return }
-                self.goToHome?()
-            }.disposed(by: disposeBag)
         
         let output = viewModel.transform(input)
         
@@ -174,3 +157,4 @@ class LoginViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 }
+
