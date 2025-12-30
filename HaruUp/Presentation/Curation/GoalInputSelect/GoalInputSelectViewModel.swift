@@ -15,7 +15,6 @@ final class GoalInputSelectViewModel {
         case success
         case empty
         case tooShort
-        //        case tooLong
         case invalidGoal
     }
     
@@ -39,9 +38,11 @@ final class GoalInputSelectViewModel {
     private let validationRequestSubject = PublishSubject<Void>()
     private let isValidGoalRelay = PublishRelay<Bool>()
     
+    private let curationData: CurationData
     
-    init(coordinator: GoalInputSelectCoordinator) {
+    init(coordinator: GoalInputSelectCoordinator, curationData: CurationData) {
         self.coordinator = coordinator
+        self.curationData = curationData
     }
     
     func transform(input: Input) -> Output {
@@ -89,12 +90,13 @@ final class GoalInputSelectViewModel {
                 guard let self = self else { return }
                 
                 let trimmedgoalInput = goalInput.trimmingCharacters(in: .whitespaces)
+                let goalInputToInterest = InterestData(id: curationData.goal!.id, name: trimmedgoalInput)
                 print("🔵 다음 버튼 탭됨 - 목표: \(trimmedgoalInput)")
                 print("🔍 유효성 검사 결과: \(result)")
                 
                 if case .success = result {
                     print("✅ 목표 입력 완료")
-                    self.coordinator?.showNextFlow(selectedGoalInput: trimmedgoalInput)
+                    self.coordinator?.showNextFlow(selectedGoalInput: goalInputToInterest)
                 } else {
                     print("❌ 유효성 검사 실패: \(result)")
                 }

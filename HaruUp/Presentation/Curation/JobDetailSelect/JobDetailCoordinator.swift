@@ -14,11 +14,11 @@ final class JobDetailSelectCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     private var curationData: CurationData
-    private let selectedJob: String
+    private let selectedJob: Job
     
     var onFinish: ((CurationData) -> Void)?
     
-    init(navigationController: UINavigationController, selectedJob: String, curationData: CurationData) {
+    init(navigationController: UINavigationController, selectedJob: Job, curationData: CurationData) {
         self.navigationController = navigationController
         self.selectedJob = selectedJob
         self.curationData = curationData
@@ -26,7 +26,7 @@ final class JobDetailSelectCoordinator: Coordinator {
     
     func start() {
         print("🟡 JobDetailSelectCoordinator start() 호출됨")
-        print("🟡 선택된 직업: \(selectedJob)")
+        print("🟡 선택된 직업: \(selectedJob.jobName)")
         let jobDetailSelectVM = JobDetailSelectViewModel(
             coordinator: self,
             selectedJob: selectedJob
@@ -39,8 +39,8 @@ final class JobDetailSelectCoordinator: Coordinator {
     }
     
     // 다음 화면으로 이동
-    func showGenderSelectFlow(selectedJobDetail: String) {
-        print("선택된 직업: \(selectedJob), 선택된 세부 직무: \(selectedJobDetail)")
+    func showGenderSelectFlow(selectedJobDetail: JobDetail) {
+        print("선택된 직업: \(selectedJob.jobName), 선택된 세부 직무: \(selectedJobDetail.jobDetailName)")
         let genderSelectCoordinator = GenderSelectCoordinator(
             navigationController: navigationController,
             curationData: curationData)

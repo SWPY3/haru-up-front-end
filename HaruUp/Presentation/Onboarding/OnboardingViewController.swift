@@ -17,7 +17,6 @@ class OnboardingViewController: UIViewController {
     
     var onFinish: (() -> Void)? // Onboarding 완료 후 Home으로 이동 콜백
     
-    
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.isPagingEnabled = true
@@ -71,10 +70,7 @@ class OnboardingViewController: UIViewController {
         setupUI()
         setupOnboardingPages()
         bindViewModel()
-        
-        
     }
-    
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -85,6 +81,7 @@ class OnboardingViewController: UIViewController {
             width: view.bounds.width * CGFloat(pageCount),
             height: scrollView.frame.height
         )
+        
         // 각 페이지 프레임 재조정
         for (index, subview) in scrollView.subviews.enumerated() {
             subview.frame = CGRect(
@@ -96,14 +93,11 @@ class OnboardingViewController: UIViewController {
         }
     }
     
-    
     // MARK: - Setup UI
     private func setupUI() {
-        view.addSubview(skipButton)
-        view.addSubview(scrollView)
-        view.addSubview(pageControl)
-        view.addSubview(nextButton)
-        
+        [skipButton, scrollView, pageControl, nextButton].forEach {
+            view.addSubview($0)
+        }
 
         skipButton.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
@@ -138,6 +132,7 @@ class OnboardingViewController: UIViewController {
             paddingRight: 20,
             height: 56
         )
+        
         scrollView.delegate = self
     }
     
@@ -153,7 +148,6 @@ class OnboardingViewController: UIViewController {
                 description: "관심사, 직무별\n랭킹표 혹은 다른\n아이콘.\n\n핸드폰 화면 안들어감...\n샘각중임.."
             )
         ]
-        
         
         scrollView.contentSize = CGSize(
             width: view.bounds.width * CGFloat(pages.count),
@@ -173,7 +167,7 @@ class OnboardingViewController: UIViewController {
         }
     }
     
-    
+
     private func createPageView(title: String, description: String)  -> UIView {
         let container = UIView()
         container.backgroundColor = .white
@@ -249,10 +243,6 @@ class OnboardingViewController: UIViewController {
             .disposed(by: disposeBag)
         
         // Output 연결
-//        viewModel.currentPage
-//            .bind(to: pageControl.rx.currentPage)
-//            .disposed(by: disposeBag)
-        
         viewModel.currentPage
                 .distinctUntilChanged()
                 .observe(on: MainScheduler.instance)
@@ -283,8 +273,6 @@ class OnboardingViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 }
-
-
 
 
 // MARK: - UIScrollViewDelegate

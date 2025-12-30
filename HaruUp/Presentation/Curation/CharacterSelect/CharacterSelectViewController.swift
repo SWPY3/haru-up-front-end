@@ -15,7 +15,7 @@ class CharacterSelectViewController: UIViewController {
     private let viewModel: CharacterSelectViewModel
     private let disposeBag = DisposeBag()
     
-    private let currentCharacterIndex = BehaviorRelay<Int>(value: 0)
+    private let currentCharacterIndex = BehaviorRelay<Int>(value: 1)
     
     private let characters: [(name: String, image: String, textImage: String)] = [
         (name: "하루", image: "haru_level1", textImage: "text_box_character_haru"),
@@ -59,7 +59,7 @@ class CharacterSelectViewController: UIViewController {
     
     private let characterShadowImageView: UIImageView = {
        let iv = UIImageView()
-        iv.image = UIImage(named: "character_shadow.png")
+        iv.image = UIImage(named: "character_shadow2.png")
         iv.contentMode = .scaleAspectFit
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
@@ -116,7 +116,7 @@ class CharacterSelectViewController: UIViewController {
         setupUI()
         bindViewModel()
         setupGestures()
-        updateCharacterDisplay(at: 0)
+        updateCharacterDisplay(at: 1)
     }
     
     
@@ -247,28 +247,28 @@ class CharacterSelectViewController: UIViewController {
     
     private func showPreviousCharacter() {
         let currentIndex = currentCharacterIndex.value
-        if currentIndex > 0 {
+        if currentIndex > 1 {
             currentCharacterIndex.accept(currentIndex - 1)
         }
     }
     
     private func showNextCharacter() {
         let currentIndex = currentCharacterIndex.value
-        if currentIndex < characters.count - 1 {
+        if currentIndex < characters.count  {
             currentCharacterIndex.accept(currentIndex + 1)
         } else {
-            currentCharacterIndex.accept(0)
+            currentCharacterIndex.accept(1)
         }
     }
     
     private func updateCharacterDisplay(at index: Int) {
         
-        guard index >= 0 && index < characters.count else {
+        guard index >= 1 && index < characters.count + 1 else {
             print("❌ 잘못된 인덱스: \(index)")
             return
         }
         
-        let character = characters[index]
+        let character = characters[index - 1]
         
         guard let charImage = UIImage(named: character.image) else {
             print("❌ 캐릭터 이미지 로드 실패: \(character.image)")
@@ -296,11 +296,11 @@ class CharacterSelectViewController: UIViewController {
         characterNameLabel.text = character.name
         
         // 화살표 버튼 활성화/비활성화
-        leftArrowButton.isEnabled = index > 0
-        leftArrowButton.alpha = index > 0 ? 1.0 : 0.2
+        leftArrowButton.isEnabled = index > 1
+        leftArrowButton.alpha = index > 1 ? 1.0 : 0.2
         
-        rightArrowButton.isEnabled = index < characters.count - 1
-        rightArrowButton.alpha = index < characters.count - 1 ? 1.0 : 0.2
+        rightArrowButton.isEnabled = index < characters.count
+        rightArrowButton.alpha = index < characters.count ? 1.0 : 0.2
         
     }
     

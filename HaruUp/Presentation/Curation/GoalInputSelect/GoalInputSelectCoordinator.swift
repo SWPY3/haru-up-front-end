@@ -25,7 +25,7 @@ final class GoalInputSelectCoordinator: Coordinator {
     func start() {
         print("🟡 GoalLInputSelectCoordinator start() 호출됨")
         print("🟡 목표 직접 입력할게요 선택")
-        let goalInputSelectVM = GoalInputSelectViewModel(coordinator: self)
+        let goalInputSelectVM = GoalInputSelectViewModel(coordinator: self, curationData: curationData)
         
         let goalInputSelectVC = GoalInputSelectViewController(viewModel: goalInputSelectVM, curationData: curationData)
         
@@ -35,8 +35,8 @@ final class GoalInputSelectCoordinator: Coordinator {
     }
     
     // 다음 화면으로 이동
-    func showNextFlow(selectedGoalInput: String) {
-        print("선택된 관심사: \(curationData.interest ?? "없음"), 작성한 목표: \(selectedGoalInput)")
+    func showNextFlow(selectedGoalInput: InterestData) {
+//        print("선택된 관심사: \(curationData.interest ?? "없음"), 작성한 목표: \(selectedGoalInput)")
         
         
         curationData.goal = selectedGoalInput
@@ -52,13 +52,13 @@ final class GoalInputSelectCoordinator: Coordinator {
         print("📦 ===== 최종 수집된 데이터 ===== 📦")
         print("캐릭터 ID: \(curationData.characterId ?? -1)")
         print("닉네임: \(curationData.nickname ?? "없음")")
-        print("직업: \(curationData.job ?? "없음")")
-        print("세부 직무: \(curationData.jobDetail ?? "없음")")
+        print("직업: \(curationData.job?.jobName ?? "없음")")
+        print("세부 직무: \(curationData.jobDetail?.jobDetailName ?? "없음")")
         print("성별: \(curationData.gender ?? "없음")")
         print("생년월일: \(curationData.birthDate ?? "없음")")
-        print("관심사: \(curationData.interest ?? "없음")")
-        print("세부 관심사: \(curationData.interestDetail ?? "없음")")
-        print("목표: \(curationData.goal ?? "없음")")
+        print("관심사: \(curationData.interest?.name ?? "없음")")
+        print("세부 관심사: \(curationData.interestDetail?.name ?? "없음")")
+        print("목표: \(curationData.goal?.name ?? "없음")")
         print("📦 ========================== 📦")
         
         onFinish?(curationData)

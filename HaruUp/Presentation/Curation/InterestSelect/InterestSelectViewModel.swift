@@ -8,43 +8,42 @@
 import UIKit
 import RxSwift
 import RxCocoa
-
-
-struct Interest {
-    let icon: String
-    let title: String
-}
+import Alamofire
 
 final class InterestSelectViewModel {
     
     struct Input {
-        let interestSelected: Observable<String>
+        let viewDidLoad: Observable<Void>
+        let interestSelected: Observable<Interest>
         let nextButtonTapped: Observable<Void>
     }
     
     struct Output {
         let interests: Driver<[Interest]>
-        let selectedInterest: Driver<String?>
+        let selectedInterest: Driver<Interest?>
+        let isLoading: Driver<Bool>
     }
     
     private weak var coordinator: InterestSelectCoordinator?
     private let disposeBag = DisposeBag()
     
-    private let interestList = BehaviorRelay<[Interest]>(value: [
-        Interest(icon: "🌍", title: "외국어 공부"),
-        Interest(icon: "⛹🏻‍♂️", title: "체력관리 및 운동"),
-        Interest(icon: "💵", title: "재테크/투자"),
-        Interest(icon: "🪪", title: "자격증 공부"),
-        Interest(icon: "👩🏻‍💻", title: "직무 관련 역량 개발")
-    ])
-    
-    private let currentSelectedInterest = BehaviorRelay<String?>(value: nil)
+    private let interestList = BehaviorRelay<[Interest]>(value: [])
+    private let currentSelectedInterest = BehaviorRelay<Interest?>(value: nil)
+    private let isLoading = BehaviorRelay<Bool>(value: false)
     
     init(coordinator: InterestSelectCoordinator) {
         self.coordinator = coordinator
     }
     
     func transform(input: Input) -> Output {
+        input.viewDidLoad
+            .flatMapLatest { [weak self] _ -> Observable<[Interest]> in
+                guard let self = self else { return .empty() }
+                return self.fetchInterestList()
+            }
+            .bind(to: interestList)
+            .disposed(by: disposeBag)
+        
         input.interestSelected
             .bind(to: currentSelectedInterest)
             .disposed(by: disposeBag)
@@ -56,14 +55,73 @@ final class InterestSelectViewModel {
                     print("관심사를 선택해주세요")
                     return
                 }
-                print("🔵 다음 버튼 탭됨 - 관심사: \(interest)")
+                print("🔵 다음 버튼 탭됨 - 관심사: \(interest.title), ID: \(interest.id)")
                 self?.coordinator?.showInterestDetailSelectFlow(selectedInterest: interest)
             })
             .disposed(by: disposeBag)
         
         return Output(
             interests: interestList.asDriver(),
-            selectedInterest: currentSelectedInterest.asDriver()
+            selectedInterest: currentSelectedInterest.asDriver(),
+            isLoading: isLoading.asDriver()
+            
         )
+    }
+    
+    private func fetchInterestList() -> Observable<[Interest]> {
+        return Observable.create { [weak self] observer in
+            guard let self = self else {
+                observer.onCompleted()
+                return Disposables.create()
+            }
+            
+            self.isLoading.accept(true)
+            
+            let urlString = NetworkDefine.InterestAPI.getInterestList.url
+            
+            guard let refreshToken = TokenStorageService.shared.getRefreshToken() else {
+                print("❌ refreshToken이 없습니다")
+                self.isLoading.accept(false)
+                observer.onError(NSError(domain: "AuthError", code: 401))
+                return Disposables.create()
+            }
+            
+            let headers: HTTPHeaders = [
+                "Content-Type" : "application/json",
+                "jwt-token": refreshToken
+            ]
+            
+            print("📡 관심사 목록 요청")
+            print("🌐 URL: \(urlString)")
+            
+            let request = AF.request(urlString, method: .get, headers: headers)
+                .validate()
+                .responseDecodable(of: InterestResponse.self){ [weak self] response in
+                    self?.isLoading.accept(false)
+                    
+                    switch response.result {
+                    case .success(let interestResponse):
+                        let interests = interestResponse.interests.map { Interest(from: $0) }
+                        print("✅ 관심사 목록 조회 성공: \(interests.count)개")
+                        interests.forEach { print("  - \($0.title) (ID: \($0.id))") }
+                        observer.onNext(interests)
+                        observer.onCompleted()
+                        
+                    case .failure(let error):
+                        print("❌ 관심사 목록 조회 실패: \(error.localizedDescription)")
+                        
+                        if let statusCode = response.response?.statusCode {
+                            print("📛 HTTP Status Code: \(statusCode)")
+                        }
+                        
+                        observer.onNext([])
+                        observer.onCompleted()
+                    }
+                }
+            
+            return Disposables.create {
+                request.cancel()
+            }
+        }
     }
 }

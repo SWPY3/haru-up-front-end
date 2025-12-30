@@ -72,4 +72,66 @@ enum NetworkDefine {
             return APIEnvironment.baseURL + self.path
         }
     }
+    
+    enum ProfileAPI {
+        case nicknameDuplicateCheck
+        
+        var path: String {
+            switch self {
+            case .nicknameDuplicateCheck:
+                return "api/member/profile/nickName_duplicate_check"
+            }
+        }
+        
+        var url: String {
+            return APIEnvironment.baseURL + self.path
+        }
+    }
+    
+    enum JobAPI {
+        case getJobList
+        case getJobDetailList(jobId: Int)
+        
+        var path: String {
+            switch self {
+            case .getJobList:
+                return "api/job/getJobList"
+            case .getJobDetailList:
+                return "api/job/getJobDetailList"
+            }
+        }
+        
+        var url: String {
+            return APIEnvironment.baseURL + self.path
+        }
+    }
+    
+    enum InterestAPI {
+        case getInterestList
+        case getInterestDetail(parentId: Int)
+        case getGoalList(parentId: Int)
+        
+        var path: String {
+            return "api/interests/data"
+        }
+        
+        var url: String {
+            return APIEnvironment.baseURL + self.path
+        }
+    }
+    
+    enum CurationAPI {
+        case initialCuration
+        
+        var path: String {
+            switch self {
+            case .initialCuration:
+                return "api/member/curation/initial"
+            }
+        }
+        
+        var url: String {
+            return APIEnvironment.baseURL + self.path
+        }
+    }
 }

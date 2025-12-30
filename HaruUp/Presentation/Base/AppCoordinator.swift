@@ -33,7 +33,6 @@ final class AppCoordinator: Coordinator {
         splashCoordinator.onFinish = { [weak self, weak splashCoordinator] result in
             guard let self = self else { return }
             
-            
             // SplashCoordinator 메모리 정리
             if let splash = splashCoordinator, let index = self.childCoordinators.firstIndex(where: { $0 === splash }) {
                 self.childCoordinators.remove(at: index)
@@ -48,10 +47,9 @@ final class AppCoordinator: Coordinator {
                 showMainTabFlow()
             }
         }
+        
         splashCoordinator.start()
     }
-    
-    
     
     private func showLoginFlow() {
         let loginCoordinator = LoginCoordinator(navigationController: navigationController)
@@ -91,10 +89,8 @@ final class AppCoordinator: Coordinator {
     private func showOnboardingFlow() {
         let onboardingCoordinator = OnboardingCoordinator(navigationController: navigationController)
         
-        
         onboardingCoordinator.onFinish = { [weak self, weak onboardingCoordinator] in
             guard let self = self else { return }
-            
             
             if let coordinator = onboardingCoordinator,
                let index = self.childCoordinators.firstIndex(where: {$0 === coordinator}) {
@@ -116,13 +112,13 @@ final class AppCoordinator: Coordinator {
             print("📦 ===== 최종 수집된 데이터 ===== 📦")
             print("캐릭터 ID: \(curationData.characterId ?? -1)")
             print("닉네임: \(curationData.nickname ?? "없음")")
-            print("직업: \(curationData.job ?? "없음")")
-            print("세부 직무: \(curationData.jobDetail ?? "없음")")
+            print("직업: \(curationData.job?.jobName ?? "없음")")
+            print("세부 직무: \(curationData.jobDetail?.jobDetailName ?? "없음")")
             print("성별: \(curationData.gender ?? "없음")")
             print("생년월일: \(curationData.birthDate ?? "없음")")
-            print("관심사: \(curationData.interest ?? "없음")")
-            print("세부 관심사: \(curationData.interestDetail ?? "없음")")
-            print("목표: \(curationData.goal ?? "없음")")
+            print("관심사: \(curationData.interest?.name ?? "없음")")
+            print("세부 관심사: \(curationData.interestDetail?.name ?? "없음")")
+            print("목표: \(curationData.goal?.name ?? "없음")")
             print("📦 ========================== 📦")
             
             if let coordinator = characterSelectCoordinator,
@@ -132,8 +128,6 @@ final class AppCoordinator: Coordinator {
             }
             self?.showLoadingFlow()
         }
-        
-            
         
         childCoordinators.append(characterSelectCoordinator)
         characterSelectCoordinator.start()

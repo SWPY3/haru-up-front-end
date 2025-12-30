@@ -20,8 +20,6 @@ class SelectButton: UIButton {
         setupButton()
     }
     
-    
-    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -31,11 +29,7 @@ class SelectButton: UIButton {
         layer.masksToBounds = true
         
         backgroundColor = .neutral10
-        
-        titleLabel?.setStyle(Typography.body1, text: "")
-        setTitleColor(.black, for: .normal)
-        
-        
+
         var configuration = Configuration.plain()
         configuration.titleAlignment = .leading
         configuration.contentInsets = NSDirectionalEdgeInsets(
@@ -62,13 +56,12 @@ class SelectButton: UIButton {
             
             backgroundColor = .primaryBlue50
         } else {
-
-//            setTitleColor(., for: .normal)
+            
+            setTitleColor(.black, for: .selected)
             
             layer.borderColor = nil
             layer.borderWidth = 0
             backgroundColor = .neutral10
         }
     }
-    
 }

@@ -18,7 +18,7 @@ class SplashViewController: UIViewController {
     
     let mainLogoImage: UIImageView = {
         let iv = UIImageView()
-        iv.image = UIImage(named: "haruUp_splash")
+        iv.image = .haruUpSplash
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -33,13 +33,13 @@ class SplashViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.addSubview(mainLogoImage)
-        configureMainLogo()
         view.backgroundColor = .white
+        view.addSubview(mainLogoImage)
+        
+        configureMainLogo()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -53,8 +53,6 @@ class SplashViewController: UIViewController {
             })
             .disposed(by: disposeBag)
     }
-    
-    
     
     func configureMainLogo() {
         mainLogoImage.translatesAutoresizingMaskIntoConstraints = false

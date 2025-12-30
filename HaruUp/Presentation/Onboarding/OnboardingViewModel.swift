@@ -18,7 +18,6 @@ final class OnboardingViewModel {
     let nextButtonTapped = PublishSubject<Void>()
     let skipButtonTapped = PublishSubject<Void>()
     
-    
     // Output
     let currentPage = BehaviorRelay<Int>(value: 0)
     let isLastPage: Observable<Bool>
@@ -30,8 +29,6 @@ final class OnboardingViewModel {
     private let totalPages = 2
     
     init() {
-        
-        
         let pages = totalPages
         
         // 마지막 페이지 여부
@@ -45,25 +42,9 @@ final class OnboardingViewModel {
             .map{ $0 ? "준비 완료" : "다음" }
         
         setupBindings()
-        
     }
     
     private func setupBindings() {
-        // 다음 버튼 탭
-        //        nextButtonTapped
-        //            .withLatestFrom(currentPage)
-        //            .subscribe(onNext: { [weak self] page in
-        //                guard let self = self else { return }
-        //
-        //                if page < self.totalPages - 1 {
-        //                    // 다음 페이지 이동
-        //                    self.currentPage.accept(page + 1)
-        //                }else {
-        //                    // 마지막 페이지 -> 완료
-        //                    self.shouldComplete.onNext(())
-        //                }
-        //            })
-        //            .disposed(by: disposeBag)
         nextButtonTapped
             .do(onNext: { print("👉 VM next tapped") })
             .withLatestFrom(currentPage)

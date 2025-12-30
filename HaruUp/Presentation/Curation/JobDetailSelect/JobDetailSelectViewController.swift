@@ -14,9 +14,10 @@ class JobDetailSelectViewController: UIViewController {
     private let viewModel: JobDetailSelectViewModel
     private let disposeBag = DisposeBag()
     
-    private let jobDetailSelectedSubject = PublishSubject<String>()
+    private let viewDidLoadSubject = PublishSubject<Void>()
+    private let jobDetailSelectedSubject = PublishSubject<JobDetail>()
     private var jobDetailButtons: [SelectButton] = []
-    private var jobDetails: [String] = []
+    private var jobDetails: [JobDetail] = []
     
     private let backButton: UIButton = {
         let button = UIButton()
@@ -104,6 +105,14 @@ class JobDetailSelectViewController: UIViewController {
         return button
     }()
     
+    private let activityIndicator: UIActivityIndicatorView = {
+            let indicator = UIActivityIndicatorView(style: .large)
+            indicator.color = .primaryBlue700
+            indicator.hidesWhenStopped = true
+            indicator.translatesAutoresizingMaskIntoConstraints = false
+            return indicator
+        }()
+    
     // MARK: - Init
     
     init(viewModel: JobDetailSelectViewModel) {
@@ -122,6 +131,8 @@ class JobDetailSelectViewController: UIViewController {
         
         setupUI()
         bindViewModel()
+        
+        viewDidLoadSubject.onNext(())
     }
     
     
@@ -134,6 +145,7 @@ class JobDetailSelectViewController: UIViewController {
         view.addSubview(titleLabelStackView)
         view.addSubview(scrollView)
         view.addSubview(nextButton)
+        view.addSubview(activityIndicator)
         
         stackView.addArrangedSubview(progressBar)
         
@@ -211,6 +223,9 @@ class JobDetailSelectViewController: UIViewController {
             height: 56
         )
         
+        activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+                activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        
     }
     
     private func bindViewModel() {
@@ -221,11 +236,24 @@ class JobDetailSelectViewController: UIViewController {
             .disposed(by: disposeBag)
         
         let input = JobDetailSelectViewModel.Input(
+            viewDidLoad: viewDidLoadSubject.asObservable(),
             jobDetailSelected: jobDetailSelectedSubject.asObservable(),
             nextButtonTapped: nextButton.rx.tap.asObservable()
         )
         
         let output = viewModel.transform(input: input)
+        
+        output.isLoading
+                    .drive(onNext: { [weak self] isLoading in
+                        if isLoading {
+                            self?.activityIndicator.startAnimating()
+                            self?.scrollView.isHidden = true
+                        } else {
+                            self?.activityIndicator.stopAnimating()
+                            self?.scrollView.isHidden = false
+                        }
+                    })
+                    .disposed(by: disposeBag)
         
         // 세부 직무 목록 받아서 버튼 생성
         output.jobDetails
@@ -241,7 +269,7 @@ class JobDetailSelectViewController: UIViewController {
                 guard let self = self else { return }
                 
                 self.jobDetailButtons.enumerated().forEach { index, button in
-                    let isSelected = self.jobDetails[index] == selectedJobDetail
+                    let isSelected = self.jobDetails[index].id == selectedJobDetail?.id
                     button.setSelected(isSelected)
                 }
             })
@@ -257,13 +285,13 @@ class JobDetailSelectViewController: UIViewController {
             })
             .disposed(by: disposeBag)
     }
-    private func createJobDetailButtons(with jobDetails: [String]) {
+    private func createJobDetailButtons(with jobDetails: [JobDetail]) {
         jobDetailButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         jobDetailButtons.removeAll()
         
         jobDetails.forEach { jobDetail in
             let button = SelectButton()
-            button.setTitle(jobDetail, for: .normal)
+            button.setTitle(jobDetail.jobDetailName, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             

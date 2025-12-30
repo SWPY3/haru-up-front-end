@@ -14,11 +14,11 @@ final class InterestDetailSelectCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     private var curationData: CurationData
-    private let selectedInterest: String
+    private let selectedInterest: Interest
     
     var onFinish: ((CurationData) -> Void)?
     
-    init(navigationController: UINavigationController, selectedInterest: String, curationData: CurationData) {
+    init(navigationController: UINavigationController, selectedInterest: Interest, curationData: CurationData) {
         self.navigationController = navigationController
         self.selectedInterest = selectedInterest
         self.curationData = curationData
@@ -49,19 +49,20 @@ final class InterestDetailSelectCoordinator: Coordinator {
         bottomSheet.onFinish = { [weak self] foreignLanguage in
             print("✅ 입력된 외국어: \(foreignLanguage)")
             // 입력된 외국어를 다음 화면으로 전달
-            self?.curationData.interestDetail = foreignLanguage
-            self?.showGoalSelectFlow(selectedInterestDetail: foreignLanguage)
+            let customInterestDetail = InterestData(id: 9, name: foreignLanguage)
+            self?.curationData.interestDetail = customInterestDetail
+            self?.showGoalSelectFlow(selectedInterestDetail: customInterestDetail)
         }
         
-        // ⭐️ navigationController의 최상단 ViewController에서 present
+        // navigationController의 최상단 ViewController에서 present
         navigationController.topViewController?.present(bottomSheet, animated: true)
     }
     
     // 다음 화면으로 이동
-    func showGoalSelectFlow(selectedInterestDetail: String) {
+    func showGoalSelectFlow(selectedInterestDetail: InterestData) {
         print("선택된 관심사: \(selectedInterest), 선택된 세부 직무: \(selectedInterestDetail)")
         curationData.interestDetail = selectedInterestDetail
-        print("📦 저장된 데이터 - 상세직업: \(selectedInterestDetail)")
+        print("📦 저장된 데이터 - 세부 관심사: \(selectedInterestDetail.name), ID: \(selectedInterestDetail.id)")
         
         let goalSelectCoordinator = GoalSelectCoordinator(navigationController: navigationController, selectedInterestDetail: selectedInterestDetail, curationData: curationData)
         
@@ -75,7 +76,6 @@ final class InterestDetailSelectCoordinator: Coordinator {
         }
         
         childCoordinators.append(goalSelectCoordinator)
-        
         goalSelectCoordinator.start()
         
     }

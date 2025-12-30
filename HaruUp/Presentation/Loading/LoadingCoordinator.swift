@@ -26,10 +26,12 @@ final class LoadingCoordinator: Coordinator {
         let loadingVC = LoadingViewController(curationData: curationData, viewModel: loadingVM, coordinator: self)
         
         navigationController.setViewControllers([loadingVC], animated: true)
-        
-        
     }
     
     
-    
+    func showLoadingComplete() {
+        print("🎬 LoadingCompleteViewController로 전환")
+        let loadingCompleteVC = LoadingCompleteViewController()
+        navigationController.setViewControllers([loadingCompleteVC], animated: true)
+    }
 }

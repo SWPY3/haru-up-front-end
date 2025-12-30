@@ -8,7 +8,7 @@
 import UIKit
 import RxSwift
 import RxCocoa
-
+import Alamofire
 
 final class NicknameSelectViewModel {
     
@@ -20,6 +20,7 @@ final class NicknameSelectViewModel {
         case tooLong
         case invalidCharacters      // 한글이 아닌 문자 포함 (숫자, 영어, 특수문자 등)
         case incompleteKorean        // 자음/모음이 섞인 경우
+        case duplicated
     }
     
     struct Input {
@@ -55,39 +56,31 @@ final class NicknameSelectViewModel {
             }
             .asDriver(onErrorJustReturn: false)
         
-        // 버튼 탭 시: 전체 유효성 검사
-        let buttonTapValidation = input.nextButtonTapped
+        let finalValidation = input.nextButtonTapped
             .withLatestFrom(currentNickname)
-            .map { [weak self] nickname -> ValidationResult in
-                guard let self = self else { return .empty }
-                return self.validateNickname(nickname)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .flatMapLatest { [weak self] nickname -> Observable<ValidationResult> in
+                guard let self = self else { return .just(.empty) }
+                
+                let basic = self.validateNickname(nickname)
+                guard case .success = basic else { return .just(basic) }
+                
+                return self.checkNicknameDuplicate(nickname)
             }
-            .asDriver(onErrorJustReturn: .empty)
-        
-        // 유효성 검사 통과 시 화면 전환
-        input.nextButtonTapped
+            .share(replay: 1)
+    
+        finalValidation
+            .filter { $0 == .success }
             .withLatestFrom(currentNickname)
-            .subscribe(onNext: { [weak self] nickname in
-                guard let self = self else { return }
-                
-                let trimmedNickname = nickname.trimmingCharacters(in: .whitespaces)
-                print("🔵 다음 버튼 탭됨 - 닉네임: \(trimmedNickname)")
-                
-                let result = self.validateNickname(trimmedNickname)
-                print("🔍 유효성 검사 결과: \(result)")
-                
-                if case .success = result {
-                    print("✅ 닉네임 입력 완료")
-                    self.coordinator?.showJobSelectFlow(selectedNickname: trimmedNickname)
-                } else {
-                    print("❌ 유효성 검사 실패: \(result)")
-                }
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .subscribe(onNext: { [weak self] nick in
+                self?.coordinator?.showJobSelectFlow(selectedNickname: nick)
             })
             .disposed(by: disposeBag)
         
         return Output(
             isLengthValid: isLengthValid,
-            buttonTapValidation: buttonTapValidation
+            buttonTapValidation: finalValidation.asDriver(onErrorJustReturn: .empty)
         )
     }
     
@@ -169,4 +162,80 @@ final class NicknameSelectViewModel {
         
         return true
     }
+    
+    private func checkNicknameDuplicate(_ nickname: String) -> Observable<ValidationResult> {
+        
+        return Observable.create { observer in
+            let urlString = NetworkDefine.ProfileAPI.nicknameDuplicateCheck.url
+            
+            
+            guard let refreshToken = TokenStorageService.shared.getRefreshToken() else {
+                print("❌ refreshToken이 없습니다")
+                observer.onError(NSError(domain: "AuthError", code: 401, userInfo: [NSLocalizedDescriptionKey: "인증 토큰이 없습니다"]))
+                return Disposables.create()
+            }
+            
+            print("📡 중복 체크 요청: \(nickname)")
+            print("🌐 URL: \(urlString)")
+            print("🔑 RefreshToken: \(refreshToken)")
+            
+            let headers: HTTPHeaders = [
+                "Content-Type": "application/json",
+                "jwt-token": refreshToken
+            ]
+            
+            let requestDTO = UpdateNicknameRequest(nickName: nickname)
+            
+            let request = AF.request(
+                urlString,
+                method: .post,
+                parameters: requestDTO,
+                encoder: JSONParameterEncoder.default,
+                headers: headers
+            )
+                .validate()
+                .responseJSON { response in
+                    switch response.result {
+                    case .success(let value):
+                        print("📥 API 응답 성공")
+                        
+                        if let json = value as? [String: Any],
+                           let success = json["success"] as? Bool {
+                            
+                            print("✅ success = \(success)")
+                            
+                            if success {
+                                // true = 중복 없음 (사용 가능)
+                                observer.onNext(.success)
+                            } else {
+                                // false = 중복 있음 (사용 불가)
+                                observer.onNext(.duplicated)
+                            }
+                        } else {
+                            print("❌ JSON 파싱 실패")
+                            //                            observer.onNext(.success) // 파싱 오류 시 일단 통과
+                            observer.onError(NSError(domain: "ParsingError", code: -1))
+                            return
+                        }
+                        
+                        observer.onCompleted()
+                        
+                    case .failure(let error):
+                        print("❌ API 호출 실패: \(error.localizedDescription)")
+                        
+                        // 네트워크 오류 시 처리
+                        if let statusCode = response.response?.statusCode {
+                            print("📛 HTTP Status Code: \(statusCode)")
+                        }
+                        
+                    }
+                }
+            
+            return Disposables.create {
+                request.cancel()
+            }
+        }
+    }
+    
+    
 }
