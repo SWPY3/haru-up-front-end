@@ -16,11 +16,35 @@ class SplashViewController: UIViewController {
     // coordinator에게 결과 전달
     var onAuthCheckCompleted: ((SplashResult) -> Void)?
     
+    private let gradientView: GradientBackgroundView = {
+        let view = GradientBackgroundView(
+            startColor: .splashStart,
+            endColor: .splashEnd)
+        
+        return view
+    }()
+    
+    private let logoStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 20
+        
+        return stackView
+    }()
+    
     let mainLogoImage: UIImageView = {
         let iv = UIImageView()
-        iv.image = .haruUpSplash
+        iv.image = .splashLogo
         iv.contentMode = .scaleAspectFit
         return iv
+    }()
+    
+    private let mainLogoTitle: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = .splashAppName
+        imageView.contentMode = .scaleAspectFit
+        
+        return imageView
     }()
     
     init(viewModel: SplashViewModel) {
@@ -35,11 +59,8 @@ class SplashViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        view.backgroundColor = .white
-        view.addSubview(mainLogoImage)
         
-        configureMainLogo()
+        setupView()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -54,10 +75,37 @@ class SplashViewController: UIViewController {
             .disposed(by: disposeBag)
     }
     
+    private func setupView() {
+        view.backgroundColor = .clear
+        
+        configureBackground()
+        configureMainLogo()
+    }
+    
+    private func configureBackground() {
+        view.addSubview(gradientView)
+        gradientView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            gradientView.topAnchor.constraint(equalTo: view.topAnchor),
+            gradientView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            gradientView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            gradientView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+    }
+    
     func configureMainLogo() {
-        mainLogoImage.translatesAutoresizingMaskIntoConstraints = false
-        mainLogoImage.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        mainLogoImage.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        gradientView.addSubview(logoStackView)
+        logoStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        [mainLogoImage, mainLogoTitle].forEach {
+            logoStackView.addArrangedSubview($0)
+        }
+        
+        NSLayoutConstraint.activate([
+            logoStackView.centerXAnchor.constraint(equalTo: gradientView.centerXAnchor),
+            logoStackView.centerYAnchor.constraint(equalTo: gradientView.centerYAnchor)
+        ])
     }
 
 }
