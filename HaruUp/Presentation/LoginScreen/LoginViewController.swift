@@ -89,7 +89,7 @@ class LoginViewController: UIViewController {
         configureUI()
         bind()
         
-//        configureNextButton()
+        configureNextButton()
     }
     
     private func configureNextButton() {

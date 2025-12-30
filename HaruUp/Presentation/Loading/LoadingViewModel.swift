@@ -33,8 +33,6 @@ final class LoadingViewModel {
         var receivedSteps: Set<String> = []
         var emittedBoxIndexes: Set<Int> = []
         
-        print("yhjo curationData : \(curationData)")
-        
         func emitBoxOnce(_ index: Int) {
             guard !emittedBoxIndexes.contains(index) else { return }
             emittedBoxIndexes.insert(index)
@@ -80,14 +78,14 @@ final class LoadingViewModel {
                                 showBoxRelay.accept(4)
                                 
                             case .completed:
-//                                emitBoxOnce(5)
+                                //                                emitBoxOnce(5)
                                 loadingCompletedRelay.accept([])
                             }
                         }
                         
                     case .completed(let memberInterestIds):
                         print("🏁 최종 완료! memberInterestIds: \(memberInterestIds)")
-//                        emitBoxOnce(5)
+                        //                        emitBoxOnce(5)
                         loadingCompletedRelay.accept(memberInterestIds)
                     }
                 },

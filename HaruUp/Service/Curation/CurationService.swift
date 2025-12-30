@@ -5,275 +5,236 @@
 //  Created by 하다현 on 12/27/25.
 //
 
-import Foundation
-import RxSwift
 
-//final class CurationService {
-//
-//    // 스트리밍 방식으로 큐레이션 로그를 수신
-//    func streamCurationLogs(curationData: CurationData) -> Observable<CurationStreamEvent> {
-//        return Observable.create { observer in
-//            guard let request = curationData.toCurationRequest() else {
-//                observer.onError(NSError(domain: "CurationError", code: -1,
-//                                         userInfo: [NSLocalizedDescriptionKey: "유효하지 않은 큐레이션 데이터입니다."]))
-//                return Disposables.create()
-//            }
-//
-//            guard let url = URL(string: NetworkDefine.CurationAPI.initialCuration.url) else {
-//                observer.onError(NSError(domain: "CurationError", code: -2,
-//                                         userInfo: [NSLocalizedDescriptionKey: "잘못된 URL입니다."]))
-//                return Disposables.create()
-//            }
-//
-//            print("=== API 요청 시작 ===")
-//                        print("URL: \(url.absoluteString)")
-//
-//            var urlRequest = URLRequest(url: url)
-//            urlRequest.httpMethod = "POST"
-//            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-//            urlRequest.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-//
-//            // RefreshToken 가져오기
-//            if let refreshToken = TokenStorageService.shared.getRefreshToken() {
-//                urlRequest.setValue(refreshToken, forHTTPHeaderField: "jwt-token")
-//                print("RefreshToken 설정 완료")
-//            }
-//
-//            // 요청 바디 설정
-////            do {
-////                let jsonData = try JSONEncoder().encode(request)
-////                urlRequest.httpBody = jsonData
-////            } catch {
-////                observer.onError(error)
-//            //                return Disposables.create()
-//            //            }
-//            do {
-//                let encoder = JSONEncoder()
-//                encoder.outputFormatting = .prettyPrinted
-//                let jsonData = try encoder.encode(request)
-//                urlRequest.httpBody = jsonData
-//
-//                if let jsonString = String(data: jsonData, encoding: .utf8) {
-//                    print("=== 요청 바디 ===")
-//                    print(jsonString)
-//                }
-//            } catch {
-//                print("❌ JSON 인코딩 실패: \(error)")
+/// MARL: Alamofire 유무에 따른 구분
+//// MARK: - SSE 처리를 위한 Delegate 클래스
+//// 이 클래스가 데이터가 '조각(Chunk)'으로 들어올 때마다 반응합니다.
+//final class StreamSessionDelegate: NSObject, URLSessionDataDelegate {
+//    
+//    private let observer: AnyObserver<CurationStreamEvent>
+//    private var buffer = "" // 끊겨서 들어오는 데이터를 이어 붙이기 위한 버퍼
+//    
+//    init(observer: AnyObserver<CurationStreamEvent>) {
+//        self.observer = observer
+//    }
+//    
+//    // 1. 데이터 수신 (여러 번 호출됨)
+//    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+//        guard let chunk = String(data: data, encoding: .utf8) else { return }
+//        
+//        // 버퍼에 새로운 데이터 추가
+//        buffer += chunk
+//        
+//        // 줄바꿈(\n)을 기준으로 메시지 분리 및 처리
+//        processBuffer()
+//    }
+//    
+//    // 2. 완료 또는 에러 처리
+//    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+//        if let error = error {
+//            // 취소 에러는 무시하거나 완료 처리
+//            if (error as NSError).code == NSURLErrorCancelled {
+//                observer.onCompleted()
+//            } else {
+//                print("❌ 스트림 에러: \(error.localizedDescription)")
 //                observer.onError(error)
-//                return Disposables.create()
 //            }
-//
-//            let session = URLSession.shared
-//            let task = session.dataTask(with: urlRequest) { data, response, error in
-//                if let error = error {
-//                    print("❌ 네트워크 에러: \(error.localizedDescription)")
-//                    observer.onError(error)
-//                    return
-//                }
-//
-//                if let httpResponse = response as? HTTPURLResponse {
-//                                    print("=== HTTP 응답 ===")
-//                                    print("상태 코드: \(httpResponse.statusCode)")
-//                                }
-//
-//                guard let data = data else {
-//                    observer.onError(NSError(domain: "CurationError", code: -3,
-//                                             userInfo: [NSLocalizedDescriptionKey: "데이터를 받지 못했습니다."]))
-//                    return
-//                }
-//
-//                // SSE 형식 파싱
-//                let dataString = String(data: data, encoding: .utf8) ?? ""
-//                print("=== 전체 응답 데이터 ===")
-//                                print(dataString)
-//                let events = dataString.components(separatedBy: "\n\n")
-//
-//                for event in events {
-//                    if event.isEmpty { continue }
-//
-//                    // "data: " 접두사 제거
-//                    let lines = event.components(separatedBy: "\n")
-//                    for line in lines {
-//                        if line.hasPrefix("data: ") {
-//                            let jsonString = String(line.dropFirst(6))
-//                            print("파싱할 JSON: \(jsonString)")
-//
-//                            // memberInterestIds가 있는지 확인 (최종 응답)
-//                            if let jsonData = jsonString.data(using: .utf8) {
-//                                // 먼저 최종 응답인지 확인
-//                                if let finalResponse = try? JSONDecoder().decode(CurationResponse.self, from: jsonData) {
-//                                    print("✅ 최종 응답 수신: \(finalResponse.memberInterestIds)")
-//                                    observer.onNext(.completed(finalResponse.memberInterestIds))
-//                                    observer.onCompleted()
-//                                    return
-//                                }
-//
-//                                // 로그 응답 파싱
-//                                if let log = try? JSONDecoder().decode(CurationLog.self, from: jsonData) {
-//                                    print("📝 로그 수신: \(log.step)")
-//                                    observer.onNext(.log(log))
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
+//        } else {
+//            // 정상 종료
+//            observer.onCompleted()
+//        }
+//    }
+//    
+//    // MARK: - 파싱 로직
+//    private func processBuffer() {
+//        // SSE는 보통 \n\n으로 이벤트를 구분하지만, 여기서는 라인별 처리를 하셨으므로 \n 기준 처리
+//        while let range = buffer.range(of: "\n") {
+//            let line = String(buffer[..<range.lowerBound])
+//            buffer.removeSubrange(..<range.upperBound) // 처리한 부분 버퍼에서 제거
+//            
+//            parseLine(line)
+//        }
+//    }
+//    
+//    private func parseLine(_ line: String) {
+//        let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+//        if trimmedLine.isEmpty { return }
+//        
+//        if trimmedLine.hasPrefix("event:") {
+//            // 이벤트 타입 저장 로직 (필요시 상태 관리를 위해 변수에 저장해야 함)
+//            // 현재 구조상 data 라인과 event 라인이 순서대로 온다고 가정하고
+//            // 간단하게 data 라인에서 처리하거나, 상태 변수를 둬야 합니다.
+//            // *단순화를 위해 여기서는 data 파싱에 집중하거나, 기존 로직처럼 상태 변수를 클래스 내에 둬야 합니다.*
+//            self.lastEvent = String(trimmedLine.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+//            
+//        } else if trimmedLine.hasPrefix("data:") {
+//            let dataContent = String(trimmedLine.dropFirst(5)).trimmingCharacters(in: .whitespaces)
+//            
+//            // 저장해둔 이벤트 타입과 함께 처리
+//            if let event = self.lastEvent {
+//                processEvent(event: event, data: dataContent)
 //            }
-//
-//            task.resume()
-//
-//            return Disposables.create {
-//                task.cancel()
+//            // 데이터 처리 후 이벤트 초기화 (SSE 스펙에 따라 다름, 보통 한 쌍)
+//            self.lastEvent = nil
+//        }
+//    }
+//    
+//    private var lastEvent: String? // event: 와 data: 가 나눠져서 들어오므로 상태 저장 필요
+//    
+//    private func processEvent(event: String, data: String) {
+//        switch event {
+//        case "connected":
+//            print("✅ 연결됨")
+//            
+//        case "curation-log":
+//            if let jsonData = data.data(using: .utf8),
+//               let log = try? JSONDecoder().decode(CurationLog.self, from: jsonData) {
+//                print("📝 로그: \(log.step)")
+//                observer.onNext(.log(log))
 //            }
+//            
+//        case "curation-complete":
+//            if let jsonData = data.data(using: .utf8),
+//               let response = try? JSONDecoder().decode(CurationResponse.self, from: jsonData) {
+//                print("🏁 완료: \(response.memberInterestIds)")
+//                observer.onNext(.completed(response.memberInterestIds))
+//                observer.onCompleted() // 스트림 종료
+//            }
+//            
+//        default:
+//            break
 //        }
 //    }
 //}
+
+import Foundation
+import RxSwift
+import Alamofire
 
 final class CurationService {
     
     func streamCurationLogs(curationData: CurationData) -> Observable<CurationStreamEvent> {
         return Observable.create { observer in
-            guard let request = curationData.toCurationRequest() else {
-                observer.onError(NSError(domain: "CurationError", code: -1,
-                                         userInfo: [NSLocalizedDescriptionKey: "유효하지 않은 큐레이션 데이터입니다."]))
+            
+            // 1. 요청 데이터 준비
+            guard let requestBody = curationData.toCurationRequest() else {
+                observer.onError(NSError(domain: "CurationError", code: -1, userInfo: [NSLocalizedDescriptionKey: "유효하지 않은 데이터"]))
                 return Disposables.create()
             }
             
             guard let url = URL(string: NetworkDefine.CurationAPI.initialCuration.url) else {
-                observer.onError(NSError(domain: "CurationError", code: -2,
-                                         userInfo: [NSLocalizedDescriptionKey: "잘못된 URL입니다."]))
+                observer.onError(NSError(domain: "CurationError", code: -2, userInfo: [NSLocalizedDescriptionKey: "잘못된 URL"]))
                 return Disposables.create()
             }
             
-            print("=== API 요청 시작 ===")
-            print("URL: \(url.absoluteString)")
-            
-            var urlRequest = URLRequest(url: url)
-            urlRequest.httpMethod = "POST"
-            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            urlRequest.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+            // 2. 헤더 설정
+            var headers: HTTPHeaders = [
+                "Content-Type": "application/json",
+                "Accept": "text/event-stream" // SSE 필수 헤더
+            ]
             
             if let refreshToken = TokenStorageService.shared.getRefreshToken() {
-                urlRequest.setValue(refreshToken, forHTTPHeaderField: "jwt-token")
-                print("RefreshToken 설정 완료")
+                headers.add(name: "jwt-token", value: refreshToken)
             }
             
-            do {
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = .prettyPrinted
-                let jsonData = try encoder.encode(request)
-                urlRequest.httpBody = jsonData
-                
-                if let jsonString = String(data: jsonData, encoding: .utf8) {
-                    print("=== 요청 바디 ===")
-                    print(jsonString)
+            // 3. 스트리밍 데이터 처리를 위한 변수
+            var buffer = "" // 끊겨서 오는 데이터를 이어 붙이기 위한 버퍼
+            var lastEvent: String? // 현재 처리 중인 이벤트 타입 (event: ...)
+            
+            print("=== Alamofire SSE 요청 시작 ===")
+            
+            // 4. Alamofire Stream Request 요청
+            // 주의: 일반 request가 아니라 streamRequest를 사용해야 합니다.
+            let request = AF.streamRequest(
+                url,
+                method: .post,
+                parameters: requestBody,
+                encoder: JSONParameterEncoder.default, // Encodable 객체를 바로 JSON으로 변환
+                headers: headers
+            )
+            .responseStreamString { stream in
+                switch stream.event {
+                case .stream(let result):
+                    switch result {
+                    case .success(let dataString):
+                        // 5. 데이터 수신 (Chunk 단위)
+                        buffer += dataString
+                        
+                        // 버퍼 파싱 로직 (이전과 동일한 원리)
+                        while let range = buffer.range(of: "\n") {
+                            let line = String(buffer[..<range.lowerBound])
+                            buffer.removeSubrange(..<range.upperBound)
+                            self.parseLine(line: line, lastEvent: &lastEvent, observer: observer)
+                        }
+                        
+                    case .failure(let error):
+                        print("❌ 스트리밍 중 에러: \(error)")
+                        observer.onError(error)
+                    }
+                    
+                case .complete(let completion):
+                    // 6. 연결 종료
+                    if let error = completion.error {
+                        print("❌ 요청 실패: \(error)")
+                        observer.onError(error)
+                    } else {
+                        print("✅ 요청 정상 종료")
+                        observer.onCompleted()
+                    }
                 }
-            } catch {
-                print("❌ JSON 인코딩 실패: \(error)")
-                observer.onError(error)
-                return Disposables.create()
             }
             
-            let session = URLSession.shared
-            let task = session.dataTask(with: urlRequest) { data, response, error in
-                if let error = error {
-                    print("❌ 네트워크 에러: \(error.localizedDescription)")
-                    observer.onError(error)
-                    return
-                }
-                
-                if let httpResponse = response as? HTTPURLResponse {
-                    print("=== HTTP 응답 ===")
-                    print("상태 코드: \(httpResponse.statusCode)")
-                }
-                
-                guard let data = data else {
-                    observer.onError(NSError(domain: "CurationError", code: -3,
-                                             userInfo: [NSLocalizedDescriptionKey: "데이터를 받지 못했습니다."]))
-                    return
-                }
-                
-                let dataString = String(data: data, encoding: .utf8) ?? ""
-                print("=== 전체 응답 데이터 ===")
-                print(dataString)
-                
-                // ✅ SSE 파싱 개선
-                self.parseSSE(dataString: dataString, observer: observer)
-            }
-            
-            task.resume()
-            
+            // 7. 구독 해제 시 요청 취소
             return Disposables.create {
-                task.cancel()
+                print("=== 요청 취소 ===")
+                request.cancel()
             }
         }
     }
     
-    // ✅ SSE 파싱 로직 분리
-    private func parseSSE(dataString: String, observer: AnyObserver<CurationStreamEvent>) {
-        let lines = dataString.components(separatedBy: "\n")
-        var currentEvent: String?
-        var currentData: String?
+    // MARK: - 파싱 로직 (내부 함수로 분리)
+    private func parseLine(line: String, lastEvent: inout String?, observer: AnyObserver<CurationStreamEvent>) {
+        let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+        if trimmedLine.isEmpty { return }
         
-        for line in lines {
-            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+        if trimmedLine.hasPrefix("event:") {
+            lastEvent = String(trimmedLine.dropFirst(6)).trimmingCharacters(in: .whitespaces)
             
-            if trimmedLine.isEmpty {
-                // 빈 줄 = 이벤트 종료, 처리
-                if let data = currentData {
-                    processEvent(event: currentEvent, data: data, observer: observer)
-                }
-                currentEvent = nil
-                currentData = nil
-                continue
-            }
+        } else if trimmedLine.hasPrefix("data:") {
+            let dataContent = String(trimmedLine.dropFirst(5)).trimmingCharacters(in: .whitespaces)
             
-            if trimmedLine.hasPrefix("event:") {
-                currentEvent = String(trimmedLine.dropFirst(6)).trimmingCharacters(in: .whitespaces)
-                print("📌 이벤트 타입: \(currentEvent ?? "nil")")
-            } else if trimmedLine.hasPrefix("data:") {
-                let dataContent = String(trimmedLine.dropFirst(5)).trimmingCharacters(in: .whitespaces)
-                currentData = dataContent
-                print("📦 데이터: \(dataContent)")
+            if let event = lastEvent {
+                processEvent(event: event, data: dataContent, observer: observer)
             }
-        }
-        
-        // 마지막 이벤트 처리 (빈 줄 없이 끝날 수 있음)
-        if let data = currentData {
-            processEvent(event: currentEvent, data: data, observer: observer)
+            // SSE 스펙상 보통 한 쌍이므로 초기화 (필요에 따라 조정)
+            lastEvent = nil
         }
     }
     
-    // ✅ 이벤트 처리
-    private func processEvent(event: String?, data: String, observer: AnyObserver<CurationStreamEvent>) {
-        guard let eventType = event else { return }
-        
-        switch eventType {
+    private func processEvent(event: String, data: String, observer: AnyObserver<CurationStreamEvent>) {
+        switch event {
         case "connected":
-            print("✅ 연결됨: \(data)")
+            print("✅ SSE 연결 성공")
             
         case "curation-log":
-            // JSON 파싱
             if let jsonData = data.data(using: .utf8),
                let log = try? JSONDecoder().decode(CurationLog.self, from: jsonData) {
-                print("📝 로그 수신: \(log.step)")
+                print("📝 로그: \(log.step)")
                 observer.onNext(.log(log))
-            } else {
-                print("❌ 로그 파싱 실패: \(data)")
             }
             
         case "curation-complete":
-            // 최종 응답
             if let jsonData = data.data(using: .utf8),
                let response = try? JSONDecoder().decode(CurationResponse.self, from: jsonData) {
-                print("✅ 큐레이션 완료: \(response.memberInterestIds)")
+                print("🏁 완료 응답: \(response.memberInterestIds)")
                 observer.onNext(.completed(response.memberInterestIds))
+                // 여기서 onCompleted()를 호출하면 스트림이 닫힘.
+                // Alamofire .complete 이벤트에서 처리해도 되지만, 비즈니스 로직상 여기가 끝이라면 여기서 호출.
                 observer.onCompleted()
-            } else {
-                print("❌ 완료 응답 파싱 실패: \(data)")
             }
             
         default:
-            print("⚠️ 알 수 없는 이벤트 타입: \(eventType)")
+            break
         }
     }
 }

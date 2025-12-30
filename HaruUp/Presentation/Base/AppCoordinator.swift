@@ -89,10 +89,8 @@ final class AppCoordinator: Coordinator {
     private func showOnboardingFlow() {
         let onboardingCoordinator = OnboardingCoordinator(navigationController: navigationController)
         
-        
         onboardingCoordinator.onFinish = { [weak self, weak onboardingCoordinator] in
             guard let self = self else { return }
-            
             
             if let coordinator = onboardingCoordinator,
                let index = self.childCoordinators.firstIndex(where: {$0 === coordinator}) {
@@ -130,8 +128,6 @@ final class AppCoordinator: Coordinator {
             }
             self?.showLoadingFlow()
         }
-        
-            
         
         childCoordinators.append(characterSelectCoordinator)
         characterSelectCoordinator.start()
