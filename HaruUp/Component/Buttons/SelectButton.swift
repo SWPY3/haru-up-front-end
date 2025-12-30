@@ -30,8 +30,6 @@ class SelectButton: UIButton {
         layer.masksToBounds = true
         
         backgroundColor = .neutral10
-        setTitleColor(.neutral1000, for: .normal) // 기본 텍스트 색상
-        titleLabel?.font = Typography.head1.font
 
         var configuration = Configuration.plain()
         configuration.titleAlignment = .leading
@@ -51,6 +49,8 @@ class SelectButton: UIButton {
         
         self.configuration = configuration
         self.contentHorizontalAlignment = .left
+        
+        self.configuration?.baseForegroundColor = .neutral1000
     }
     
     func setSelected(_ selected: Bool) {
@@ -58,18 +58,22 @@ class SelectButton: UIButton {
     }
     
     private func updateAppearance() {
+        guard var config = self.configuration else { return }
+        
         if buttonIsSelected {
             backgroundColor = .primaryBlue50
             layer.borderWidth = 2
             layer.borderColor = UIColor.cta.cgColor
             
-            setTitleColor(.cta, for: .normal)
+            config.baseForegroundColor = .cta
         } else {
             backgroundColor = .neutral10
             layer.borderColor = nil
             layer.borderWidth = 0
             
-            setTitleColor(.black, for: .normal)
+            config.baseForegroundColor = .neutral1000
         }
+        
+        self.configuration = config
     }
 }

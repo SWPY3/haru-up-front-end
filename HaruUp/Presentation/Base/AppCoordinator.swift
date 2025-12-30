@@ -64,7 +64,6 @@ final class AppCoordinator: Coordinator {
             // 로그인 완료 후 분기 처리 개선
             print("🔍 로그인 결과 - onboardingCompleted: \(loginResult.onboardingCompleted)")
             
-            
             // 로그인 완료 후 온보딩 여부 확인
             if loginResult.onboardingCompleted {
                 print("✅ 온보딩 완료 → 홈 화면으로 이동")
@@ -73,7 +72,6 @@ final class AppCoordinator: Coordinator {
                 print("⚠️ 온보딩 필요 → 온보딩 화면으로 이동")
                 self.showOnboardingFlow()
             }
-            
         }
         
         loginCoordinator.gotoHome = { [weak self] in

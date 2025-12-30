@@ -5,8 +5,6 @@
 //  Created by 조영현 on 12/2/25.
 //
 
-
-
 import Foundation
 import RxSwift
 import RxCocoa
@@ -39,7 +37,7 @@ final class OnboardingViewModel {
             .asObservable()
         // 버튼 타이틀
         buttonTitle = isLastPage
-            .map{ $0 ? "준비 완료" : "다음" }
+            .map{ $0 ? "시작하기" : "다음" }
         
         setupBindings()
     }

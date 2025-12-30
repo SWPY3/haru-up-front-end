@@ -17,6 +17,14 @@ class OnboardingViewController: UIViewController {
     
     var onFinish: (() -> Void)? // Onboarding 완료 후 Home으로 이동 콜백
     
+    private let gradientView: GradientBackgroundView = {
+        let view = GradientBackgroundView(
+            startColor: .onboardingStart,
+            endColor: .onboardingEnd)
+        
+        return view
+    }()
+    
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.isPagingEnabled = true
@@ -29,9 +37,10 @@ class OnboardingViewController: UIViewController {
         let pc = UIPageControl()
         pc.numberOfPages = 2
         pc.currentPage = 0
-        pc.pageIndicatorTintColor = UIColor.systemGray4
-        pc.currentPageIndicatorTintColor = UIColor.systemGreen
+        pc.pageIndicatorTintColor = .neutral100
+        pc.currentPageIndicatorTintColor = .neutral1000
         pc.isUserInteractionEnabled = false
+        
         return pc
     }()
     
@@ -40,16 +49,17 @@ class OnboardingViewController: UIViewController {
         btn.setTitle("건너뛰기", for: .normal)
         btn.setTitleColor(.systemGray, for: .normal)
         btn.titleLabel?.font = .systemFont(ofSize: 16, weight: .regular)
+        
         return btn
     }()
     
     private let nextButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("다음", for: .normal)
-        btn.backgroundColor = .systemBlue
+        btn.backgroundColor = .cta
         btn.setTitleColor(.white, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        btn.layer.cornerRadius = 8
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.layer.cornerRadius = 16
         return btn
     }()
     
@@ -66,10 +76,15 @@ class OnboardingViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
         setupUI()
         setupOnboardingPages()
         bindViewModel()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
     override func viewDidLayoutSubviews() {
@@ -95,20 +110,15 @@ class OnboardingViewController: UIViewController {
     
     // MARK: - Setup UI
     private func setupUI() {
-        [skipButton, scrollView, pageControl, nextButton].forEach {
+        view.backgroundColor = .clear
+        configureBackground()
+        
+        [scrollView, pageControl, nextButton].forEach {
             view.addSubview($0)
         }
-
-        skipButton.anchor(
-            top: view.safeAreaLayoutGuide.topAnchor,
-            right: view.rightAnchor,
-            paddingTop: 16,
-            paddingRight: 20,
-            height: 44
-        )
         
         scrollView.anchor(
-            top: skipButton.bottomAnchor,
+            top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
             bottom: pageControl.topAnchor,
             right: view.rightAnchor,
@@ -128,7 +138,7 @@ class OnboardingViewController: UIViewController {
             bottom: view.safeAreaLayoutGuide.bottomAnchor,
             right: view.rightAnchor,
             paddingLeft: 20,
-            paddingBottom: 20,
+            paddingBottom: 10,
             paddingRight: 20,
             height: 56
         )
@@ -136,98 +146,39 @@ class OnboardingViewController: UIViewController {
         scrollView.delegate = self
     }
     
+    private func configureBackground() {
+        view.addSubview(gradientView)
+        gradientView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            gradientView.topAnchor.constraint(equalTo: view.topAnchor),
+            gradientView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            gradientView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            gradientView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+    }
     
     private func setupOnboardingPages() {
-        let pages: [(title: String, description: String)] = [
-            (
-                title: "AI가 당신의 목표를 분석해\n맞춤형 미션을 추천드려요!",
-                description: "분석하는 기능?아이콘\nQ/A 주고 받는 아이콘\n\n 핸드폰 화면 안들어감..\n생각중임..."
-            ),
-            (
-                title: "관심사별 미션 차트를 참고해\n미션을 더 쉽게 고르세요.",
-                description: "관심사, 직무별\n랭킹표 혹은 다른\n아이콘.\n\n핸드폰 화면 안들어감...\n샘각중임.."
-            )
+        let pageViews: [OnboardingPageView] = [
+            OnboardingPageView(page: .init(title: "AI가 당신의 성장목표를 분석해\n맞춤 미션을 추천해줘요", highlightTitle: "맞춤 미션", description: "현재 내가 도전하기 좋은 5단계의 미션을 추천해요.", image: .imageOnboarding1)),
+            OnboardingPageView(page: .init(title: "월간 미션 차트를 참고해서\n미션을 더 쉽게 고르세요.", highlightTitle: "월간 미션 차트", description: "나와 같은 사람들이 얼마나 선택했는지 참고 하세요.", image: .imageOnboarding2))
         ]
         
         scrollView.contentSize = CGSize(
-            width: view.bounds.width * CGFloat(pages.count),
+            width: view.bounds.width * CGFloat(pageViews.count),
             height: scrollView.frame.height
         )
         
-        for (index, page) in pages.enumerated() {
-            let pageView = createPageView(title: page.title, description: page.description)
-            
-            pageView.frame = CGRect(
+        for (index, page) in pageViews.enumerated() {
+            page.frame = CGRect(
                 x: view.bounds.width * CGFloat(index),
                 y: 0,
                 width: view.bounds.width,
                 height: scrollView.frame.height
             )
-            scrollView.addSubview(pageView)
+            
+            scrollView.addSubview(page)
         }
-    }
-    
-
-    private func createPageView(title: String, description: String)  -> UIView {
-        let container = UIView()
-        container.backgroundColor = .white
-        
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 22, weight: .bold)
-        titleLabel.textAlignment = .center
-        titleLabel.numberOfLines = 0
-        titleLabel.textColor = .black
-        
-        // 설명 박스
-        let descriptionBox = UIView()
-        descriptionBox.backgroundColor = UIColor(white: 0.95, alpha: 1)
-        descriptionBox.layer.cornerRadius = 12
-        
-        let descriptionLabel = UILabel()
-        descriptionLabel.text = description
-        descriptionLabel.font = .systemFont(ofSize: 15, weight: .regular)
-        descriptionLabel.textAlignment = .center
-        descriptionLabel.numberOfLines = 0
-        descriptionLabel.textColor = .darkGray
-        
-        descriptionBox.addSubview(descriptionLabel)
-        container.addSubview(titleLabel)
-        container.addSubview(descriptionBox)
-        
-        // 타이틀 레이아웃
-        titleLabel.anchor(
-            top: container.topAnchor,
-            left: container.leftAnchor,
-            right: container.rightAnchor,
-            paddingTop: 60,
-            paddingLeft: 30,
-            paddingRight: 30
-        )
-        
-        // 설명 박스 레이아웃
-        descriptionBox.anchor(
-            top: titleLabel.bottomAnchor,
-            left: container.leftAnchor,
-            right: container.rightAnchor,
-            paddingTop: 80,
-            paddingLeft: 40,
-            paddingRight: 40
-        )
-        
-        // 설명 라벨 레이아웃 (박스 내부)
-        descriptionLabel.anchor(
-            top: descriptionBox.topAnchor,
-            left: descriptionBox.leftAnchor,
-            bottom: descriptionBox.bottomAnchor,
-            right: descriptionBox.rightAnchor,
-            paddingTop: 30,
-            paddingLeft: 20,
-            paddingBottom: 30,
-            paddingRight: 20
-        )
-        
-        return container
     }
     
     // MARK: - Bind ViewModel

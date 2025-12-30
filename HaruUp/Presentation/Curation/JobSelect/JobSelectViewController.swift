@@ -89,10 +89,12 @@ class JobSelectViewController: UIViewController {
     
     private let nextButton: UIButton = {
         let btn = UIButton()
-        btn.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
+        btn.setTitle("다음", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .neutral200
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
         btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.contentMode = .scaleAspectFit
-        btn.isEnabled = false
         return btn
     }()
     
@@ -246,8 +248,7 @@ class JobSelectViewController: UIViewController {
             .map { $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
-                let imageName = isEnabled ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
+                self?.nextButton.backgroundColor = isEnabled ? .cta : .neutral200
             })
             .disposed(by: disposeBag)
     }
