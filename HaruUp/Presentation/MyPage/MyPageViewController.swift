@@ -18,6 +18,7 @@ class MyPageViewController: UIViewController {
     
     // Coordinator 연결용
     var onEditInterest: (() -> Void)?
+    var onLogout: (() -> Void)?
     
     // MARK: - UI Components
     private let titleLabel: UILabel = {
@@ -41,6 +42,15 @@ class MyPageViewController: UIViewController {
         //        label.font = .systemFont(ofSize: 20, weight: .bold)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+    
+    private let editProfileButton: UIButton = {
+        let button = UIButton()
+        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
+        button.setImage(.iconProfileEdit, for: .normal)
+//        button.tintColor = .systemBlue
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
     
     private let jobLabel: UILabel = {
@@ -95,7 +105,7 @@ class MyPageViewController: UIViewController {
     private let feedbackBtn = MyPageMenuButton(title: "피드백하기")   // 변경됨
     private let inquiryBtn = MyPageMenuButton(title: "문의하기")      // 추가됨
     private let logoutBtn = MyPageMenuButton(title: "로그아웃", hasArrow: false)
-    private let withdrawBtn = MyPageMenuButton(title: "탈퇴하기", hasArrow: false, isDestructive: true)
+    private let withdrawBtn = MyPageMenuButton(title: "탈퇴하기", hasArrow: false, isDestructive: true, showSeparator: false)
     
     private let versionLabel: UILabel = {
         let label = UILabel()
@@ -121,7 +131,7 @@ class MyPageViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .neutral10
         
-        [titleLabel, profileImageView, nicknameLabel, jobLabel, goalCardView, menuStackView, versionLabel].forEach {
+        [titleLabel, profileImageView, nicknameLabel, editProfileButton, jobLabel, goalCardView, menuStackView, versionLabel].forEach {
             view.addSubview($0)
         }
         
@@ -148,6 +158,11 @@ class MyPageViewController: UIViewController {
             
             nicknameLabel.topAnchor.constraint(equalTo: profileImageView.topAnchor, constant: 10),
             nicknameLabel.leadingAnchor.constraint(equalTo: profileImageView.trailingAnchor, constant: 16),
+            
+            editProfileButton.centerYAnchor.constraint(equalTo: nicknameLabel.centerYAnchor),
+            editProfileButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
+            editProfileButton.widthAnchor.constraint(equalToConstant: 30),
+            editProfileButton.heightAnchor.constraint(equalToConstant: 30),
             
             jobLabel.topAnchor.constraint(equalTo: nicknameLabel.bottomAnchor, constant: 4),
             jobLabel.leadingAnchor.constraint(equalTo: nicknameLabel.leadingAnchor),

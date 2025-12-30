@@ -8,14 +8,22 @@
 import UIKit
 
 final class MyPageMenuButton: UIButton {
-    init(title: String, hasArrow: Bool = true, isDestructive: Bool = false) {
+    // 구분선 뷰 선언
+    private let separatorView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .neutral50 // 선 색상
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    init(title: String, hasArrow: Bool = true, isDestructive: Bool = false, showSeparator: Bool = true) {
         super.init(frame: .zero)
         self.backgroundColor = .white
         self.translatesAutoresizingMaskIntoConstraints = false
         
         let titleLabel = UILabel()
         titleLabel.setStyle(Typography.body1, text: title)
-        titleLabel.textColor = isDestructive ? .red : .black
+        titleLabel.textColor = isDestructive ? .neutral600 : .black
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         addSubview(titleLabel)
@@ -29,14 +37,25 @@ final class MyPageMenuButton: UIButton {
         if hasArrow {
             let arrow = UIImageView(image: .chevronRight)
             arrow.tintColor = .neutral900
+            arrow.contentMode = .scaleAspectFit
             arrow.translatesAutoresizingMaskIntoConstraints = false
             addSubview(arrow)
             
             NSLayoutConstraint.activate([
                 arrow.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
                 arrow.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-                arrow.widthAnchor.constraint(equalToConstant: 16),
-//                arrow.heightAnchor.constraint(equalToConstant: 16)
+                arrow.widthAnchor.constraint(equalToConstant: 15),
+                arrow.heightAnchor.constraint(equalToConstant: 15)
+            ])
+        }
+        
+        if showSeparator {
+            addSubview(separatorView)
+            NSLayoutConstraint.activate([
+                separatorView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+                separatorView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+                separatorView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+                separatorView.heightAnchor.constraint(equalToConstant: 1) // 얇은 선
             ])
         }
     }
