@@ -28,11 +28,11 @@ final class MainTabBarCoordinator: Coordinator {
         historyCoordinator.start()
         historyNav.tabBarItem = UITabBarItem(title: "히스토리", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
         
-        let recommendNav = UINavigationController()
-        let recommendCoordinator = RecommendCoordinator(navigationController: recommendNav)
-        childCoordinators.append(recommendCoordinator)
-        recommendCoordinator.start()
-        recommendNav.tabBarItem = UITabBarItem(title: "추천", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
+        let chartNav = UINavigationController()
+        let chartCoordinator = ChartCoordinator(navigationController: chartNav)
+        childCoordinators.append(chartCoordinator)
+        chartCoordinator.start()
+        chartNav.tabBarItem = UITabBarItem(title: "추천", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
         
         let myPageNav = UINavigationController()
         let myPageCoordinator = MyPageCoordinator(navigationController: myPageNav)
@@ -40,7 +40,7 @@ final class MainTabBarCoordinator: Coordinator {
         myPageCoordinator.start()
         myPageNav.tabBarItem = UITabBarItem(title: "마이페이지", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
         
-        let container = MainTabBarController(tabs: [homeNav, historyNav, recommendNav, myPageNav])
+        let container = MainTabBarController(tabs: [homeNav, historyNav, chartNav, myPageNav])
         
         navigationController.setViewControllers([container], animated: true)
         navigationController.setNavigationBarHidden(true, animated: false)

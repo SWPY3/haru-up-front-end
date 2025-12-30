@@ -1,5 +1,5 @@
 //
-//  RecommendViewController.swift
+//  ChartViewController.swift
 //  HaruUp
 //
 //  Created by 조영현 on 12/5/25.
@@ -7,11 +7,11 @@
 
 import UIKit
 
-class RecommendViewController: UIViewController {
+class ChartViewController: UIViewController {
     
-    private let viewModel: RecommendViewModel
+    private let viewModel: ChartViewModel
     
-    init(viewModel: RecommendViewModel) {
+    init(viewModel: ChartViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
