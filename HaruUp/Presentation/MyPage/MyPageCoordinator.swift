@@ -11,12 +11,15 @@ final class MyPageCoordinator: Coordinator {
     let navigationController: UINavigationController
     var childCoordinators: [any Coordinator] = []
     
-    init(navigationController: UINavigationController) {
+    let curationData: CurationData
+    
+    init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
+        self.curationData = curationData
     }
     
     func start() {
-        let myPageVM = MyPageViewModel()
+        let myPageVM = MyPageViewModel(curationData: curationData)
         let myPageVC = MyPageViewController(viewModel: myPageVM)
         
         navigationController.setViewControllers([myPageVC], animated: false)

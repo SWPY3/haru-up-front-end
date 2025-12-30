@@ -35,7 +35,7 @@ struct Interest {
     }
     
     
-    private static func iconForInterest(name: String) -> String {
+    static func iconForInterest(name: String) -> String {
         switch name {
         case "외국어 공부":
             return "🌍"

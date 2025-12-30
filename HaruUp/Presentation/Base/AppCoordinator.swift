@@ -158,7 +158,7 @@ final class AppCoordinator: Coordinator {
     }
     
     private func showMainTabFlow() {
-        let mainTabCoordinator = MainTabBarCoordinator(navigationController: navigationController)
+        let mainTabCoordinator = MainTabBarCoordinator(navigationController: navigationController, curationData: curationData)
         childCoordinators.append(mainTabCoordinator)
         
         mainTabCoordinator.start()

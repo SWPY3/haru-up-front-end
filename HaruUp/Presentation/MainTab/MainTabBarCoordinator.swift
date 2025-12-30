@@ -11,8 +11,11 @@ final class MainTabBarCoordinator: Coordinator {
     var navigationController: UINavigationController
     var childCoordinators: [any Coordinator] = []
     
-    init(navigationController: UINavigationController) {
+    let curationData: CurationData
+    
+    init(navigationController: UINavigationController, curationData: CurationData) {
         self.navigationController = navigationController
+        self.curationData = curationData
     }
     
     func start() {
@@ -35,7 +38,7 @@ final class MainTabBarCoordinator: Coordinator {
         chartNav.tabBarItem = UITabBarItem(title: "추천", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
         
         let myPageNav = UINavigationController()
-        let myPageCoordinator = MyPageCoordinator(navigationController: myPageNav)
+        let myPageCoordinator = MyPageCoordinator(navigationController: myPageNav, curationData: curationData)
         childCoordinators.append(myPageCoordinator)
         myPageCoordinator.start()
         myPageNav.tabBarItem = UITabBarItem(title: "마이페이지", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
