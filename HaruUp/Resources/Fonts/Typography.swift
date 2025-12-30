@@ -20,6 +20,7 @@ struct FontStyle {
 enum Typography {
     // Head
     static let head1 = FontStyle(font: .pretendard(size: 32, weight: .bold))
+    static let head2 = FontStyle(font: .pretendard(size: 30, weight: .bold), lineHeight: 1.0)
     
     // Title
     static let title1 = FontStyle(font: .pretendard(size: 24, weight: .bold))
@@ -35,6 +36,9 @@ enum Typography {
     static let body2 = FontStyle(font: .pretendard(size: 14, weight: .bold))
     static let body3 = FontStyle(font: .pretendard(size: 14, weight: .semiBold))
     static let body4 = FontStyle(font: .pretendard(size: 14, weight: .medium))
+    
+    // Footnote
+    static let footnote = FontStyle(font: .pretendard(size: 13, weight: .regular))
     
     // Caption
     static let caption1 = FontStyle(font: .pretendard(size: 12, weight: .semiBold))

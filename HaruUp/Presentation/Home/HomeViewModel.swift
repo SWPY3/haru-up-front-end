@@ -36,7 +36,24 @@ final class HomeViewModel {
     }
 
     func transform(input: Input) -> Output {
-        Observable.merge(input.viewDidLoad)
+        // 1) 오늘 미션 플로우 필요 여부를 1번만 확인해서 공유
+        let needShow = input.viewDidAppear
+            .take(1)
+            .flatMapLatest { [weak self] _ -> Observable<Bool> in
+                guard let self else { return .empty() }
+                return self.missionService.needShowTodayMissionFlow().asObservable()
+            }
+            .share(replay: 1, scope: .whileConnected)
+        
+        // 2) 필요하면 플로우만 띄우기
+        let showTodayMissionFlow = needShow
+            .filter { $0 }
+            .map { _ in () }
+            .asSignal(onErrorSignalWith: .empty())
+        
+        // 3) 필요하지 않을 때만 미션 로드
+        needShow
+            .filter { !$0 }
             .flatMapLatest { [weak self] _ -> Observable<[Mission]> in
                 guard let self else { return .empty() }
                 return self.loadSelectedMissions()
@@ -56,16 +73,6 @@ final class HomeViewModel {
             }
             .asDriver(onErrorJustReturn: [.empty])
 
-        let showTodayMissionFlow = input.viewDidAppear
-            .take(1) // 앱 실행후 한번만 확인
-            .flatMapLatest { [weak self] _ -> Observable<Bool> in
-                guard let self else { return .empty() }
-                return self.missionService.needShowTodayMissionFlow().asObservable()
-            }
-            .filter { $0 }
-            .map { _ in () }
-            .asSignal(onErrorSignalWith: .empty())
-
         return Output(
             rows: rows,
             showTodayMissionFlow: showTodayMissionFlow,
@@ -76,16 +83,28 @@ final class HomeViewModel {
 
     // MARK: - Temp loader (서버 붙이면 여기만 교체)
     private func loadSelectedMissions() -> Observable<[Mission]> {
-//        // TODO: Mission List 조회
-//        // empty dummy
-//        return Observable.just([])
-        // mission 1개 dummy
-        let dummy: [Mission] = [
-            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .veryHigh, exp: 200),
-            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .high, exp: 150),
-            Mission(title: "영어 회화 유튜브 강의 10분 시청하기, 및 암기한 영단어 문장 외우기", difficulty: .mediumHigh, exp: 100)
-        ]
-        return Observable.just(dummy)
+        return missionService.fetchMissionList()
+            .asObservable()
+            .do(
+                onSubscribe: { [weak self] in self?.loadingRelay.accept(true) },
+                onDispose:   { [weak self] in self?.loadingRelay.accept(false) }
+            )
+            .map { [weak self] response -> [Mission] in
+                let missions = response.data
+
+                return missions.map { mission in
+                    Mission(
+                        id: mission.id,
+                        title: mission.missionContent,
+                        difficulty: MissionDifficultyModel(rawValue: mission.difficulty) ?? .low,
+                        exp: mission.expEarned,
+                        isCompleted: mission.missionStatus == "COMPLETED"
+                    )
+                }
+            }
+            .catch { [weak self] err in
+                self?.errorRelay.accept(err)
+                return .just([])
+            }
     }
 }
-

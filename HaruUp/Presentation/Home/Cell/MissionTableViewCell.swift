@@ -10,7 +10,7 @@ import UIKit
 final class MissionTableViewCell: UITableViewCell {
     static let identifier: String = "MissionTableViewCell"
     
-    var onTapSetting: (() -> Void)?
+    public var onTapSetting: (() -> Void)?
     
     private let cardView: UIView = {
         let view = UIView()
@@ -55,10 +55,17 @@ final class MissionTableViewCell: UITableViewCell {
     private let difficultyBadge = MissionDifficultyBadgeView()
     private let expBadge = MissionExpBadgeView()
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        onTapSetting = nil
+    }
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         setupView()
+        setButton()
     }
     
     required init?(coder: NSCoder) {
@@ -94,6 +101,8 @@ final class MissionTableViewCell: UITableViewCell {
         NSLayoutConstraint.activate([
             settingButton.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 20),
             settingButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -20),
+            settingButton.widthAnchor.constraint(equalToConstant: 24),
+            settingButton.heightAnchor.constraint(equalToConstant: 24),
             
             missionStackView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 20),
             missionStackView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -20),
@@ -114,6 +123,14 @@ final class MissionTableViewCell: UITableViewCell {
         [difficultyBadge, expBadge, spacerView].forEach {
             badgeStackView.addArrangedSubview($0)
         }
+    }
+    
+    private func setButton() {
+        settingButton.addTarget(self, action: #selector(settingButtonTap), for: .touchUpInside)
+    }
+    
+    @objc private func settingButtonTap() {
+        onTapSetting?()
     }
     
     func configure(mission: Mission) {
