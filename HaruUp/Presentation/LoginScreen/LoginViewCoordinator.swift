@@ -30,10 +30,6 @@ final class LoginCoordinator: Coordinator {
             self?.onFinish?(result)
         }
         
-        loginVC.goToHome = { [weak self] in
-            self?.gotoHome?()
-        }
-        
         navigationController.setViewControllers([loginVC], animated: false)
         navigationController.setNavigationBarHidden(true, animated: false)
     }
