@@ -34,4 +34,37 @@ extension UILabel {
         
         self.attributedText = NSAttributedString(string: content, attributes: attributes)
     }
+    
+    /// 전체 스타일(폰트/라인하이트) 적용 + 특정 텍스트만 색 변경
+    func setStyledText(_ style: FontStyle, fullText: String, highlightedText: String,highlightedColor: UIColor, defaultColor: UIColor) {
+        self.textColor = defaultColor
+        self.numberOfLines = 0
+
+        let font = style.font
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        let targetLineHeight = font.lineHeight * style.lineHeight
+        paragraphStyle.minimumLineHeight = targetLineHeight
+        paragraphStyle.maximumLineHeight = targetLineHeight
+        paragraphStyle.alignment = self.textAlignment
+        paragraphStyle.lineBreakMode = self.lineBreakMode
+
+        let baseAttributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .paragraphStyle: paragraphStyle,
+            .baselineOffset: (targetLineHeight - font.lineHeight) / 2,
+            .foregroundColor: defaultColor
+        ]
+
+        let attributed = NSMutableAttributedString(string: fullText, attributes: baseAttributes)
+
+        // highlightedText 범위 찾아서 색만 변경
+        let nsText = fullText as NSString
+        let range = nsText.range(of: highlightedText)
+        if range.location != NSNotFound {
+            attributed.addAttribute(.foregroundColor, value: highlightedColor, range: range)
+        }
+
+        self.attributedText = attributed
+    }
 }

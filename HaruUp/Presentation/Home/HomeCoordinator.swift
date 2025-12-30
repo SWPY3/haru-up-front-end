@@ -12,6 +12,7 @@ final class HomeCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     private let missionService: MissionServiceProtocol = MissionService()
+    private let interestsService: InterestsService = InterestsService()
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -25,14 +26,19 @@ final class HomeCoordinator: Coordinator {
             self.showTodayMissionFlow()
         }
         
+        homeVC.onShowBottomSheet = { [weak self] mission in
+            self?.presentMissionBottomSheet(mission: mission)
+        }
+        
         navigationController.setViewControllers([homeVC], animated: false)
     }
     
     private func showTodayMissionFlow() {
         let modalNavigationController = UINavigationController()
         modalNavigationController.modalPresentationStyle = .overFullScreen
+        modalNavigationController.modalTransitionStyle = .crossDissolve
 
-        let coordinator = TodayMissionCoordinator(navigationController: modalNavigationController, missionService: missionService)
+        let coordinator = TodayMissionCoordinator(navigationController: modalNavigationController, missionService: missionService, interestsService: interestsService)
 
         coordinator.onFinish = { [weak self, weak modalNavigationController, weak coordinator] in
             print("창 종료")
@@ -50,4 +56,15 @@ final class HomeCoordinator: Coordinator {
         coordinator.start()
         navigationController.present(modalNavigationController, animated: true)
     }
+
+    private func presentMissionBottomSheet(mission: Mission) {
+        let bottomSheetViewModel = MissionBottomSheetViewModel(
+            mission: mission,
+            missionService: self.missionService
+        )
+        let bottomSheetVC = MissionBottomSheetViewController(viewModel: bottomSheetViewModel)
+        
+        navigationController.present(bottomSheetVC, animated: false)
+    }
 }
+

@@ -48,13 +48,13 @@ final class TodayMissionSelectView: UIView {
     
     private let countLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.title3, text: "3개")
+        label.setStyle(Typography.title3, text: "0개")
         label.textColor = .cta // 0개인 경우 .neutral400
         
         return label
     }()
     
-    private let button: UIButton = {
+    let button: UIButton = {
         let button = UIButton()
         button.setTitle("선택 완료", for: .normal)
         button.titleLabel?.font = Typography.subtitle2.font
@@ -145,5 +145,10 @@ final class TodayMissionSelectView: UIView {
             button.widthAnchor.constraint(equalToConstant: 152),
             button.heightAnchor.constraint(equalToConstant: 56),
         ])
+    }
+    
+    func updateSelectionCount(_ count: Int) {
+        let countText = "\(count)개"
+        countLabel.setStyle(Typography.title3, text: countText)
     }
 }
