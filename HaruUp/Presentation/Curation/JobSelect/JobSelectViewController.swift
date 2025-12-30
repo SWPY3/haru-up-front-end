@@ -97,12 +97,12 @@ class JobSelectViewController: UIViewController {
     }()
     
     private let activityIndicator: UIActivityIndicatorView = {
-            let indicator = UIActivityIndicatorView(style: .large)
-            indicator.color = .primaryBlue700
-            indicator.hidesWhenStopped = true
-            indicator.translatesAutoresizingMaskIntoConstraints = false
-            return indicator
-        }()
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .primaryBlue700
+        indicator.hidesWhenStopped = true
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        return indicator
+    }()
     
     // MARK: - Init
     init(viewModel: JobSelectViewModel) {
@@ -211,16 +211,16 @@ class JobSelectViewController: UIViewController {
         let output = viewModel.transform(input: input)
         
         output.isLoading
-                    .drive(onNext: { [weak self] isLoading in
-                        if isLoading {
-                            self?.activityIndicator.startAnimating()
-                            self?.jobButtonsStackView.isHidden = true
-                        } else {
-                            self?.activityIndicator.stopAnimating()
-                            self?.jobButtonsStackView.isHidden = false
-                        }
-                    })
-                    .disposed(by: disposeBag)
+            .drive(onNext: { [weak self] isLoading in
+                if isLoading {
+                    self?.activityIndicator.startAnimating()
+                    self?.jobButtonsStackView.isHidden = true
+                } else {
+                    self?.activityIndicator.stopAnimating()
+                    self?.jobButtonsStackView.isHidden = false
+                }
+            })
+            .disposed(by: disposeBag)
         
         // 직업 목록 받아 버튼 생성
         output.jobs
@@ -259,8 +259,6 @@ class JobSelectViewController: UIViewController {
         jobs.forEach { job in
             let button = SelectButton()
             button.setTitle(job.jobName, for: .normal)
-            button.titleLabel?.font = Typography.body1.font
-            button.setTitleColor(.black, for: .normal)
             button.translatesAutoresizingMaskIntoConstraints = false
             button.heightAnchor.constraint(equalToConstant: 56).isActive = true
             
@@ -273,5 +271,4 @@ class JobSelectViewController: UIViewController {
             jobButtonsStackView.addArrangedSubview(button)
         }
     }
-    
 }
