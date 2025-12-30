@@ -40,6 +40,7 @@ final class MissionBottomSheetViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.setStyle(Typography.subtitle1, text: "영어 회화 유튜브 강의 10분...")
+        label.textColor = .black
         label.textAlignment = .center
         label.numberOfLines = 1
         
@@ -201,7 +202,9 @@ final class MissionBottomSheetViewController: UIViewController {
         let output = viewModel.transform(input: input)
         
         output.missionTitle
-            .drive(titleLabel.rx.text)
+            .drive(onNext: { [weak self] title in
+                self?.titleLabel.setStyle(Typography.subtitle1, text: title)
+            })
             .disposed(by: disposeBag)
         
         output.missionExp
