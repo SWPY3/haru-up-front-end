@@ -19,6 +19,7 @@ class MyPageViewController: UIViewController {
     // Coordinator 연결용
     var onEditInterest: (() -> Void)?
     var onLogout: (() -> Void)?
+    var onWithdraw: (() -> Void)?
     
     // MARK: - UI Components
     private let titleLabel: UILabel = {
@@ -48,7 +49,7 @@ class MyPageViewController: UIViewController {
         let button = UIButton()
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         button.setImage(.iconProfileEdit, for: .normal)
-//        button.tintColor = .systemBlue
+        //        button.tintColor = .systemBlue
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -221,9 +222,135 @@ class MyPageViewController: UIViewController {
             .drive(versionLabel.rx.text)
             .disposed(by: disposeBag)
         
-        // 버튼 클릭 바인딩
+        // 로그아웃 Alert 표시
+        output.showLogoutAlert
+            .emit(onNext: { [weak self] in
+                self?.showLogoutConfirmationAlert()
+            })
+            .disposed(by: disposeBag)
+        
+        // 탈퇴 첫 번째 Alert 표시
+        output.showWithdrawFirstAlert
+            .emit(onNext: { [weak self] in
+                self?.showWithdrawFirstConfirmationAlert()
+            })
+            .disposed(by: disposeBag)
+        
+        // 탈퇴 성공 Alert 표시
+        output.showWithdrawSuccessAlert
+            .emit(onNext: { [weak self] in
+                self?.showWithdrawSuccessAlert()
+            })
+            .disposed(by: disposeBag)
+        
+        // 로그아웃 성공
+        output.logoutSuccess
+            .emit(onNext: { [weak self] in
+                self?.onLogout?()
+            })
+            .disposed(by: disposeBag)
+        
+        // 탈퇴 성공
+        output.withdrawSuccess
+            .emit(onNext: { [weak self] in
+                self?.onWithdraw?()
+            })
+            .disposed(by: disposeBag)
+        
+        // 에러 메시지
+        output.errorMessage
+            .emit(onNext: { [weak self] message in
+                self?.showErrorAlert(message: message)
+            })
+            .disposed(by: disposeBag)
+        
+        
         editInterestBtn.rx.tap
             .subscribe(onNext: { [weak self] in self?.onEditInterest?() })
+            .disposed(by: disposeBag)
+    }
+    
+    private func showLogoutConfirmationAlert() {
+        let alert = UIAlertController(
+            title: "로그아웃을 진행할까요?",
+            message: "다음 접속 시 계정 정보를 다시 입력해야 해요.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "아니오", style: .cancel))
+        alert.addAction(UIAlertAction(title: "예", style: .default) { [weak self] _ in
+            self?.handleLogout()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    // 탈퇴 첫 번째 확인 Alert
+    private func showWithdrawFirstConfirmationAlert() {
+        let alert = UIAlertController(
+            title: "정말 저희를 떠나실 건가요?",
+            message: "탈퇴 시, 모든 기록이 사라지며 복구할 수 없어요.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "탈퇴하기", style: .destructive) { [weak self] _ in
+            self?.handleWithdraw()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    // 탈퇴 성공 Alert
+    private func showWithdrawSuccessAlert() {
+        let alert = UIAlertController(
+            title: "탈퇴가 완료되었습니다.",
+            message: "더 좋은 서비스를 준비할게요. 다음에 다시 만나요!",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "확인", style: .default) { [weak self] _ in
+            self?.onWithdraw?()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    // 에러 Alert
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(
+            title: "오류",
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        
+        present(alert, animated: true)
+    }
+    
+    // 로그아웃 처리
+    private func handleLogout() {
+        viewModel.performLogout()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onSuccess: { [weak self] in
+                self?.onLogout?()
+            }, onFailure: { [weak self] error in
+                self?.showErrorAlert(message: error.localizedDescription)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    // 탈퇴 처리
+    private func handleWithdraw() {
+        viewModel.performWithdraw()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onSuccess: { [weak self] in
+                // 탈퇴 성공 Alert 표시
+                self?.showWithdrawSuccessAlert()
+            }, onFailure: { [weak self] error in
+                self?.showErrorAlert(message: error.localizedDescription)
+            })
             .disposed(by: disposeBag)
     }
 }

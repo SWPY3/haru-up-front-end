@@ -12,10 +12,12 @@ final class MainTabBarCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     let curationData: CurationData
+    let appCoordinator: AppCoordinator
     
-    init(navigationController: UINavigationController, curationData: CurationData) {
+    init(navigationController: UINavigationController, curationData: CurationData, appCoordinator: AppCoordinator) {
         self.navigationController = navigationController
         self.curationData = curationData
+        self.appCoordinator = appCoordinator
     }
     
     func start() {
@@ -40,6 +42,11 @@ final class MainTabBarCoordinator: Coordinator {
         let myPageNav = UINavigationController()
         let myPageCoordinator = MyPageCoordinator(navigationController: myPageNav, curationData: curationData)
         childCoordinators.append(myPageCoordinator)
+        
+        myPageCoordinator.onFinish = { [weak self] in
+            self?.appCoordinator.showLoginFlow()
+        }
+        
         myPageCoordinator.start()
         myPageNav.tabBarItem = UITabBarItem(title: "마이페이지", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
         

@@ -42,6 +42,8 @@ final class SplashViewModel {
                 print("-> 결과: onboardingRequired") 
                 return .onboardingRequired
             }
+            
+//            return .onboardingRequired
         }()
         
         let elapsed = Date().timeIntervalSince(start)
