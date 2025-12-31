@@ -12,21 +12,13 @@ import RxCocoa
 
 final class BirthSelectViewModel {
     
-    enum ValidationResult {
-        case success    // 성공
-        case empty      // 빈 문자열
-        case tooShort
-        case tooLong
-        case invalid    // 유효하지 않은 날짜
-    }
-    
     struct Input {
         let birthInput: Observable<String>
         let nextButtonTapped: Observable<Void>
     }
     struct Output {
         let isLengthValid: Driver<Bool>
-        let buttonTapValidation: Driver<ValidationResult>
+        let buttonTapValidation: Driver<BirthValidationResult>
     }
     
     private weak var coordinator: BirthSelectCoordinator?
@@ -66,7 +58,7 @@ final class BirthSelectViewModel {
         // 버튼 탭 시: 전체 유효성 검사
         let buttonTapValidation = input.nextButtonTapped
             .withLatestFrom(currentBirth)
-            .map { [weak self] birth -> ValidationResult in
+            .map { [weak self] birth -> BirthValidationResult in
                 guard let self = self else { return .empty }
                 return self.validateBirth(birth)
             }
@@ -96,7 +88,7 @@ final class BirthSelectViewModel {
         
     }
     
-    private func validateBirth(_ birth: String) -> ValidationResult {
+    private func validateBirth(_ birth: String) -> BirthValidationResult {
         let trimmed = birth.trimmingCharacters(in: .whitespaces)
         
         if trimmed.isEmpty {
