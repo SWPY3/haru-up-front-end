@@ -271,7 +271,7 @@ final class NicknameSelectViewController: UIViewController {
     // MARK: - Private Helper Methods
     
     // 복잡한 Switch문 분리
-    private func handleValidationResult(_ result: ValidationResult) { // Enum 타입 추론
+    private func handleValidationResult(_ result: NicknameValidationResult) { // Enum 타입 추론
         switch result {
         case .success:
             warningLabel.isHidden = true

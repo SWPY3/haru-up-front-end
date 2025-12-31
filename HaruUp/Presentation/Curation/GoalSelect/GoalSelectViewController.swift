@@ -14,12 +14,10 @@ class GoalSelectViewController: UIViewController {
     private let viewModel: GoalSelectViewModel
     private let disposeBag = DisposeBag()
     
-    
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let goalSelectedSubject = PublishSubject<InterestData>()
     private var goalButtons: [SelectButton] = []
     private var goals: [InterestData] = []
-    
     
     private let activityIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .large)
@@ -95,14 +93,15 @@ class GoalSelectViewController: UIViewController {
     }()
     
     private let nextButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.contentMode = .scaleAspectFit
-        //        button.isEnabled = false
-        return button
+        let btn = UIButton()
+        btn.setTitle("다음", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .neutral200
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
     }()
-    
     
     
     init(viewModel: GoalSelectViewModel) {
@@ -248,8 +247,7 @@ class GoalSelectViewController: UIViewController {
             .map{ $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
-                let imageName = isEnabled ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
+                self?.nextButton.backgroundColor = isEnabled ? .cta : .neutral200
             })
             .disposed(by: disposeBag)
     }

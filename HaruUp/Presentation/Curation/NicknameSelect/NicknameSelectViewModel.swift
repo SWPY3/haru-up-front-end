@@ -19,7 +19,7 @@ final class NicknameSelectViewModel {
     
     struct Output {
         let isLengthValid: Driver<Bool>
-        let buttonTapValidation: Driver<ValidationResult>
+        let buttonTapValidation: Driver<NicknameValidationResult>
     }
     
     private weak var coordinator: NicknameSelectCoordinator?
@@ -48,7 +48,7 @@ final class NicknameSelectViewModel {
         let finalValidation = input.nextButtonTapped
             .withLatestFrom(currentNickname)
             .map { $0.trimmingCharacters(in: .whitespaces) }
-            .flatMapLatest { [weak self] nickname -> Observable<ValidationResult> in
+            .flatMapLatest { [weak self] nickname -> Observable<NicknameValidationResult> in
                 guard let self = self else { return .just(.empty) }
                 
                 let basic = self.validateNickname(nickname)
@@ -76,7 +76,7 @@ final class NicknameSelectViewModel {
     // MARK: - Validation Methods
     
     /// 전체 유효성 검사 (버튼 탭 시에만 실행)
-    private func validateNickname(_ nickname: String) -> ValidationResult {
+    private func validateNickname(_ nickname: String) -> NicknameValidationResult {
         let trimmed = nickname.trimmingCharacters(in: .whitespaces)
         
         // 1. 빈 문자열 체크
@@ -152,7 +152,7 @@ final class NicknameSelectViewModel {
         return true
     }
     
-    private func checkNicknameDuplicate(_ nickname: String) -> Observable<ValidationResult> {
+    private func checkNicknameDuplicate(_ nickname: String) -> Observable<NicknameValidationResult> {
         
         return Observable.create { observer in
             let urlString = NetworkDefine.ProfileAPI.nicknameDuplicateCheck.url
