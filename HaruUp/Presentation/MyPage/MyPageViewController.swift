@@ -166,6 +166,7 @@ class MyPageViewController: UIViewController {
             
             nicknameLabel.topAnchor.constraint(equalTo: profileImageView.topAnchor),
             nicknameLabel.leadingAnchor.constraint(equalTo: profileImageView.trailingAnchor, constant: 16),
+            nicknameLabel.trailingAnchor.constraint(lessThanOrEqualTo: editProfileButton.leadingAnchor, constant: -8),
             
             editProfileButton.topAnchor.constraint(equalTo: nicknameLabel.topAnchor, constant: 10),
             editProfileButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
@@ -178,7 +179,7 @@ class MyPageViewController: UIViewController {
             goalCardView.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 36),
             goalCardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             goalCardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-//            goalCardView.heightAnchor.constraint(equalToConstant: 130),
+            //            goalCardView.heightAnchor.constraint(equalToConstant: 130),
             
             goalBadgeContainer.topAnchor.constraint(equalTo: goalCardView.topAnchor, constant: 15),
             goalBadgeContainer.leadingAnchor.constraint(equalTo: goalCardView.leadingAnchor, constant: 24),
@@ -297,6 +298,26 @@ class MyPageViewController: UIViewController {
         output.errorMessage
             .emit(onNext: { [weak self] message in
                 self?.showErrorAlert(message: message)
+            })
+            .disposed(by: disposeBag)
+        
+        // 의견남기기 이동 (Google Forms)
+        feedbackBtn.rx.tap
+            .subscribe(onNext: { [weak self] in
+                guard let url = URL(string: "https://forms.gle/qC5jrp4FL89CcdoA6") else { return }
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 문의하기 이동 (Google Forms)
+        inquiryBtn.rx.tap
+            .subscribe(onNext: { [weak self] in
+                guard let url = URL(string: "https://forms.gle/MP4LuXLJDd13vo5W9") else { return }
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
             })
             .disposed(by: disposeBag)
         
