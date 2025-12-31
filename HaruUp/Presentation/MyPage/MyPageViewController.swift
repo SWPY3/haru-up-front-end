@@ -204,8 +204,8 @@ class MyPageViewController: UIViewController {
             menuStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             menuStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-            versionLabel.topAnchor.constraint(equalTo: menuStackView.bottomAnchor, constant: 20),
-            versionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 25)
+            versionLabel.topAnchor.constraint(equalTo: menuStackView.bottomAnchor, constant: 10),
+            versionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40)
         ])
     }
     
@@ -256,7 +256,10 @@ class MyPageViewController: UIViewController {
             .disposed(by: disposeBag)
         
         output.appVersion
-            .drive(versionLabel.rx.text)
+            .drive(onNext: { [weak self] versionText in
+                self?.versionLabel.setStyle(Typography.body4, text: versionText)
+                self?.versionLabel.textColor = .neutral700
+            })
             .disposed(by: disposeBag)
         
         // 로그아웃 Alert 표시
