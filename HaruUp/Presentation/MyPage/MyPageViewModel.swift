@@ -14,7 +14,7 @@ final class MyPageViewModel {
         let viewDidLoad: Observable<Void>
         // 버튼 5개에 대한 이벤트
         let editInterestTapped: ControlEvent<Void>
-        let feedbackTapped: ControlEvent<Void>   // 피드백하기
+        let feedbackTapped: ControlEvent<Void>   // 의견남기기
         let inquiryTapped: ControlEvent<Void>    // 문의하기
         let logoutTapped: ControlEvent<Void>
         let withdrawTapped: ControlEvent<Void>

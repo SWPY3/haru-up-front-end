@@ -103,7 +103,7 @@ class MyPageViewController: UIViewController {
     }()
     
     private let editInterestBtn = MyPageMenuButton(title: "관심사 수정")
-    private let feedbackBtn = MyPageMenuButton(title: "피드백하기")   // 변경됨
+    private let feedbackBtn = MyPageMenuButton(title: "의견남기기")   // 변경됨
     private let inquiryBtn = MyPageMenuButton(title: "문의하기")      // 추가됨
     private let logoutBtn = MyPageMenuButton(title: "로그아웃", hasArrow: false)
     private let withdrawBtn = MyPageMenuButton(title: "탈퇴하기", hasArrow: false, isDestructive: true, showSeparator: false)
@@ -271,48 +271,51 @@ class MyPageViewController: UIViewController {
     }
     
     private func showLogoutConfirmationAlert() {
-        let alert = UIAlertController(
+        let alert = MyPageAlertViewController(
             title: "로그아웃을 진행할까요?",
-            message: "다음 접속 시 계정 정보를 다시 입력해야 해요.",
-            preferredStyle: .alert
+            message: "다음 접속 시 계정 정보를\n 다시 입력해야 해요.",
+            type: .confirmation,
+            confirmTitle: "예",
+            cancelTitle: "아니오",
+            confirmColor: .primaryBlue700,
+            cancelColor: .neutral700
         )
         
-        alert.addAction(UIAlertAction(title: "아니오", style: .cancel))
-        alert.addAction(UIAlertAction(title: "예", style: .default) { [weak self] _ in
+        alert.onConfirm = { [weak self] in
             self?.handleLogout()
-        })
+        }
         
         present(alert, animated: true)
     }
     
     // 탈퇴 첫 번째 확인 Alert
     private func showWithdrawFirstConfirmationAlert() {
-        let alert = UIAlertController(
-            title: "정말 저희를 떠나실 건가요?",
-            message: "탈퇴 시, 모든 기록이 사라지며 복구할 수 없어요.",
-            preferredStyle: .alert
+        let alert = MyPageAlertViewController(
+            title: "😢 정말 저희를 떠나실 건가요?",
+            message: "탈퇴 시, 모든 기록이 사라지며\n복구할 수 없어요.",
+            type: .confirmation,
+            confirmTitle: "탈퇴하기",
+            cancelTitle: "취소",
+            confirmColor: .primaryBlue700,
+            cancelColor: .neutral700
         )
-        
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "탈퇴하기", style: .destructive) { [weak self] _ in
+        alert.onConfirm = { [weak self] in
             self?.handleWithdraw()
-        })
-        
+        }
         present(alert, animated: true)
     }
     
     // 탈퇴 성공 Alert
     private func showWithdrawSuccessAlert() {
-        let alert = UIAlertController(
+        let alert = MyPageAlertViewController(
             title: "탈퇴가 완료되었습니다.",
-            message: "더 좋은 서비스를 준비할게요. 다음에 다시 만나요!",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "확인", style: .default) { [weak self] _ in
+            message: "더 좋은 서비스를 준비할게요.\n다음에 다시 만나요!",
+            type: .success,
+            confirmTitle: "확인"
+        ) 
+        alert.onConfirm = { [weak self] in
             self?.onWithdraw?()
-        })
-        
+        }
         present(alert, animated: true)
     }
     
