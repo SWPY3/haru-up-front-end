@@ -69,7 +69,7 @@ final class MyPageTagView: UIView {
     init() {
         super.init(frame: .zero)
         self.translatesAutoresizingMaskIntoConstraints = false
-        backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+        backgroundColor = .neutral10
         layer.cornerRadius = 16
         
         label.setStyle(Typography.body4, text: "")
@@ -79,15 +79,16 @@ final class MyPageTagView: UIView {
         addSubview(label)
         
         NSLayoutConstraint.activate([
-            label.topAnchor.constraint(equalTo: self.topAnchor, constant: 8),
-            label.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -8),
-            label.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 14),
-            label.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -14)
+            label.topAnchor.constraint(equalTo: self.topAnchor, constant: 3),
+            label.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -3),
+            label.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 10),
+            label.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -10)
         ])
     }
     
     func configure(text: String, emoji: String? = nil) {
-        label.text = (emoji != nil) ? "\(emoji!) \(text)" : text
+        label.setStyle(Typography.body4, text: (emoji != nil) ? "\(emoji!) \(text)" : text)
+        label.textColor = .neutral800
     }
     required init?(coder: NSCoder) { fatalError() }
 }

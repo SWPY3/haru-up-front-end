@@ -93,10 +93,12 @@ final class MyPageViewModel {
         
         return authAPI.logout(refreshToken: refreshToken)
             .map { response in
+                print("response : \(response)")
                 if response.success {
                     self.tokenStorage.clearForLogout()
                 } else {
                     throw NSError(domain: "MyPageViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: response.message ?? "로그아웃에 실패했습니다."])
+
                 }
             }
     }

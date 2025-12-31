@@ -71,13 +71,19 @@ class MyPageViewController: UIViewController {
         return view
     }()
     
-    private let goalBadge: UILabel = {
+    private let goalBadgeContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .primaryBlue600
+        view.layer.cornerRadius = 8
+        view.clipsToBounds = true
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let goalBadgeLabel: UILabel = {
         let label = UILabel()
         label.setStyle(Typography.body4, text: "GOAL")
         label.textColor = .white
-        label.backgroundColor = .primaryBlue600
-        label.layer.cornerRadius = 8
-        label.clipsToBounds = true
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -136,9 +142,10 @@ class MyPageViewController: UIViewController {
             view.addSubview($0)
         }
         
-        [goalBadge, goalNameLabel, interestTag, detailTag].forEach {
+        [goalBadgeContainer, goalNameLabel, interestTag, detailTag].forEach {
             goalCardView.addSubview($0)
         }
+        goalBadgeContainer.addSubview(goalBadgeLabel)
         
         [editInterestBtn, feedbackBtn, inquiryBtn, logoutBtn, withdrawBtn].forEach {
             menuStackView.addArrangedSubview($0)
@@ -157,32 +164,39 @@ class MyPageViewController: UIViewController {
             profileImageView.widthAnchor.constraint(equalToConstant: 80),
             profileImageView.heightAnchor.constraint(equalToConstant: 80),
             
-            nicknameLabel.topAnchor.constraint(equalTo: profileImageView.topAnchor, constant: 10),
+            nicknameLabel.topAnchor.constraint(equalTo: profileImageView.topAnchor),
             nicknameLabel.leadingAnchor.constraint(equalTo: profileImageView.trailingAnchor, constant: 16),
             
-            editProfileButton.centerYAnchor.constraint(equalTo: nicknameLabel.centerYAnchor),
+            editProfileButton.topAnchor.constraint(equalTo: nicknameLabel.topAnchor, constant: 10),
             editProfileButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
-            editProfileButton.widthAnchor.constraint(equalToConstant: 30),
-            editProfileButton.heightAnchor.constraint(equalToConstant: 30),
+            editProfileButton.widthAnchor.constraint(equalToConstant: 36),
+            editProfileButton.heightAnchor.constraint(equalToConstant: 36),
             
-            jobLabel.topAnchor.constraint(equalTo: nicknameLabel.bottomAnchor, constant: 4),
+            jobLabel.topAnchor.constraint(equalTo: nicknameLabel.bottomAnchor, constant: 3),
             jobLabel.leadingAnchor.constraint(equalTo: nicknameLabel.leadingAnchor),
             
-            goalCardView.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 30),
+            goalCardView.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 36),
             goalCardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             goalCardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            goalCardView.heightAnchor.constraint(equalToConstant: 140),
+//            goalCardView.heightAnchor.constraint(equalToConstant: 130),
             
-            goalBadge.topAnchor.constraint(equalTo: goalCardView.topAnchor, constant: 20),
-            goalBadge.leadingAnchor.constraint(equalTo: goalCardView.leadingAnchor, constant: 20),
+            goalBadgeContainer.topAnchor.constraint(equalTo: goalCardView.topAnchor, constant: 15),
+            goalBadgeContainer.leadingAnchor.constraint(equalTo: goalCardView.leadingAnchor, constant: 24),
             
-            goalNameLabel.topAnchor.constraint(equalTo: goalBadge.bottomAnchor, constant: 10),
-            goalNameLabel.leadingAnchor.constraint(equalTo: goalBadge.leadingAnchor),
+            goalBadgeLabel.topAnchor.constraint(equalTo: goalBadgeContainer.topAnchor, constant: 2),
+            goalBadgeLabel.bottomAnchor.constraint(equalTo: goalBadgeContainer.bottomAnchor, constant: -2),
+            goalBadgeLabel.leadingAnchor.constraint(equalTo: goalBadgeContainer.leadingAnchor, constant: 6.5),
+            goalBadgeLabel.trailingAnchor.constraint(equalTo: goalBadgeContainer.trailingAnchor, constant: -6.5),
             
-            interestTag.topAnchor.constraint(equalTo: goalNameLabel.bottomAnchor, constant: 12),
-            interestTag.leadingAnchor.constraint(equalTo: goalBadge.leadingAnchor),
+            goalNameLabel.topAnchor.constraint(equalTo: goalBadgeContainer.bottomAnchor, constant: 5),
+            goalNameLabel.leadingAnchor.constraint(equalTo: goalBadgeContainer.leadingAnchor),
+            
+            interestTag.topAnchor.constraint(equalTo: goalNameLabel.bottomAnchor, constant: 10),
+            interestTag.bottomAnchor.constraint(equalTo: goalCardView.bottomAnchor, constant: -20),
+            interestTag.leadingAnchor.constraint(equalTo: goalBadgeContainer.leadingAnchor),
             
             detailTag.centerYAnchor.constraint(equalTo: interestTag.centerYAnchor),
+            detailTag.bottomAnchor.constraint(equalTo: goalCardView.bottomAnchor, constant: -20),
             detailTag.leadingAnchor.constraint(equalTo: interestTag.trailingAnchor, constant: 8),
             
             menuStackView.topAnchor.constraint(equalTo: goalCardView.bottomAnchor, constant: 24),
@@ -208,11 +222,33 @@ class MyPageViewController: UIViewController {
         
         output.curationData
             .drive(onNext: { [weak self] data in
-                self?.nicknameLabel.text = data.nickname
-                self?.jobLabel.text = data.jobDetail?.jobDetailName
-                self?.goalNameLabel.text = data.goal?.name
-                self?.interestTag.configure(text: data.interest?.name ?? "", emoji: Interest.iconForInterest(name: data.interest?.name ?? ""))
-                self?.detailTag.configure(text: data.interestDetail?.name ?? "")
+                guard let self = self else { return }
+                
+                // 1. 닉네임
+                guard let nickname = data.nickname else {
+                    self.nicknameLabel.setStyle(Typography.subtitle1, text: "사용자")
+                    self.nicknameLabel.textColor = .black
+                    return
+                }
+                
+                self.nicknameLabel.setStyle(Typography.subtitle1, text: "\(nickname)님")
+                self.nicknameLabel.textColor = .black
+                
+                // 2. 직업 상세
+                self.jobLabel.setStyle(Typography.body1, text: data.jobDetail?.jobDetailName ?? "직업 정보 없음")
+                self.jobLabel.textColor = .neutral900
+                
+                // 3. 목표 이름
+                self.goalNameLabel.setStyle(Typography.body1, text: data.goal?.name ?? "목표를 설정해보세요")
+                self.goalNameLabel.textColor = .black
+                
+                // 4. 태그 (TagView 내부에서 setStyle을 사용하도록 설계되어 있다면 그대로 사용)
+                self.interestTag.configure(
+                    text: data.interest?.name ?? "",
+                    emoji: Interest.iconForInterest(name: data.interest?.name ?? "")
+                )
+                self.detailTag.configure(text: data.interestDetail?.name ?? "")
+                
                 print("닉네임: \(data.nickname ?? "없음")")
                 print("세부직업: \(data.jobDetail?.jobDetailName ?? "없음")")
             })
@@ -312,7 +348,7 @@ class MyPageViewController: UIViewController {
             message: "더 좋은 서비스를 준비할게요.\n다음에 다시 만나요!",
             type: .success,
             confirmTitle: "확인"
-        ) 
+        )
         alert.onConfirm = { [weak self] in
             self?.onWithdraw?()
         }

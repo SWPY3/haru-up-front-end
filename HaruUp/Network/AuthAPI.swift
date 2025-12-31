@@ -9,7 +9,6 @@ import Foundation
 import RxSwift
 import Alamofire
 
-
 protocol AuthAPIProtocol {
     func socialLogin(request: SocialLoginRequestDTO) -> Single<SocialLoginResponseDTO>
     func logout(refreshToken: String) -> Single<GenericResponse<EmptyResponseData>>
@@ -17,7 +16,6 @@ protocol AuthAPIProtocol {
 }
 
 struct EmptyResponseData: Codable {}
-
 
 final class AuthAPI: AuthAPIProtocol {
     private func request<T: Decodable, B: Encodable>(
@@ -70,6 +68,9 @@ final class AuthAPI: AuthAPIProtocol {
         var headers: HTTPHeaders = ["Content-Type": "application/json"]
         headers["jwt-token"] = refreshToken
         
+        if let token = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(token)"
+        }
         // Body가 없는 경우 EmptyBody 사용
         struct EmptyBody: Encodable {}
         

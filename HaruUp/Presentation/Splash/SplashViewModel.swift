@@ -28,7 +28,25 @@ final class SplashViewModel {
         print("토큰 유효: \(tokenStorage.isTokenValid())")
         print("온보딩 완료: \(tokenStorage.isOnboardingCompleted())")
         print("Access Token: \(tokenStorage.getAccessToken() ?? "없음")")
+        print("Refresh Token: \(tokenStorage.getRefreshToken() ?? "없음")")
+        print("멤버ID: \(tokenStorage.getMemberId() ?? "없음")")
 #endif
+        
+        
+//#if DEBUG
+//    print("=== Splash 상태 확인 ===")
+//    
+//    // ✅✅✅ 이 부분 주석 해제 (한 줄만)
+//    tokenStorage.clearForLogout()
+//    print("⚠️ 강제 로그아웃 실행됨")
+//    // ✅✅✅
+//    
+//    print("토큰 유효: \(tokenStorage.isTokenValid())")
+//    print("온보딩 완료: \(tokenStorage.isOnboardingCompleted())")
+//    print("Access Token: \(tokenStorage.getAccessToken() ?? "없음")")
+//    print("Refresh Token: \(tokenStorage.getRefreshToken() ?? "없음")")
+//    #endif
+//        
         
         // 로컬 토큰 검사 (동기)
         let result : SplashResult = {
@@ -42,8 +60,7 @@ final class SplashViewModel {
                 print("-> 결과: onboardingRequired") 
                 return .onboardingRequired
             }
-            
-//            return .onboardingRequired
+        
         }()
         
         let elapsed = Date().timeIntervalSince(start)
