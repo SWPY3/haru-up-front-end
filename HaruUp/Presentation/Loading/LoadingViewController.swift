@@ -80,6 +80,8 @@ class LoadingViewController: UIViewController {
     private var currentPhase2BoxIndex = 0
     private var isPhase2Started = false
     
+    var onFinish: (() -> Void)? // 미션 분석 완료
+    
     // MARK: - Init
     init(curationData: CurationData, viewModel: LoadingViewModel, coordinator: LoadingCoordinator) {
         self.curationData = curationData
@@ -224,11 +226,8 @@ class LoadingViewController: UIViewController {
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] memberInterestIds in
                 guard let self = self else { return }
-                // memberInterestIds를 저장하거나 다음 화면으로 전달
-                //                self.coordinator?.onFinsh?()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                    self.coordinator?.showLoadingComplete()
-                }
+                
+                self.onFinish?()
             })
             .disposed(by: disposeBag)
         
