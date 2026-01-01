@@ -90,28 +90,21 @@ final class ProfileEditViewController: UIViewController {
         return label
     }()
     
-    // 직장인 (Selected State Mock)
+    // 직업 선택 버튼
     private let jobSelectButton: UIButton = {
         let btn = UIButton()
-        btn.setTitle("직장인", for: .normal)
-        btn.setTitleColor(.systemBlue, for: .normal) // Selected Color
+        btn.setAttributedTitle(NSAttributedString(string: TokenStorageService.shared.getCurationData()?.job?.jobName ?? "직업선택", attributes: [.font: Typography.body1.font, .foregroundColor: UIColor.cta]), for: .normal)
         btn.contentHorizontalAlignment = .left
         btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         btn.backgroundColor = .white
-        btn.layer.cornerRadius = 12
-        btn.layer.borderWidth = 1.5
-        btn.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.5).cgColor // Purple/Blue stroke
-        
-        // Shadow for selected state
-        btn.layer.shadowColor = UIColor.systemBlue.cgColor
-        btn.layer.shadowOpacity = 0.1
-        btn.layer.shadowOffset = CGSize(width: 0, height: 2)
-        btn.layer.shadowRadius = 4
+        btn.layer.cornerRadius = 16
+        btn.layer.borderWidth = 1
+        btn.layer.borderColor = UIColor.neutral200.cgColor
+        btn.translatesAutoresizingMaskIntoConstraints = false
         
         // Arrow Icon
-        let img = UIImage(systemName: "chevron.down")
+        let img = UIImage(named: "chevron_bottom")
         let imgView = UIImageView(image: img)
-        imgView.tintColor = .systemBlue
         imgView.translatesAutoresizingMaskIntoConstraints = false
         btn.addSubview(imgView)
         NSLayoutConstraint.activate([
@@ -133,18 +126,18 @@ final class ProfileEditViewController: UIViewController {
     // 디자이너 (Unselected State Mock)
     private let detailJobSelectButton: UIButton = {
         let btn = UIButton()
-        btn.setTitle("디자이너", for: .normal)
-        btn.setTitleColor(.systemBlue, for: .normal)
+        btn.setAttributedTitle(NSAttributedString(string: TokenStorageService.shared.getCurationData()?.jobDetail?.jobDetailName ?? "세부 직무 선택", attributes: [.font: Typography.body1.font, .foregroundColor: UIColor.cta]), for: .normal)
         btn.contentHorizontalAlignment = .left
         btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         btn.backgroundColor = .white
-        btn.layer.cornerRadius = 12
+        btn.layer.cornerRadius = 16
         btn.layer.borderWidth = 1
-        btn.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
+        btn.layer.borderColor = UIColor.neutral200.cgColor
+        btn.translatesAutoresizingMaskIntoConstraints = false
         
-        let img = UIImage(systemName: "chevron.down")
+        // Arrow Icon
+        let img = UIImage(named: "chevron_bottom")
         let imgView = UIImageView(image: img)
-        imgView.tintColor = .lightGray
         imgView.translatesAutoresizingMaskIntoConstraints = false
         btn.addSubview(imgView)
         NSLayoutConstraint.activate([
@@ -165,6 +158,9 @@ final class ProfileEditViewController: UIViewController {
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
+    
+    private let jobDropdown = DropdownView()
+    private let detailJobDropdown = DropdownView()
     
     // MARK: - Properties
     private let viewModel: ProfileEditViewModel
@@ -239,10 +235,21 @@ final class ProfileEditViewController: UIViewController {
         view.backgroundColor = .white
         navigationController?.isNavigationBarHidden = true
         
-        [customNavBar, nicknameTitleLabel, textFieldContainer, warningLabel, completeButton].forEach {
+        [customNavBar, nicknameTitleLabel, textFieldContainer, warningLabel,
+         jobTitleLabel, jobSelectButton,
+         detailJobTitleLabel, detailJobSelectButton,
+         completeButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
+        
+        view.addSubview(jobDropdown)
+        view.addSubview(detailJobDropdown)
+        
+        jobDropdown.isHidden = true
+        detailJobDropdown.isHidden = true
+        jobDropdown.translatesAutoresizingMaskIntoConstraints = false
+        detailJobDropdown.translatesAutoresizingMaskIntoConstraints = false
         
         [backButton, navTitleLabel].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -300,6 +307,34 @@ final class ProfileEditViewController: UIViewController {
             warningLabel.topAnchor.constraint(equalTo: textFieldContainer.bottomAnchor, constant: 6),
             warningLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             
+            // [New] Job Selection UI Constraints
+            jobTitleLabel.topAnchor.constraint(equalTo: textFieldContainer.bottomAnchor, constant: 40),
+            jobTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            
+            jobSelectButton.topAnchor.constraint(equalTo: jobTitleLabel.bottomAnchor, constant: 8),
+            jobSelectButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            jobSelectButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            jobSelectButton.heightAnchor.constraint(equalToConstant: 55),
+            
+            detailJobTitleLabel.topAnchor.constraint(equalTo: jobSelectButton.bottomAnchor, constant: 24),
+            detailJobTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            
+            detailJobSelectButton.topAnchor.constraint(equalTo: detailJobTitleLabel.bottomAnchor, constant: 8),
+            detailJobSelectButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            detailJobSelectButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            detailJobSelectButton.heightAnchor.constraint(equalToConstant: 55),
+            
+            // Dropdowns (Button 바로 아래 위치)
+            jobDropdown.topAnchor.constraint(equalTo: jobSelectButton.bottomAnchor, constant: 4),
+            jobDropdown.leadingAnchor.constraint(equalTo: jobSelectButton.leadingAnchor),
+            jobDropdown.trailingAnchor.constraint(equalTo: jobSelectButton.trailingAnchor),
+            jobDropdown.heightAnchor.constraint(equalToConstant: 200), // 최대 높이
+            
+            detailJobDropdown.topAnchor.constraint(equalTo: detailJobSelectButton.bottomAnchor, constant: 4),
+            detailJobDropdown.leadingAnchor.constraint(equalTo: detailJobSelectButton.leadingAnchor),
+            detailJobDropdown.trailingAnchor.constraint(equalTo: detailJobSelectButton.trailingAnchor),
+            detailJobDropdown.heightAnchor.constraint(equalToConstant: 200),
+            
             completeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             completeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             completeButton.heightAnchor.constraint(equalToConstant: 56),
@@ -347,11 +382,88 @@ final class ProfileEditViewController: UIViewController {
         
         // --- ViewModel Binding ---
         let input = ProfileEditViewModel.Input(
-            nicknameInput: nicknameTextField.rx.text.orEmpty.asObservable(), clearButtonTapped: clearButton.rx.tap.asObservable(),
-            completeButtonTapped: completeButton.rx.tap.asObservable()
+            nicknameInput: nicknameTextField.rx.text.orEmpty.asObservable(),
+            clearButtonTapped: clearButton.rx.tap.asObservable(),
+            completeButtonTapped: completeButton.rx.tap.asObservable(),
+            
+            // Job 관련 이벤트 전달
+            jobButtonTapped: jobSelectButton.rx.tap.asObservable(),
+            detailJobButtonTapped: detailJobSelectButton.rx.tap.asObservable(),
+            jobSelected: jobDropdown.itemSelected.asObservable(),
+            detailJobSelected: detailJobDropdown.itemSelected.asObservable()
         )
         
         let output = viewModel.transform(input: input)
+        
+        
+        // Job Binding
+        // 1. 직업 목록 데이터 바인딩
+                Driver.combineLatest(output.jobList, output.selectedJobId)
+                    .drive(with: self, onNext: { owner, data in
+                        owner.jobDropdown.bind(items: data.0, selectedId: data.1)
+                    })
+                    .disposed(by: disposeBag)
+                    
+                // 2. 세부직무 목록 데이터 바인딩
+                Driver.combineLatest(output.detailJobList, output.selectedDetailJobId)
+                    .drive(with: self, onNext: { owner, data in
+                        owner.detailJobDropdown.bind(items: data.0, selectedId: data.1)
+                    })
+                    .disposed(by: disposeBag)
+                
+                // 3. 직업 선택 상태 업데이트 (버튼 UI)
+                output.currentJobName
+                    .drive(with: self, onNext: { owner, name in
+                        if let name = name {
+                            owner.jobSelectButton.setTitle(name, for: .normal)
+                            owner.jobSelectButton.setTitleColor(.systemBlue, for: .normal)
+                            owner.jobSelectButton.layer.borderColor = UIColor.systemBlue.cgColor
+                        } else {
+                            owner.jobSelectButton.setTitle("직업 선택", for: .normal)
+                            owner.jobSelectButton.setTitleColor(.neutral800, for: .normal)
+                            owner.jobSelectButton.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
+                        }
+                        owner.jobDropdown.isHidden = true // 선택 후 닫기
+                    })
+                    .disposed(by: disposeBag)
+                    
+                // 4. 세부 직무 선택 상태 업데이트 (버튼 UI)
+                output.currentDetailJobName
+                    .drive(with: self, onNext: { owner, name in
+                        if let name = name {
+                            owner.detailJobSelectButton.setTitle(name, for: .normal)
+                            owner.detailJobSelectButton.setTitleColor(.systemBlue, for: .normal)
+                            owner.detailJobSelectButton.layer.borderColor = UIColor.systemBlue.cgColor
+                        } else {
+                            owner.detailJobSelectButton.setTitle("세부 직무 선택", for: .normal)
+                            owner.detailJobSelectButton.setTitleColor(.neutral800, for: .normal)
+                            owner.detailJobSelectButton.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
+                        }
+                        owner.detailJobDropdown.isHidden = true
+                    })
+                    .disposed(by: disposeBag)
+                    
+                // 5. 드롭다운 Show/Hide 토글
+                jobSelectButton.rx.tap
+                    .bind(with: self, onNext: { owner, _ in
+                        owner.jobDropdown.isHidden.toggle()
+                        owner.detailJobDropdown.isHidden = true
+                        owner.view.endEditing(true)
+                    })
+                    .disposed(by: disposeBag)
+                    
+                detailJobSelectButton.rx.tap
+                    .bind(with: self, onNext: { owner, _ in
+                        // 직업 선택 안 되어 있으면 방어
+                        if owner.jobSelectButton.title(for: .normal) == "직업 선택" { return }
+                        
+                        owner.detailJobDropdown.isHidden.toggle()
+                        owner.jobDropdown.isHidden = true
+                        owner.view.endEditing(true)
+                    })
+                    .disposed(by: disposeBag)
+        
+        // ----------------------------------------
     
         // 1. 초기 닉네임
         output.initialNickname
@@ -384,20 +496,6 @@ final class ProfileEditViewController: UIViewController {
                 }
             })
             .disposed(by: disposeBag)
-        
-        //        output.initialNickname
-        //            .drive(nicknameTextField.rx.text)
-        //            .disposed(by: disposeBag)
-        //
-        //        output.isCompleteEnabled
-        //            .drive(with: self, onNext: { owner, isEnabled in
-        //                owner.completeButton.isEnabled = isEnabled
-        //                owner.completeButton.backgroundColor = isEnabled ? .systemBlue : .lightGray.withAlphaComponent(0.5)
-        //            })
-        //            .disposed(by: disposeBag)
-        //
-        
-        
     }
     
     // MARK: - Logic Methods
@@ -417,7 +515,7 @@ final class ProfileEditViewController: UIViewController {
             self?.navigationController?.popViewController(animated: true)
         }
         
-        self.present(alert, animated: false) // custom transition 사용 시 false
+        self.present(alert, animated: false)
     }
     
     // MARK: - Private Helper Methods
@@ -425,10 +523,8 @@ final class ProfileEditViewController: UIViewController {
         switch result {
         case .success:
             warningLabel.isHidden = true
-            // 다음 화면 이동 로직 등 추가
             
         case .empty:
-            // Empty일 때는 보통 버튼이 비활성화 되어있겠지만 예외처리
             break
             
         case .tooShort, .tooLong:
@@ -460,6 +556,11 @@ final class ProfileEditViewController: UIViewController {
     }
     
     @objc private func dismissKeyboard() {
+        // 드롭다운이 열려있으면 닫아주는 로직 추가
+        if !jobDropdown.isHidden || !detailJobDropdown.isHidden {
+            jobDropdown.isHidden = true
+            detailJobDropdown.isHidden = true
+        }
         view.endEditing(true)
     }
     
@@ -491,16 +592,10 @@ final class ProfileEditViewController: UIViewController {
         toastContainer.addSubview(label)
         
         NSLayoutConstraint.activate([
-//            toastContainer.bottomAnchor.constraint(equalTo: completeButton.topAnchor, constant: -20),
-//            toastContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-//            toastContainer.heightAnchor.constraint(equalToConstant: 54),
-//            toastContainer.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-//            toastContainer.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
-            
             toastContainer.bottomAnchor.constraint(equalTo: completeButton.topAnchor, constant: -20),
-                    toastContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                    toastContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                    toastContainer.heightAnchor.constraint(equalToConstant: 54),
+            toastContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            toastContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            toastContainer.heightAnchor.constraint(equalToConstant: 54),
             
             icon.centerYAnchor.constraint(equalTo: toastContainer.centerYAnchor),
             icon.leadingAnchor.constraint(equalTo: toastContainer.leadingAnchor, constant: 16),
@@ -546,11 +641,19 @@ extension ProfileEditViewController: UIGestureRecognizerDelegate {
         }
     }
     
+//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+//        if touch.view is UIButton {
+//            return false
+//        }
+//        
+    //        return true
+    //    }
+    
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        if touch.view is UIButton {
+        // 버튼이나 테이블뷰 셀 터치 시 제스처 무시 (드롭다운 터치 문제 방지)
+        if touch.view is UIButton || touch.view?.superview is UITableViewCell {
             return false
         }
-        
         return true
     }
 }

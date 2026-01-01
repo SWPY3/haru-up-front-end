@@ -22,7 +22,6 @@ final class JobService {
     // 2. 세부 직무 목록 조회
     func fetchJobDetails(jobId: Int) -> Observable<[JobDetail]> {
         let url = NetworkDefine.JobAPI.getJobDetailList(jobId: jobId).url
-        // GET 방식 파라미터 전달
         let parameters: [String: Any] = ["jobId": jobId]
         return request(url: url, parameters: parameters)
     }
@@ -52,21 +51,21 @@ final class JobService {
                 encoding: URLEncoding.default, // GET 요청은 URLEncoding
                 headers: headers
             )
-            .validate()
-            .responseDecodable(of: [T].self) { response in
-                switch response.result {
-                case .success(let data):
-                    print("✅ 조회 성공: \(data.count)건")
-                    observer.onNext(data)
-                    observer.onCompleted()
-                    
-                case .failure(let error):
-                    print("❌ 요청 실패: \(error.localizedDescription)")
-                    // 실패 시 빈 배열 반환 또는 에러 방출 
-                    observer.onNext([])
-                    observer.onCompleted()
+                .validate()
+                .responseDecodable(of: [T].self) { response in
+                    switch response.result {
+                    case .success(let data):
+                        print("✅ 조회 성공: \(data.count)건")
+                        observer.onNext(data)
+                        observer.onCompleted()
+                        
+                    case .failure(let error):
+                        print("❌ 요청 실패: \(error.localizedDescription)")
+                        // 실패 시 빈 배열 반환 또는 에러 방출
+                        observer.onNext([])
+                        observer.onCompleted()
+                    }
                 }
-            }
             
             return Disposables.create {
                 request.cancel()

@@ -16,6 +16,12 @@ final class ProfileEditViewModel {
         let nicknameInput: Observable<String>
         let clearButtonTapped: Observable<Void>
         let completeButtonTapped: Observable<Void>
+        
+        // Job 관련 Input
+        let jobButtonTapped: Observable<Void>
+        let detailJobButtonTapped: Observable<Void>
+        let jobSelected: Observable<DropdownDisplayable>        // 드롭다운 선택
+        let detailJobSelected: Observable<DropdownDisplayable>  // 드롭다운 선택
     }
     
     struct Output {
@@ -23,7 +29,14 @@ final class ProfileEditViewModel {
         let isCompleteEnabled: Driver<Bool>          // 완료 버튼 활성화 여부
         let validationResult: Signal<ValidationResult> // 검증 결과 (경고 메시지 표시용)
         let updateSuccess: Signal<Void>              // 최종 수정 성공 이벤트
-//        let buttonTapValidation: Driver<ValidationResult>
+        
+        // Job 관련 Output
+        let jobList: Driver<[DropdownDisplayable]>          // 직업 리스트
+        let detailJobList: Driver<[DropdownDisplayable]>    // 세부직무 리스트
+        let currentJobName: Driver<String?>                 // 버튼 텍스트용
+        let currentDetailJobName: Driver<String?>           // 버튼 텍스트용
+        let selectedJobId: Driver<Int?>                     // 드롭다운 하이라이트용
+        let selectedDetailJobId: Driver<Int?>               // 드롭다운 하이라이트용
     }
     
     private let disposeBag = DisposeBag()
@@ -32,22 +45,28 @@ final class ProfileEditViewModel {
     private let nicknameRelay: BehaviorRelay<String>
     private let initialNicknameValue: String
     
+    // Job 상태관리
+    private let selectedJobRelay = BehaviorRelay<Job?>(value: nil)
+    private let selectedDetailJobRelay = BehaviorRelay<JobDetail?>(value: nil)
+    private let jobListRelay = BehaviorRelay<[Job]>(value: [])
+    private let detailJobListRelay = BehaviorRelay<[JobDetail]>(value: [])
+    
     // 외부 의존성
     private let nicknameServiceVM: NicknameSelectViewModel
+    private let jobService: JobService
     
-    init(currentNickname: String, nicknameServiceVM: NicknameSelectViewModel) {
+    init(currentNickname: String, nicknameServiceVM: NicknameSelectViewModel, jobService: JobService = .shared) {
         self.initialNicknameValue = currentNickname
-        // 1. 초기값을 Relay에 넣어주어야 TextField에 바인딩될 때 값이 들어갑니다.
         self.nicknameRelay = BehaviorRelay<String>(value: currentNickname)
         self.nicknameServiceVM = nicknameServiceVM
+        self.jobService = jobService
     }
     
     func transform(input: Input) -> Output {
         let validationResultRelay = PublishRelay<ValidationResult>()
         let updateSuccessRelay = PublishRelay<Void>()
         
-        // 1. 초기 닉네임 Driver (화면 진입 시 1회 방출)
-//        let initialNicknameDriver = Driver.just(initialNicknameValue)
+        // 1. 초기 닉네임 Driver
         let initialNicknameDriver = Driver.just(initialNicknameValue)
         
         // 2. 텍스트 필드 입력값과 Relay 동기화
@@ -63,7 +82,6 @@ final class ProfileEditViewModel {
             .disposed(by: disposeBag)
         
         // 4. 완료 버튼 활성화 조건
-        // 조건: 2~10자 이내 && 공백 제외 && 초기 닉네임과 달라야 함
         let isCompleteEnabled = nicknameRelay
             .map { [weak self] text -> Bool in
                 guard let self = self else { return false }
@@ -75,7 +93,47 @@ final class ProfileEditViewModel {
             }
             .asDriver(onErrorJustReturn: false)
         
-        // 5. 완료 버튼 탭 로직 (핵심 플로우)
+        // Job Logic
+        // 1. 직업 버튼 탭 -> Service 호출
+        input.jobButtonTapped
+            .flatMapLatest { [weak self] _ -> Observable<[Job]> in
+                guard let self = self else { return .empty() }
+                return self.jobService.fetchJobs()
+            }
+            .bind(to: jobListRelay)
+            .disposed(by: disposeBag)
+        
+        // 2. 직업 선택 시
+        input.jobSelected
+            .map { $0 as? Job }
+            .compactMap { $0 }
+            .subscribe(onNext: { [weak self] job in
+                self?.selectedJobRelay.accept(job)
+                
+                // 직업이 변경되면 하위 데이터 초기화
+                self?.selectedDetailJobRelay.accept(nil)
+                self?.detailJobListRelay.accept([])
+            })
+            .disposed(by: disposeBag)
+        
+        // 3. 세부 직무 버튼 탭 -> Service 호출 (Job ID 필요)
+        input.detailJobButtonTapped
+            .withLatestFrom(selectedJobRelay)
+            .flatMapLatest { [weak self] job -> Observable<[JobDetail]> in
+                guard let self = self, let jobId = job?.id else { return .just([]) }
+                return self.jobService.fetchJobDetails(jobId: jobId)
+            }
+            .bind(to: detailJobListRelay)
+            .disposed(by: disposeBag)
+        
+        // 4. 세부 직무 선택 시
+        input.detailJobSelected
+            .map { $0 as? JobDetail }
+            .compactMap { $0 }
+            .bind(to: selectedDetailJobRelay)
+            .disposed(by: disposeBag)
+        
+        // 완료 버튼 탭 로직
         input.completeButtonTapped
             .withLatestFrom(nicknameRelay) // 현재 닉네임 가져오기
             .flatMapLatest { [weak self] nickname -> Observable<ValidationResult> in
@@ -120,7 +178,16 @@ final class ProfileEditViewModel {
             initialNickname: initialNicknameDriver,
             isCompleteEnabled: isCompleteEnabled,
             validationResult: validationResultRelay.asSignal(),
-            updateSuccess: updateSuccessRelay.asSignal()
+            updateSuccess: updateSuccessRelay.asSignal(),
+            
+            // job output mapping
+            jobList: jobListRelay.map { $0 as [DropdownDisplayable] }.asDriver(onErrorJustReturn: []),
+            detailJobList: detailJobListRelay.map { $0 as [DropdownDisplayable] }.asDriver(onErrorJustReturn: []),
+            currentJobName: selectedJobRelay.map { $0?.jobName }.asDriver(onErrorJustReturn: nil),
+            currentDetailJobName: selectedDetailJobRelay.map { $0?.jobDetailName }.asDriver(onErrorJustReturn: nil),
+            selectedJobId: selectedJobRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
+            selectedDetailJobId: selectedDetailJobRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil)
+            
         )
     }
     
