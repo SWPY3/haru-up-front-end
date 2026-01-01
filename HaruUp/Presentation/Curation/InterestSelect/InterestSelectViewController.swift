@@ -97,12 +97,15 @@ class InterestSelectViewController: UIViewController {
     }()
     
     private let nextButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+        let btn = UIButton()
+        btn.setTitle("다음", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .neutral200
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
     }()
-    
     
     // MARK: - Init
     init(viewModel: InterestSelectViewModel) {
@@ -114,9 +117,6 @@ class InterestSelectViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
-    
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -125,7 +125,6 @@ class InterestSelectViewController: UIViewController {
         
         viewDidLoadSubject.onNext(())
     }
-    
     
     // MARK: - Setup UI
     private func setupUI() {
@@ -247,8 +246,7 @@ class InterestSelectViewController: UIViewController {
             .map { $0 != nil }
             .drive(onNext: { [weak self] isEnabled in
                 self?.nextButton.isEnabled = isEnabled
-                let imageName = isEnabled ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
+                self?.nextButton.backgroundColor = isEnabled ? .cta : .neutral200
             })
             .disposed(by: disposeBag)
     }

@@ -19,11 +19,13 @@ final class HomeCoordinator: Coordinator {
     }
     
     func start() {
-        let homeVM = HomeViewModel(missionService: missionService)
+        let homeVM = HomeViewModel(missionService: missionService, interestsService: interestsService)
         let homeVC = HomeViewController(viewModel: homeVM)
         homeVC.onSelectTodayMission = { [weak self] in
             guard let self else { return }
-            self.showTodayMissionFlow()
+            self.showTodayMissionFlow {
+                homeVC.didCompleteMissionSelection()
+            }
         }
         
         homeVC.onShowBottomSheet = { [weak self] mission in
@@ -33,7 +35,7 @@ final class HomeCoordinator: Coordinator {
         navigationController.setViewControllers([homeVC], animated: false)
     }
     
-    private func showTodayMissionFlow() {
+    private func showTodayMissionFlow(onDismiss: @escaping () -> Void) {
         let modalNavigationController = UINavigationController()
         modalNavigationController.modalPresentationStyle = .overFullScreen
         modalNavigationController.modalTransitionStyle = .crossDissolve
@@ -42,7 +44,9 @@ final class HomeCoordinator: Coordinator {
 
         coordinator.onFinish = { [weak self, weak modalNavigationController, weak coordinator] in
             print("창 종료")
-            modalNavigationController?.dismiss(animated: true)
+            modalNavigationController?.dismiss(animated: true, completion: {
+                onDismiss() // 해당 위치에서 갱신 요청
+            })
             
             if let coordinator = coordinator {
                 if let removable = coordinator as AnyObject? {

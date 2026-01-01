@@ -35,16 +35,19 @@ enum NetworkDefine {
     
     /// api/member
     enum MissionAPI {
-        case recommend      /// 오늘의 미션 추천
-        case retry          /// 오늘의 미션 재추천
-        case select         /// 오늘의 미션 선택
-        case list           /// 오늘의 미션 목록
-        case status         /// 미션 성공 및 실패
+        case recommend             /// 오늘의 미션 추천
+        case recommendMultiple     /// 다수의 관심사의 미션을 추천
+        case retry                 /// 오늘의 미션 재추천
+        case select                /// 오늘의 미션 선택
+        case list                  /// 오늘의 미션 목록
+        case status                /// 미션 성공 및 실패
         
         var path: String {
             switch self {
             case .recommend:
                 return "api/member/mission/recommend"
+            case .recommendMultiple:
+                return "api/missions/recommend"
             case .retry:
                 return "api/member/mission/retry"
             case .select:

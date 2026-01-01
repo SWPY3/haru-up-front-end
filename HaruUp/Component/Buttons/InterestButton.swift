@@ -15,19 +15,10 @@ class InterestButton: UIButton {
         }
     }
     
-    // 아이콘을 표시할 ImageView
-//    private let iconImageView: UIImageView = {
-//        let imageView = UIImageView()
-//        imageView.contentMode = .scaleAspectFit
-//        imageView.translatesAutoresizingMaskIntoConstraints = false
-//        return imageView
-//    }()
-    
     // 아이콘 텍스트 Label
     private let iconTextLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .medium)
-//        label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -51,9 +42,9 @@ class InterestButton: UIButton {
     }
     
     private func setupButton() {
-        layer.cornerRadius = 12
+        layer.cornerRadius = 16
         layer.masksToBounds = true
-        backgroundColor = .systemGray6
+        backgroundColor = .neutral10
         
         // ImageView와 Label 추가
         addSubview(iconTextLabel)
@@ -64,21 +55,14 @@ class InterestButton: UIButton {
             // 아이콘: 왼쪽에서 20pt, 세로 중앙
             iconTextLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             iconTextLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            iconTextLabel.widthAnchor.constraint(equalToConstant: 24),
-            iconTextLabel.heightAnchor.constraint(equalToConstant: 24),
+            iconTextLabel.widthAnchor.constraint(equalToConstant: 16),
+            iconTextLabel.heightAnchor.constraint(equalToConstant: 16),
             
             // 텍스트: 아이콘 오른쪽, 세로 중앙
-            interestTitleLabel.leadingAnchor.constraint(equalTo: iconTextLabel.trailingAnchor, constant: 12),
+            interestTitleLabel.leadingAnchor.constraint(equalTo: iconTextLabel.trailingAnchor, constant: 16),
             interestTitleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
             interestTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -20)
         ])
-        
-    }
-    
-    // 아이콘과 텍스트 설정
-    func configure(icon: String, title: String) {
-        iconTextLabel.text = icon
-        interestTitleLabel.text = title
     }
     
     func setSelected(_ selected: Bool) {
@@ -86,16 +70,26 @@ class InterestButton: UIButton {
     }
     
     private func updateAppearance() {
-        UIView.animate(withDuration: 0.2) {
-            if self.isInterestSelected {
-                self.layer.borderColor = UIColor.systemBlue.cgColor
-                self.layer.borderWidth = 2
-                self.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.05)
-            } else {
-                self.layer.borderColor = nil
-                self.layer.borderWidth = 0
-                self.backgroundColor = .systemGray6
-            }
+        if self.isInterestSelected {
+            self.backgroundColor = .primaryBlue50
+            
+            self.layer.borderColor = UIColor.cta.cgColor
+            self.layer.borderWidth = 2
+            
+            interestTitleLabel.textColor = .cta
+        } else {
+            self.backgroundColor = .neutral10
+            
+            self.layer.borderColor = nil
+            self.layer.borderWidth = 0
+            
+            interestTitleLabel.textColor = .neutral1000
         }
+    }
+    
+    // 아이콘과 텍스트 설정
+    func configure(icon: String, title: String) {
+        iconTextLabel.text = icon
+        interestTitleLabel.setStyle(Typography.body1, text: title)
     }
 }

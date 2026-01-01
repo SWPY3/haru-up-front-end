@@ -19,6 +19,9 @@ class TodayMissionListViewController: UIViewController {
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let refreshTapSubject = PublishSubject<Void>()
     
+    /// Cell 구성시 선택한 ID인지를 파악하기 위한 변수
+    private var currentSelectedIDs: Set<Int> = []
+    
     private let topContainerView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
@@ -127,7 +130,6 @@ class TodayMissionListViewController: UIViewController {
     private func setupView() {
         view.backgroundColor = .neutral10
         
-//        configureCompleteButton()
         configureCloseButton()
         configureBottomView()
         configureTableview()
@@ -236,7 +238,9 @@ class TodayMissionListViewController: UIViewController {
             .filter { $0 } // 로딩이 시작될 때만 통과
             .withLatestFrom(Observable.combineLatest(output.missions, output.selectedIDs))
             .map { missions, selectedIDs -> [RecommendMissionRow] in
-                let keptMissions = missions.filter { selectedIDs.contains($0.memberMissionId) }
+                let keptMissions = missions
+                    .filter { selectedIDs.contains($0.memberMissionId) }
+                    .sorted { $0.difficulty > $1.difficulty }
                 let keptRows = keptMissions.map { RecommendMissionRow.mission($0) }
                 
                 let needCount = max(0, 5 - keptRows.count)
@@ -247,7 +251,9 @@ class TodayMissionListViewController: UIViewController {
         
         let missionItems = output.missions
             .map { missions -> [RecommendMissionRow] in
-                return missions.map { .mission($0) }
+                let sortedMissions = missions.sorted { $0.difficulty > $1.difficulty }
+                
+                return sortedMissions.map { .mission($0) }
             }
         
         Observable.merge(loadingItems, missionItems)
@@ -272,21 +278,36 @@ class TodayMissionListViewController: UIViewController {
                         return UITableViewCell()
                     }
                     
-                    let data = Mission(id:mission.memberMissionId, title: mission.content, difficulty: difficulty, exp: 150, isCompleted: false)
+                    let isSelected = self.currentSelectedIDs.contains(mission.memberMissionId)
+                    let data = Mission(id:mission.memberMissionId, title: mission.content, difficulty: difficulty, exp: mission.expEarned, isCompleted: isSelected) // isCompleted를 미션을 선택한 상태여부로 사용. 해당페이지는 미션을 추천하는 페이지이기 때문에 영향이 없다.
                     print("data: \(data)")
                     
                     cell.configure(mission: data)
+                    
+                    if isSelected {
+                        // 애니메이션 없이, 스크롤 이동 없이 선택 상태로 만듦
+                        tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
+                    } else {
+                        // 재사용 셀 문제 방지를 위해 명시적 해제
+                        tableView.deselectRow(at: indexPath, animated: false)
+                    }
                     
                     return cell
                 }
             }
             .disposed(by: disposeBag)
         
+        output.retryCount
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] count in
+                self?.refreshFooterView.updateRefreshButtonCount(count)
+            })
+            .disposed(by: disposeBag)
+        
         output.isLoading
             .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] isLoading in
-                print("loading? : \(isLoading)")
                 self?.bottomViewContainer.backgroundColor = isLoading ? .clear : .white
                 self?.loadingButtonView.isHidden = !isLoading
                 self?.selectedButtonView.isHidden = isLoading
@@ -308,15 +329,19 @@ class TodayMissionListViewController: UIViewController {
         output.missionCompleted
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] in
-                print("미션 선택 완료 -> 홈 화면 이동")
                 self?.onComplete?()
+            })
+            .disposed(by: disposeBag)
+        
+        output.selectedIDs
+            .subscribe(onNext: { [weak self] ids in
+                self?.currentSelectedIDs = ids
             })
             .disposed(by: disposeBag)
         
         output.selectedMissionCount
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] count in
-                print("count : \(count)")
                 self?.selectedButtonView.updateSelectionCount(count)
             })
             .disposed(by: disposeBag)

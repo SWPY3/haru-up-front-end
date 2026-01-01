@@ -145,6 +145,7 @@ final class TodayMissionTableViewCell: UITableViewCell {
         missionLabel.setStyle(Typography.subtitle2, text: mission.title)
         difficultyBadge.configure(difficulty: mission.difficulty)
         expBadge.configure(exp: mission.exp)
+        setSelected(mission.isCompleted, animated: false)
     }
     
     private func applySelection(_ selected: Bool, animated: Bool) {

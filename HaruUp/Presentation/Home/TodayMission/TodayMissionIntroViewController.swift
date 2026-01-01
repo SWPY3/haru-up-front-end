@@ -180,10 +180,10 @@ class TodayMissionIntroViewController: UIViewController {
     }
     
     private func startEntranceAnimation() {
-        UIView.animate(withDuration: 0.8, delay: 0, options: .curveEaseOut) {
+        UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseOut) {
             self.characterImageView.alpha = 1.0
         } completion: { _ in
-            UIView.animate(withDuration: 0.6, delay: 0, options: .curveEaseOut) {
+            UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
                 self.titleLabel.alpha = 1.0
                 self.subtitleLabel.alpha = 1.0
                 self.nextButton.alpha = 1.0

@@ -46,7 +46,6 @@ enum LoadingStep: String {
     case jobDetailSet = "회원 직업 상세 정보 설정 완료"
     case interestSet = "회원 관심사 설정 완료"
     case goalSet = "회원 미션 설정 완료"
-    case completed = "초기 회원 설정 완료"
     
     var boxIndex: Int {
         switch self {
@@ -55,7 +54,6 @@ enum LoadingStep: String {
         case .jobSet, .jobDetailSet: return 2
         case .interestSet: return 3
         case .goalSet: return 4
-        case .completed: return 5
         }
     }
 }

@@ -13,14 +13,16 @@ protocol MissionServiceProtocol {
     // Home에서 미션 선택창을 띄워야하는지 여부
     func needShowTodayMissionFlow() -> Single<Bool>
     // 미션 추천
-    func fetchRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO>
+    func requestRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO>
+    // 다양한 관심사로 미션 추천
+    func requestRecommendedMultipleMissions(memberInterestIds: [Int]) -> Single<MemberMission.RecommendMultipleResponseDTO>
     // 미션 재추천
     func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]) -> Single<MemberMission.RetryRecommendResponseDTO>
     // 미션 선택 완료
     func selectMissions(missionIDs: [Int]) -> Single<MemberMission.SelectMissionResponseDTO>
     func markTodayMissionSelected() // UserDefaults 갱신
     // 미션 목록 표시
-    func fetchMissionList() -> Single<MemberMission.FetchMissionResponseDTO>
+    func fetchMissionList(memberInterestId: Int) -> Single<MemberMission.FetchMissionResponseDTO>
     // 미션 완료 및 삭제
     func setMissionStatus(id: Int, status: String) -> Single<MemberMission.MissionStatusResponseDTO>
 }
@@ -28,17 +30,34 @@ protocol MissionServiceProtocol {
 final class MissionService: Service, MissionServiceProtocol {
     private let defaults = UserDefaults.standard
     
-    func fetchRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO> {
+    func requestRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO> {
         
         let url: String = NetworkDefine.MissionAPI.recommend.url
         
         var headers: HTTPHeaders = ["Accept": "application/json"]
 
-        headers["Authorization"] = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwibmFtZSI6IiIsInR5cGUiOiJBQ0NFU1MiLCJpYXQiOjE3NjY1NjM5NjQsImV4cCI6MTc3NTIwMzk2NH0.azu1SOj9BQdQkYQeQ17Dv05sShVGXJYogmOEqZYAZjM"
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
         
         let query = MemberMission.RecommendRequestDTO(memberInterestId: memberInterestId)
 
         return request(url, method: .get, header: headers, query: query)
+    }
+    
+    func requestRecommendedMultipleMissions(memberInterestIds: [Int]) -> Single<MemberMission.RecommendMultipleResponseDTO> {
+        
+        let url: String = NetworkDefine.MissionAPI.recommendMultiple.url
+        
+        var headers: HTTPHeaders = ["Accept": "application/json"]
+
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
+        
+        let body = MemberMission.RecommendMultipleRequestDTO(memberInterestId: memberInterestIds)
+
+        return request(url, method: .post, header: headers, body: body)
     }
     
     func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]) -> Single<MemberMission.RetryRecommendResponseDTO> {
@@ -47,7 +66,9 @@ final class MissionService: Service, MissionServiceProtocol {
         var headers: HTTPHeaders = ["Content-Type": "application/json"]
         headers["Accept"] = "application/json"
 
-        headers["Authorization"] = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwibmFtZSI6IiIsInR5cGUiOiJBQ0NFU1MiLCJpYXQiOjE3NjY1NjM5NjQsImV4cCI6MTc3NTIwMzk2NH0.azu1SOj9BQdQkYQeQ17Dv05sShVGXJYogmOEqZYAZjM"
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
         
         let body = MemberMission.RetryRecommendRequestDTO(memberInterestId: memberInterestId, excludeMemberMissionIds: excludeMissionIDs)
         
@@ -60,22 +81,26 @@ final class MissionService: Service, MissionServiceProtocol {
         var headers: HTTPHeaders = ["Content-Type": "application/json"]
         headers["Accept"] = "application/json"
 
-        headers["Authorization"] = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwibmFtZSI6IiIsInR5cGUiOiJBQ0NFU1MiLCJpYXQiOjE3NjY1NjM5NjQsImV4cCI6MTc3NTIwMzk2NH0.azu1SOj9BQdQkYQeQ17Dv05sShVGXJYogmOEqZYAZjM"
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
         
         let body = MemberMission.SelectMissionRequestDTO(memberMissionIds: missionIDs)
         
         return request(url, method: .post, header: headers, body: body)
     }
     
-    func fetchMissionList() -> Single<MemberMission.FetchMissionResponseDTO> {
+    func fetchMissionList(memberInterestId: Int) -> Single<MemberMission.FetchMissionResponseDTO> {
         
         let url: String = NetworkDefine.MissionAPI.list.url
         
         var headers: HTTPHeaders = ["Accept": "application/json"]
 
-        headers["Authorization"] = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwibmFtZSI6IiIsInR5cGUiOiJBQ0NFU1MiLCJpYXQiOjE3NjY1NjM5NjQsImV4cCI6MTc3NTIwMzk2NH0.azu1SOj9BQdQkYQeQ17Dv05sShVGXJYogmOEqZYAZjM"
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
         
-        let query = MemberMission.FetchMissionRequestDTO()
+        let query = MemberMission.FetchMissionRequestDTO(memberInterestId: memberInterestId)
 
         return request(url, method: .get, header: headers, query: query)
     }
@@ -86,7 +111,9 @@ final class MissionService: Service, MissionServiceProtocol {
         var headers: HTTPHeaders = ["Content-Type": "application/json"]
         headers["Accept"] = "application/json"
 
-        headers["Authorization"] = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwibmFtZSI6IiIsInR5cGUiOiJBQ0NFU1MiLCJpYXQiOjE3NjY1NjM5NjQsImV4cCI6MTc3NTIwMzk2NH0.azu1SOj9BQdQkYQeQ17Dv05sShVGXJYogmOEqZYAZjM"
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
         
         let body = MemberMission.MissionStatusRequestDTO(missions: [MemberMission.MemberMissionDTO(memberMissionId: id, missionStatus: status)])
         

@@ -31,30 +31,37 @@ class LoadingCompleteViewController: UIViewController {
         let view = LottieAnimationView(name: "success")
         view.contentMode = .scaleAspectFit
         view.loopMode = .loop
+        view.isUserInteractionEnabled = false
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
     private let confirmButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(named: "like_btn"), for: .normal)
-        button.contentMode = .scaleAspectFit
+        button.setTitle("좋아요!", for: .normal)
+        button.titleLabel?.font = Typography.subtitle2.font
+        button.backgroundColor = .cta
+        button.layer.cornerRadius = 16
+        button.clipsToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
+        
         return button
     }()
     
+    var onFinish: (() -> Void)?
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         setupUI()
+        setAction()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
         animationView.play()
     }
-    
 
     private func setupUI() {
         view.backgroundColor = .white
@@ -84,11 +91,8 @@ class LoadingCompleteViewController: UIViewController {
         animationView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         animationView.anchor(
             top: titleLabel.bottomAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor,
             paddingTop: 135,
-            paddingLeft: 40,
-            paddingRight: 40,
+            width: 150,
             height: 150
         )
         
@@ -97,10 +101,17 @@ class LoadingCompleteViewController: UIViewController {
             bottom: view.safeAreaLayoutGuide.bottomAnchor,
             right: view.rightAnchor,
             paddingLeft: 20,
-            paddingBottom: 5,
+            paddingBottom: 10,
             paddingRight: 20,
             height: 56
         )
     }
-
+    
+    private func setAction() {
+        confirmButton.addTarget(self, action: #selector(confirmButtonTapped), for: .touchUpInside)
+    }
+    
+    @objc private func confirmButtonTapped() {
+        onFinish?()
+    }
 }

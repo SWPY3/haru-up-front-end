@@ -5,6 +5,7 @@
 //  Created by 조영현 on 12/5/25.
 //
 
+import Foundation
 import RxSwift
 import RxCocoa
 
@@ -13,6 +14,7 @@ final class HomeViewModel {
     struct Input {
         let viewDidLoad: Observable<Void>
         let viewDidAppear: Observable<Void>
+        let reload: Observable<Void>
     }
 
     struct Output {
@@ -23,16 +25,19 @@ final class HomeViewModel {
     }
 
     private let missionService: MissionServiceProtocol
-    private let disposeBag = DisposeBag()
+    private let interestsService: InterestsService
 
     private let selectedMissionsRelay = BehaviorRelay<[Mission]>(value: [])
 
     // 로딩/에러(나중에 서버 붙일 때 그대로 확장 가능)
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorRelay = PublishRelay<Error>()
+    
+    private let disposeBag = DisposeBag()
 
-    init(missionService: MissionServiceProtocol) {
+    init(missionService: MissionServiceProtocol, interestsService: InterestsService) {
         self.missionService = missionService
+        self.interestsService = interestsService
     }
 
     func transform(input: Input) -> Output {
@@ -45,15 +50,23 @@ final class HomeViewModel {
             }
             .share(replay: 1, scope: .whileConnected)
         
-        // 2) 필요하면 플로우만 띄우기
+        // 2) 플로우 띄우기
         let showTodayMissionFlow = needShow
             .filter { $0 }
             .map { _ in () }
             .asSignal(onErrorSignalWith: .empty())
         
-        // 3) 필요하지 않을 때만 미션 로드
-        needShow
+        // 3) 데이터 로드 로직
+        // A: 미션 플로우가 필요 없는 경우
+        let initialLoad = needShow
             .filter { !$0 }
+            .map { _ in () }
+        
+        // B: 외부에서 리로드 요청이 온 경우 (미션 선택 완료 후)
+        let reloadLoad = input.reload
+        
+        // A와 B 둘 중 하나라도 발생하면 데이터 로드
+        Observable.merge(initialLoad, reloadLoad)
             .flatMapLatest { [weak self] _ -> Observable<[Mission]> in
                 guard let self else { return .empty() }
                 return self.loadSelectedMissions()
@@ -80,18 +93,22 @@ final class HomeViewModel {
             error: errorRelay.asSignal()
         )
     }
-
-    // MARK: - Temp loader (서버 붙이면 여기만 교체)
+    
     private func loadSelectedMissions() -> Observable<[Mission]> {
-        return missionService.fetchMissionList()
+        return resolveMemberInterestId()
             .asObservable()
             .do(
                 onSubscribe: { [weak self] in self?.loadingRelay.accept(true) },
                 onDispose:   { [weak self] in self?.loadingRelay.accept(false) }
             )
-            .map { [weak self] response -> [Mission] in
+            .flatMap { [weak self] id -> Observable<MemberMission.FetchMissionResponseDTO> in
+                guard let self = self else { return .empty() }
+                
+                return self.missionService.fetchMissionList(memberInterestId: id).asObservable()
+            }
+            .map { response -> [Mission] in
                 let missions = response.data
-
+                
                 return missions.map { mission in
                     Mission(
                         id: mission.id,
@@ -105,6 +122,26 @@ final class HomeViewModel {
             .catch { [weak self] err in
                 self?.errorRelay.accept(err)
                 return .just([])
+            }
+    }
+    
+    private func resolveMemberInterestId() -> Single<Int> {
+        // UserDefaults에 저장된 값 사용
+        if let saved = UserStorage.shared.selectedMemberInterestId {
+            return .just(saved)
+        }
+        
+        // 없을 시 서버에 요청 후 데이터 값 저장
+        return interestsService.fetchInterests()
+            .map { [weak self] dto in
+                guard let id = dto.interests.first?.memberInterestId else {
+                    throw NSError(domain: "Interests",
+                                  code: -1,
+                                  userInfo: [NSLocalizedDescriptionKey: "관심사가 없습니다."])
+                }
+                
+                UserStorage.shared.selectedMemberInterestId = id // UserDefaults 값 업데이트
+                return id
             }
     }
 }
