@@ -40,7 +40,7 @@ final class MainTabBarCoordinator: Coordinator {
         chartNav.tabBarItem = UITabBarItem(title: "추천", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
         
         let myPageNav = UINavigationController()
-        let myPageCoordinator = MyPageCoordinator(navigationController: myPageNav, curationData: curationData)
+        let myPageCoordinator = MyPageViewCoordinator(navigationController: myPageNav, curationData: curationData)
         childCoordinators.append(myPageCoordinator)
         
         myPageCoordinator.onFinish = { [weak self] in

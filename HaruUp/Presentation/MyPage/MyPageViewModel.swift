@@ -12,6 +12,7 @@ import RxCocoa
 final class MyPageViewModel {
     struct Input {
         let viewDidLoad: Observable<Void>
+        let viewWillAppear: Observable<Void>
         // 버튼 5개에 대한 이벤트
         let editInterestTapped: ControlEvent<Void>
         let feedbackTapped: ControlEvent<Void>   // 의견남기기
@@ -47,9 +48,18 @@ final class MyPageViewModel {
     }
     
     func transform(input: Input) -> Output {
-        let curationDataDriver = input.viewDidLoad
+//        let curationDataDriver = input.viewDidLoad
+//            .map { [weak self] _ in
+//                // 앱을 껐다 켜도 여기서 다시 불러오기 때문에 데이터가 보입니다.
+//                return self?.tokenStorage.getCurationData() ?? CurationData()
+//            }
+//            .asDriver(onErrorJustReturn: CurationData())
+        
+        let loadData = Observable.merge(input.viewDidLoad, input.viewWillAppear)
+        
+        let curationDataDriver = loadData
             .map { [weak self] _ in
-                // 앱을 껐다 켜도 여기서 다시 불러오기 때문에 데이터가 보입니다.
+                // TokenStorageService에서 최신 데이터를 가져옴 (수정된 닉네임이 저장되어 있어야 함)
                 return self?.tokenStorage.getCurationData() ?? CurationData()
             }
             .asDriver(onErrorJustReturn: CurationData())

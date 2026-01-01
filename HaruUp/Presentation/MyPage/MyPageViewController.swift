@@ -17,6 +17,7 @@ class MyPageViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     // Coordinator 연결용
+    var onEditProfile: (() -> Void)?
     var onEditInterest: (() -> Void)?
     var onLogout: (() -> Void)?
     var onWithdraw: (() -> Void)?
@@ -212,6 +213,7 @@ class MyPageViewController: UIViewController {
     private func bind() {
         let input = MyPageViewModel.Input(
             viewDidLoad: Observable.just(()),
+            viewWillAppear: rx.methodInvoked(#selector(viewWillAppear(_:))).map { _ in }, // viewWillAppear 바인딩
             editInterestTapped: editInterestBtn.rx.tap,
             feedbackTapped: feedbackBtn.rx.tap,
             inquiryTapped: inquiryBtn.rx.tap,
@@ -301,6 +303,12 @@ class MyPageViewController: UIViewController {
         output.errorMessage
             .emit(onNext: { [weak self] message in
                 self?.showErrorAlert(message: message)
+            })
+            .disposed(by: disposeBag)
+        
+        editProfileButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.onEditProfile?() // 코디네이터에게 알림
             })
             .disposed(by: disposeBag)
         
