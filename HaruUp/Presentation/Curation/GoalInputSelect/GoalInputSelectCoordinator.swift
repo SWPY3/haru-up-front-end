@@ -36,31 +36,7 @@ final class GoalInputSelectCoordinator: Coordinator {
     
     // 다음 화면으로 이동
     func showNextFlow(selectedGoalInput: InterestData) {
-//        print("선택된 관심사: \(curationData.interest ?? "없음"), 작성한 목표: \(selectedGoalInput)")
-        
-        
         curationData.goal = selectedGoalInput
-        
-        
-        // 온보딩 완료
-        TokenStorageService.shared.saveOnboardingCompleted(true)
-        print("✅온보딩 완료!! - onboardingCompleted: \(TokenStorageService.shared.isOnboardingCompleted)")
-        
-        
-        print("📦 저장된 데이터 - 작성 목표: \(selectedGoalInput)")
-        
-        print("📦 ===== 최종 수집된 데이터 ===== 📦")
-        print("캐릭터 ID: \(curationData.characterId ?? -1)")
-        print("닉네임: \(curationData.nickname ?? "없음")")
-        print("직업: \(curationData.job?.jobName ?? "없음")")
-        print("세부 직무: \(curationData.jobDetail?.jobDetailName ?? "없음")")
-        print("성별: \(curationData.gender ?? "없음")")
-        print("생년월일: \(curationData.birthDate ?? "없음")")
-        print("관심사: \(curationData.interest?.name ?? "없음")")
-        print("세부 관심사: \(curationData.interestDetail?.name ?? "없음")")
-        print("목표: \(curationData.goal?.name ?? "없음")")
-        print("📦 ========================== 📦")
-        
         onFinish?(curationData)
     }
 }

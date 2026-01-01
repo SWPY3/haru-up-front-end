@@ -15,6 +15,7 @@ enum NetworkDefine {
     enum AuthAPI {
         case snsLogin
         case logout
+        case withdraw
         
         var path: String {
             switch self {
@@ -22,6 +23,8 @@ enum NetworkDefine {
                 return "api/member/auth/sns-login"
             case .logout:
                 return "api/member/auth/logout"
+            case .withdraw:
+                return "api/member/account/withdraw"
             }
         }
         
@@ -78,11 +81,14 @@ enum NetworkDefine {
     
     enum ProfileAPI {
         case nicknameDuplicateCheck
+        case updateProfile
         
         var path: String {
             switch self {
             case .nicknameDuplicateCheck:
                 return "api/member/profile/nickName_duplicate_check"
+            case .updateProfile:
+                return "api/member/profile/profile"
             }
         }
         

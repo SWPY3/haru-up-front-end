@@ -7,7 +7,7 @@
 
 import Foundation
 
-class CurationData {
+class CurationData: Codable{
     var characterId: Int?
     var nickname: String?
     var job: Job?

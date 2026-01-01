@@ -51,7 +51,7 @@ final class AppCoordinator: Coordinator {
         splashCoordinator.start()
     }
     
-    private func showLoginFlow() {
+    func showLoginFlow() {
         let loginCoordinator = LoginCoordinator(navigationController: navigationController)
         loginCoordinator.onFinish = { [weak self, weak loginCoordinator] loginResult in
             guard let self else { return }
@@ -119,6 +119,15 @@ final class AppCoordinator: Coordinator {
             print("목표: \(curationData.goal?.name ?? "없음")")
             print("📦 ========================== 📦")
             
+            self?.tokenStorage.saveCurationData(curationData)
+//            TokenStorageService.shared.saveCurationData(curationData)
+            print("✅ 큐레이션 데이터 저장 완료")
+            
+            // 온보딩 완료!!
+            self?.tokenStorage.saveOnboardingCompleted(true)
+            print("✅온보딩 완료!! - onboardingCompleted: \(TokenStorageService.shared.isOnboardingCompleted)")
+
+            
             if let coordinator = characterSelectCoordinator,
                let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
                 self?.childCoordinators.remove(at: index)
@@ -170,7 +179,7 @@ final class AppCoordinator: Coordinator {
     }
     
     private func showMainTabFlow() {
-        let mainTabCoordinator = MainTabBarCoordinator(navigationController: navigationController)
+        let mainTabCoordinator = MainTabBarCoordinator(navigationController: navigationController, curationData: curationData, appCoordinator: self)
         childCoordinators.append(mainTabCoordinator)
         
         mainTabCoordinator.start()

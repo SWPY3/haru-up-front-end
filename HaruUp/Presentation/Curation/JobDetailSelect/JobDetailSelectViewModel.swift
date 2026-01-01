@@ -25,26 +25,29 @@ final class JobDetailSelectViewModel {
     private weak var coordinator: JobDetailSelectCoordinator?
     private let disposeBag = DisposeBag()
     private let selectedJob: Job
+    private let jobService: JobService
     
     private let jobDetailList = BehaviorRelay<[JobDetail]>(value: [])
     private let currentSelectedJobDetail = BehaviorRelay<JobDetail?>(value: nil)
     private let isLoading = BehaviorRelay<Bool>(value: false)
     
-    init(coordinator: JobDetailSelectCoordinator, selectedJob: Job) {
+    init(coordinator: JobDetailSelectCoordinator, selectedJob: Job, jobService: JobService = .shared) {
         self.coordinator = coordinator
         self.selectedJob = selectedJob
+        self.jobService = jobService
     }
     
     func transform(input: Input) -> Output {
         
         input.viewDidLoad
+            .do(onNext: { [weak self] _ in self?.isLoading.accept(true) })
             .flatMapLatest { [weak self] _ -> Observable<[JobDetail]> in
                 guard let self = self else { return .empty() }
-                return self.fetchJobDetailList(jobId: self.selectedJob.id)
+                return self.jobService.fetchJobDetails(jobId: self.selectedJob.id)
             }
+            .do(onNext: { [weak self] _ in self?.isLoading.accept(false) })
             .bind(to: jobDetailList)
             .disposed(by: disposeBag)
-        
         
         // 세부 직무 선택 처리
         input.jobDetailSelected
@@ -72,76 +75,4 @@ final class JobDetailSelectViewModel {
             isLoading: isLoading.asDriver()
         )
     }
-    
-    
-    // MARK: - API
-    
-    // 세부 직업 목록 가져오기
-    private func fetchJobDetailList(jobId: Int) -> Observable<[JobDetail]> {
-        return Observable.create { [weak self] observer in
-            guard let self = self else {
-                observer.onCompleted()
-                return Disposables.create()
-            }
-            
-            // 로딩 시작
-            self.isLoading.accept(true)
-            
-            let urlString = NetworkDefine.JobAPI.getJobDetailList(jobId: jobId).url
-            
-            guard let refreshToken = TokenStorageService.shared.getRefreshToken() else {
-                print("❌ refreshToken이 없습니다")
-                self.isLoading.accept(false)
-                observer.onError(NSError(domain: "AuthError", code: 401))
-                return Disposables.create()
-            }
-            
-            let headers: HTTPHeaders = [
-                "Content-Type": "application/json",
-                "jwt-token": refreshToken
-            ]
-            
-            // ✅ 파라미터 추가
-            let parameters: [String: Int] = ["jobId": jobId]
-            
-            print("📡 세부 직업 목록 요청")
-            print("🌐 URL: \(urlString)")
-            print("🔑 jobId: \(jobId)")
-            
-            let request = AF.request(
-                urlString,
-                method: .get,
-                parameters: parameters,  // ✅ 파라미터 추가
-                headers: headers
-            )
-                .validate()
-                .responseDecodable(of: [JobDetail].self) { [weak self] response in
-                    self?.isLoading.accept(false)
-                    
-                    switch response.result {
-                    case .success(let jobDetails):
-                        print("✅ 세부 직업 목록 조회 성공: \(jobDetails.count)개")
-                        jobDetails.forEach { print("  - \($0.jobDetailName) (ID: \($0.id))") }
-                        observer.onNext(jobDetails)
-                        observer.onCompleted()
-                        
-                    case .failure(let error):
-                        print("❌ 세부 직업 목록 조회 실패: \(error.localizedDescription)")
-                        
-                        if let statusCode = response.response?.statusCode {
-                            print("📛 HTTP Status Code: \(statusCode)")
-                        }
-                        
-                        // 에러 발생 시 빈 배열 반환
-                        observer.onNext([])
-                        observer.onCompleted()
-                    }
-                }
-            
-            return Disposables.create {
-                request.cancel()
-            }
-        }
-    }
-    
 }

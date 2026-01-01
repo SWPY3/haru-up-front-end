@@ -28,6 +28,7 @@ final class JobSelectViewModel {
     
     private weak var coordinator: JobSelectCoordinator?
     private let disposeBag = DisposeBag()
+    private let jobService: JobService
     
     // 직업 목록
     private let jobList = BehaviorRelay<[Job]>(value: [])
@@ -35,8 +36,9 @@ final class JobSelectViewModel {
     private let isLoading = BehaviorRelay<Bool>(value: false)
     
     
-    init(coordinator: JobSelectCoordinator) {
+    init(coordinator: JobSelectCoordinator, jobService: JobService = .shared) {
         self.coordinator = coordinator
+        self.jobService = jobService
         print("🔴 JobSelectViewModel init - coordinator: \(coordinator)")
     }
     
@@ -44,13 +46,14 @@ final class JobSelectViewModel {
         
         // 화면 로드 시 직업 목롤 호출
         input.viewDidLoad
+            .do(onNext: { [weak self] _ in self?.isLoading.accept(true) }) // 로딩 시작
             .flatMapLatest { [weak self] _ -> Observable<[Job]> in
                 guard let self = self else { return .empty() }
-                return self.fetchJobList()
+                return self.jobService.fetchJobs()
             }
+            .do(onNext: { [weak self] _ in self?.isLoading.accept(false) }) // 로딩 끝
             .bind(to: jobList)
             .disposed(by: disposeBag)
-        
         // 직업 선택
         input.jobSelected
             .bind(to: currentSelectedJob)
@@ -76,69 +79,5 @@ final class JobSelectViewModel {
             selectedJob: currentSelectedJob.asDriver(),
             isLoading: isLoading.asDriver()
         )
-    }
-    
-    
-    // MARK: - API
-    private func fetchJobList() -> Observable<[Job]> {
-        return Observable.create { [ weak self ] observer in
-            guard let self = self else {
-                observer.onCompleted()
-                return Disposables.create()
-            }
-            
-            // 로딩 시작
-            self.isLoading.accept(true)
-            
-            let urlString = NetworkDefine.JobAPI.getJobList.url
-            
-            guard let refreshToken = TokenStorageService.shared.getRefreshToken() else {
-                print("❌ refreshToken이 없습니다")
-                self.isLoading.accept(false)
-                observer.onError(NSError(domain: "AuthError", code: 401))
-                return Disposables.create()
-            }
-            
-            let headers: HTTPHeaders = [
-                "Content-Type": "application/json",
-                "jwt-token": refreshToken
-            ]
-            
-            print("📡 직업 목록 요청")
-            print("🌐 URL: \(urlString)")
-            
-            let request = AF.request(
-                urlString,
-                method: .get,
-                headers: headers
-            )
-            .validate()
-            .responseDecodable(of: [Job].self) { [weak self] response in
-                self?.isLoading.accept(false)
-                
-                switch response.result {
-                case .success(let jobs):
-                    print("✅ 직업 목록 조회 성공: \(jobs.count)개")
-                    jobs.forEach { print("  - \($0.jobName) (ID: \($0.id))") }
-                    observer.onNext(jobs)
-                    observer.onCompleted()
-                    
-                case .failure(let error):
-                    print("❌ 직업 목록 조회 실패: \(error.localizedDescription)")
-                    
-                    if let statusCode = response.response?.statusCode {
-                        print("📛 HTTP Status Code: \(statusCode)")
-                    }
-                    
-                    // 에러 발생 시 빈 배열 반환 (화면은 유지)
-                    observer.onNext([])
-                    observer.onCompleted()
-                }
-            }
-            
-            return Disposables.create {
-                request.cancel()
-            }
-        }
     }
 }

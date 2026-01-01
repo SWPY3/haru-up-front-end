@@ -1,0 +1,65 @@
+//
+//  MyPageViewCoordinator.swift
+//  HaruUp
+//
+//  Created by 조영현 on 12/5/25.
+//
+
+import UIKit
+
+final class MyPageViewCoordinator: Coordinator {
+    let navigationController: UINavigationController
+    var childCoordinators: [any Coordinator] = []
+    
+    let curationData: CurationData
+    var onFinish: (() -> Void)?
+    
+    // 닉네임 유효성 검사 VM은 Coordinator가 들고 있거나 DI Container에서 가져옴
+    // 여기서는 간단히 생성
+    private lazy var nicknameServiceVM: NicknameSelectViewModel = {
+        // Coordinator를 self로 넘겨야 하지만 순환 참조 주의 (여기선 로직 재사용 목적이므로 nil이나 dummy 사용 가능하나, 구조상 this coordinator를 넘김)
+        // 실제로는 별도의 UseCase나 Service로 분리하는 것이 좋음
+        return NicknameSelectViewModel(coordinator: NicknameSelectCoordinator(navigationController: navigationController, curationData: curationData))
+    }()
+    init(navigationController: UINavigationController, curationData: CurationData) {
+        self.navigationController = navigationController
+        self.curationData = curationData
+    }
+    
+    func start() {
+        let myPageVM = MyPageViewModel(curationData: curationData)
+        let myPageVC = MyPageViewController(viewModel: myPageVM)
+        
+        myPageVC.onEditProfile = { [weak self] in
+            self?.showProfileEdit()
+        }
+        
+        myPageVC.onLogout = { [weak self] in
+            self?.onFinish?()
+        }
+        
+        myPageVC.onWithdraw = { [weak self] in
+            self?.onFinish?()
+        }
+        
+        navigationController.setViewControllers([myPageVC], animated: false)
+    }
+    
+    func showProfileEdit() {
+        // 1. 현재 닉네임 가져오기 (CurationData 혹은 저장된 UserInfo에서)
+        let currentNickname = TokenStorageService.shared.getCurationData()?.nickname ?? "Anonymous"
+        
+        print("=== 프로필 수정 진입 ===")
+        print("전달할 닉네임: \(currentNickname)")
+        
+        // 2. ViewModel 주입
+        let vm = ProfileEditViewModel(
+            currentNickname: currentNickname,
+            nicknameServiceVM: NicknameSelectViewModel(coordinator: NicknameSelectCoordinator(navigationController: navigationController, curationData: curationData))
+        )
+        
+        let vc = ProfileEditViewController(viewModel: vm)
+        // 3. Coordinator에서 push
+        navigationController.pushViewController(vc, animated: true)
+    }
+}

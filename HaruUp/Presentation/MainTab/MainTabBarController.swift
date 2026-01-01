@@ -112,4 +112,15 @@ final class MainTabBarController: UIViewController {
         currentViewController = targetViewController
         mainTabBarView.setSelected(tab)
     }
+    
+    func setTabBarHidden(_ hidden: Bool, animated: Bool) {
+        let duration = animated ? 0.3 : 0.0
+        
+        UIView.animate(withDuration: duration) {
+            self.mainTabBarView.alpha = hidden ? 0 : 1
+            self.mainTabBarView.transform = hidden
+                ? CGAffineTransform(translationX: 0, y: self.tabBarContentHeight)
+                : .identity
+        }
+    }
 }

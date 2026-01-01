@@ -59,10 +59,7 @@ final class GoalSelectCoordinator: Coordinator {
         print("세부 관심사: \(curationData.interestDetail?.name ?? "없음")")
         print("목표: \(curationData.goal?.name ?? "없음")")
         print("📦 ========================== 📦")
-        // 온보딩 완료!!
-        TokenStorageService.shared.saveOnboardingCompleted(true)
-        print("✅온보딩 완료!! - onboardingCompleted: \(TokenStorageService.shared.isOnboardingCompleted)")
-        
+                
         onFinish?(curationData)
     }
     
