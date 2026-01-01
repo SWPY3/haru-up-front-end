@@ -147,6 +147,7 @@ enum MemberMission {
     // MARK: 미션 목록
     struct FetchMissionRequestDTO: Encodable {
         let missionStatus: String = "ACTIVE,COMPLETED"
+        let memberInterestId: Int
     }
     
     struct FetchMissionResponseDTO: Decodable {

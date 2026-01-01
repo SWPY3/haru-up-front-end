@@ -22,7 +22,7 @@ protocol MissionServiceProtocol {
     func selectMissions(missionIDs: [Int]) -> Single<MemberMission.SelectMissionResponseDTO>
     func markTodayMissionSelected() // UserDefaults 갱신
     // 미션 목록 표시
-    func fetchMissionList() -> Single<MemberMission.FetchMissionResponseDTO>
+    func fetchMissionList(memberInterestId: Int) -> Single<MemberMission.FetchMissionResponseDTO>
     // 미션 완료 및 삭제
     func setMissionStatus(id: Int, status: String) -> Single<MemberMission.MissionStatusResponseDTO>
 }
@@ -90,7 +90,7 @@ final class MissionService: Service, MissionServiceProtocol {
         return request(url, method: .post, header: headers, body: body)
     }
     
-    func fetchMissionList() -> Single<MemberMission.FetchMissionResponseDTO> {
+    func fetchMissionList(memberInterestId: Int) -> Single<MemberMission.FetchMissionResponseDTO> {
         
         let url: String = NetworkDefine.MissionAPI.list.url
         
@@ -100,7 +100,7 @@ final class MissionService: Service, MissionServiceProtocol {
             headers["Authorization"] = "Bearer \(accessToken)"
         }
         
-        let query = MemberMission.FetchMissionRequestDTO()
+        let query = MemberMission.FetchMissionRequestDTO(memberInterestId: memberInterestId)
 
         return request(url, method: .get, header: headers, query: query)
     }
