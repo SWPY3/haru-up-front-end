@@ -21,7 +21,7 @@ final class ProfileEditViewController: UIViewController {
     private let backButton: UIButton = {
         let button = UIButton()
         button.setImage(.chevronLeft, for: .normal)
-        button.tintColor = .black
+        button.imageView?.contentMode = .scaleAspectFit
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -84,9 +84,9 @@ final class ProfileEditViewController: UIViewController {
     
     private let jobTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.text = "직업"
-        label.textColor = .darkGray
+        label.setStyle(Typography.body4, text: "직업")
+        label.textColor = .neutral800
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -190,10 +190,38 @@ final class ProfileEditViewController: UIViewController {
         setupKeyboardHandling()
         bind()
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        var parent = self.parent
+        while parent != nil {
+            if let tabBar = parent as? MainTabBarController {
+                tabBar.setTabBarHidden(true, animated: animated)
+                break
+            }
+            parent = parent?.parent
+        }
+        
+        nicknameTextField.becomeFirstResponder()
+    }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         nicknameTextField.becomeFirstResponder()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        var parent = self.parent
+        while parent != nil {
+            if let tabBar = parent as? MainTabBarController {
+                tabBar.setTabBarHidden(false, animated: animated)
+                break
+            }
+            parent = parent?.parent
+        }
     }
     
     // MARK: - Setup Methods
@@ -239,12 +267,12 @@ final class ProfileEditViewController: UIViewController {
             customNavBar.heightAnchor.constraint(equalToConstant: 56),
             
             backButton.centerYAnchor.constraint(equalTo: customNavBar.centerYAnchor),
-            backButton.leadingAnchor.constraint(equalTo: customNavBar.leadingAnchor, constant: 12),
-            backButton.widthAnchor.constraint(equalToConstant: 44),
-            backButton.heightAnchor.constraint(equalToConstant: 44),
+            backButton.leadingAnchor.constraint(equalTo: customNavBar.leadingAnchor, constant: 20),
+            backButton.widthAnchor.constraint(equalToConstant: 20),
+            backButton.heightAnchor.constraint(equalToConstant: 20),
             
             navTitleLabel.centerYAnchor.constraint(equalTo: customNavBar.centerYAnchor),
-            navTitleLabel.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 4),
+            navTitleLabel.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 13),
             
             nicknameTitleLabel.topAnchor.constraint(equalTo: customNavBar.bottomAnchor, constant: 32),
             nicknameTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -501,8 +529,7 @@ extension ProfileEditViewController: UIGestureRecognizerDelegate {
         guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
               let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
         
-        // safeArea 고려하지 않고 키보드 바로 위로 붙이기
-        completeButtonBottomConstraint?.constant = -(keyboardFrame.height - view.safeAreaInsets.bottom + 10)
+        completeButtonBottomConstraint?.constant = -(keyboardFrame.height - view.safeAreaInsets.bottom)
         
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
