@@ -20,6 +20,7 @@ final class TodayMissionListViewModel {
     
     struct Output {
         let missions: Observable<[MemberMission.MissionDTO]>
+        let retryCount: Observable<Int>
         let isLoading: Observable<Bool>
         let errorMessage: Observable<String>
         let missionCompleted: Observable<Void>
@@ -30,6 +31,7 @@ final class TodayMissionListViewModel {
     private let missionService: MissionServiceProtocol
     private let interestsService: InterestsService
     
+    private let retryCountRelay = PublishRelay<Int>()
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorRelay = PublishRelay<String>()
     private let currentMissionsRelay = BehaviorRelay<[MemberMission.MissionDTO]>(value: [])
@@ -65,7 +67,10 @@ final class TodayMissionListViewModel {
                     .flatMap { id -> Single<[MemberMission.MissionDTO]> in
                         return self.missionService.requestRecommendedMissions(memberInterestId: id)
                             .flatMap { response -> Single<[MemberMission.MissionDTO]> in
-                                let missions = response.data.missions
+                                let data = response.data
+                                let missions = data.missions
+                                
+                                self.retryCountRelay.accept(data.retryCount)
                                 
                                 if !missions.isEmpty {
                                     // 데이터가 있으면 그대로 리턴
@@ -75,6 +80,7 @@ final class TodayMissionListViewModel {
                                     // id를 배열 [id] 형태로 감싸서 전달
                                     return self.missionService.requestRecommendedMultipleMissions(memberInterestIds: [id])
                                         .map { multipleResponse in
+                                            self.retryCountRelay.accept(multipleResponse.data.retryCount)
                                             // MultipleMissionDTO 배열을 MissionDTO 배열로 변환
                                             return multipleResponse.data.missions.map { $0.toMissionDTO() }
                                         }
@@ -114,7 +120,11 @@ final class TodayMissionListViewModel {
                     }
                     .asObservable()
                     .map { (response: MemberMission.RetryRecommendResponseDTO) -> [MemberMission.MissionDTO] in
-                        let newRetryMissions = response.data.missions.first?.data ?? [] // 현재 가장 첫번째 값으로 구현
+                        let data = response.data
+                        
+                        self.retryCountRelay.accept(data.retryCount)
+                        
+                        let newRetryMissions = data.missions.first?.data ?? [] // 현재 가장 첫번째 값으로 구현
                         let newMissions = newRetryMissions.map { $0.toMissionDTO() }
                         
                         let needCount = max(0, 5 - selectedMissions.count)
@@ -192,6 +202,7 @@ final class TodayMissionListViewModel {
         
         return Output(
             missions: currentMissionsRelay.asObservable(),
+            retryCount: retryCountRelay.asObservable(),
             isLoading: loadingSubject.asObservable(),
             errorMessage: errorSubject.asObservable(),
             missionCompleted: missionCompleted,

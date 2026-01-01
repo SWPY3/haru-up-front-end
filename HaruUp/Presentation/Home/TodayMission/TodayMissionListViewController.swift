@@ -127,7 +127,6 @@ class TodayMissionListViewController: UIViewController {
     private func setupView() {
         view.backgroundColor = .neutral10
         
-//        configureCompleteButton()
         configureCloseButton()
         configureBottomView()
         configureTableview()
@@ -282,11 +281,17 @@ class TodayMissionListViewController: UIViewController {
             }
             .disposed(by: disposeBag)
         
+        output.retryCount
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] count in
+                self?.refreshFooterView.updateRefreshButtonCount(count)
+            })
+            .disposed(by: disposeBag)
+        
         output.isLoading
             .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] isLoading in
-                print("loading? : \(isLoading)")
                 self?.bottomViewContainer.backgroundColor = isLoading ? .clear : .white
                 self?.loadingButtonView.isHidden = !isLoading
                 self?.selectedButtonView.isHidden = isLoading
@@ -308,7 +313,6 @@ class TodayMissionListViewController: UIViewController {
         output.missionCompleted
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] in
-                print("미션 선택 완료 -> 홈 화면 이동")
                 self?.onComplete?()
             })
             .disposed(by: disposeBag)
@@ -316,7 +320,6 @@ class TodayMissionListViewController: UIViewController {
         output.selectedMissionCount
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] count in
-                print("count : \(count)")
                 self?.selectedButtonView.updateSelectionCount(count)
             })
             .disposed(by: disposeBag)
