@@ -190,7 +190,7 @@ final class ProfileEditViewController: UIViewController {
         setupKeyboardHandling()
         bind()
     }
-    
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         nicknameTextField.becomeFirstResponder()
