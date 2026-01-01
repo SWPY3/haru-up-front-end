@@ -124,9 +124,9 @@ final class ProfileEditViewController: UIViewController {
     
     private let detailJobTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.text = "세부 직무"
-        label.textColor = .darkGray
+        label.setStyle(Typography.body4, text: "직업")
+        label.textColor = .neutral800
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
