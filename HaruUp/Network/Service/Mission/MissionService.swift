@@ -13,7 +13,9 @@ protocol MissionServiceProtocol {
     // Home에서 미션 선택창을 띄워야하는지 여부
     func needShowTodayMissionFlow() -> Single<Bool>
     // 미션 추천
-    func fetchRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO>
+    func requestRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO>
+    // 다양한 관심사로 미션 추천
+    func requestRecommendedMultipleMissions(memberInterestIds: [Int]) -> Single<MemberMission.RecommendMultipleResponseDTO>
     // 미션 재추천
     func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]) -> Single<MemberMission.RetryRecommendResponseDTO>
     // 미션 선택 완료
@@ -28,7 +30,7 @@ protocol MissionServiceProtocol {
 final class MissionService: Service, MissionServiceProtocol {
     private let defaults = UserDefaults.standard
     
-    func fetchRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO> {
+    func requestRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO> {
         
         let url: String = NetworkDefine.MissionAPI.recommend.url
         
@@ -41,6 +43,21 @@ final class MissionService: Service, MissionServiceProtocol {
         let query = MemberMission.RecommendRequestDTO(memberInterestId: memberInterestId)
 
         return request(url, method: .get, header: headers, query: query)
+    }
+    
+    func requestRecommendedMultipleMissions(memberInterestIds: [Int]) -> Single<MemberMission.RecommendMultipleResponseDTO> {
+        
+        let url: String = NetworkDefine.MissionAPI.recommendMultiple.url
+        
+        var headers: HTTPHeaders = ["Accept": "application/json"]
+
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
+        
+        let body = MemberMission.RecommendMultipleRequestDTO(memberInterestId: memberInterestIds)
+
+        return request(url, method: .post, header: headers, body: body)
     }
     
     func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]) -> Single<MemberMission.RetryRecommendResponseDTO> {
