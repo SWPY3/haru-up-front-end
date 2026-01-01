@@ -1,5 +1,5 @@
 //
-//  RecommendCoordinator.swift
+//  ChartCoordinator.swift
 //  HaruUp
 //
 //  Created by 조영현 on 12/5/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class RecommendCoordinator: Coordinator {
+final class ChartCoordinator: Coordinator {
     let navigationController: UINavigationController
     var childCoordinators: [any Coordinator] = []
     
@@ -16,9 +16,9 @@ final class RecommendCoordinator: Coordinator {
     }
     
     func start() {
-        let recommendVM = RecommendViewModel()
-        let recommendVC = RecommendViewController(viewModel: recommendVM)
+        let chartVM = ChartViewModel()
+        let chartVC = ChartViewController(viewModel: chartVM)
         
-        navigationController.setViewControllers([recommendVC], animated: false)
+        navigationController.setViewControllers([chartVC], animated: false)
     }
 }

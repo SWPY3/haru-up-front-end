@@ -152,7 +152,7 @@ final class NicknameSelectViewModel {
         return true
     }
     
-    private func checkNicknameDuplicate(_ nickname: String) -> Observable<ValidationResult> {
+    func checkNicknameDuplicate(_ nickname: String) -> Observable<ValidationResult> {
         
         return Observable.create { observer in
             let urlString = NetworkDefine.ProfileAPI.nicknameDuplicateCheck.url

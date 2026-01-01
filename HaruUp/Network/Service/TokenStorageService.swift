@@ -16,6 +16,7 @@ final class TokenStorageService {
     private let onboardingCompletedKey = "HaruUp_OnboardingCompleted"
     private let onboardingCompletedMemberIdKey = "HaruUp_OnboardingCompletedMemberId"
     private let memberIdKey = "HaruUp_MemberId"
+    private let curationDataKey = "HaruUp_CurationData"
     // Apple 로그인 관련 키들
     private let appleUserIdKey = "HaruUp_AppleUserId"
     private let appleEmailKey = "HaruUp_AppleEmail"
@@ -116,21 +117,49 @@ final class TokenStorageService {
         }
     }
     
-    // 온보딩 상태 완전 초기화 (로그아웃 시 호출)
+    func saveCurationData(_ data: CurationData) {
+        do {
+            let encoded = try JSONEncoder().encode(data)
+            UserDefaults.standard.set(encoded, forKey: curationDataKey)
+            print("✅ 큐레이션 데이터 로컬 저장 완료")
+        } catch {
+            print("❌ 큐레이션 데이터 저장 실패: \(error)")
+        }
+    }
+    
+    func getCurationData() -> CurationData? {
+            guard let data = UserDefaults.standard.data(forKey: curationDataKey) else { return nil }
+            do {
+                return try JSONDecoder().decode(CurationData.self, from: data)
+            } catch {
+                print("❌ 큐레이션 데이터 디코딩 실패: \(error)")
+                return nil
+            }
+        }
+    
+    // 온보딩 상태 완전 초기화
     func clearOnboardingState() {
         UserDefaults.standard.removeObject(forKey: onboardingCompletedKey)
         UserDefaults.standard.removeObject(forKey: onboardingCompletedMemberIdKey)
         print("🗑️ 온보딩 상태 완전 초기화")
     }
     
-    // 모든 데이터 초기화 (로그아웃 시)
-    func clearAll() {
-        clearTokens()
-        clearOnboardingState()
-        clearAppleLoginInfo()
-        UserDefaults.standard.removeObject(forKey: memberIdKey)
-        print("🗑️ 모든 저장 데이터 초기화(로그아웃)")
-    }
+    func clearForLogout() {
+            clearTokens()
+            clearAppleLoginInfo()
+            print("🔓 로그아웃 완료 - 토큰만 삭제 (사용자 기록 유지)")
+            print("   → 유지된 데이터: MemberId, CurationData")
+        }
+    
+    func clearForWithdraw() {
+           clearTokens()
+           clearOnboardingState()
+           clearAppleLoginInfo()
+           UserDefaults.standard.removeObject(forKey: memberIdKey)
+           UserDefaults.standard.removeObject(forKey: curationDataKey)
+           print("🗑️ 탈퇴 완료 - 모든 저장 데이터 초기화")
+       }
+    
     
     func printCurrentStatus() {
         print("=== Token Status ===")
