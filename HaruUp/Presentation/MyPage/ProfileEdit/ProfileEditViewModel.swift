@@ -27,7 +27,7 @@ final class ProfileEditViewModel {
     struct Output {
         let initialNickname: Driver<String>          // 초기 닉네임 (진입 시 1회)
         let isCompleteEnabled: Driver<Bool>          // 완료 버튼 활성화 여부
-        let validationResult: Signal<ValidationResult> // 검증 결과 (경고 메시지 표시용)
+        let validationResult: Signal<NicknameValidationResult> // 검증 결과 (경고 메시지 표시용)
         let updateSuccess: Signal<Void>              // 최종 수정 성공 이벤트
         
         // Job 관련 Output
@@ -66,7 +66,7 @@ final class ProfileEditViewModel {
     }
     
     func transform(input: Input) -> Output {
-        let validationResultRelay = PublishRelay<ValidationResult>()
+        let validationResultRelay = PublishRelay<NicknameValidationResult>()
         let updateSuccessRelay = PublishRelay<Void>()
         
         // 1. 초기 닉네임 Driver
@@ -151,7 +151,7 @@ final class ProfileEditViewModel {
             .compactMap { $0 }
             .bind(to: selectedDetailJobRelay)
             .disposed(by: disposeBag)
-
+        
         // 완료 버튼 탭 로직
         input.completeButtonTapped
             .withLatestFrom(Observable.combineLatest(
@@ -159,7 +159,7 @@ final class ProfileEditViewModel {
                 selectedJobRelay,
                 selectedDetailJobRelay
             ))
-            .flatMapLatest { [weak self] (nickname, job, jobDetail) -> Observable<ValidationResult> in
+            .flatMapLatest { [weak self] (nickname, job, jobDetail) -> Observable<NicknameValidationResult> in
                 guard let self = self else { return .just(.empty) }
                 
                 // 닉네임 변경 여부 확인
@@ -317,7 +317,7 @@ final class ProfileEditViewModel {
     }
     
     // MARK: - Validation Logic
-    private func validateNickname(_ nickname: String) -> ValidationResult {
+    private func validateNickname(_ nickname: String) -> NicknameValidationResult {
         let trimmed = nickname.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty { return .empty }
         if trimmed.count < 2 { return .tooShort }

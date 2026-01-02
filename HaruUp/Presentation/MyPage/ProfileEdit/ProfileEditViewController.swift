@@ -680,7 +680,7 @@ final class ProfileEditViewController: UIViewController {
     }
     
     // MARK: - Private Helper Methods
-    private func handleValidationResult(_ result: ValidationResult) {
+    private func handleValidationResult(_ result: NicknameValidationResult) {
         switch result {
         case .success:
             warningLabel.isHidden = true

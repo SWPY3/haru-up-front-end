@@ -20,6 +20,7 @@ final class TodayMissionListViewModel {
     
     struct Output {
         let missions: Observable<[MemberMission.MissionDTO]>
+        let retryCount: Observable<Int>
         let isLoading: Observable<Bool>
         let errorMessage: Observable<String>
         let missionCompleted: Observable<Void>
@@ -30,6 +31,7 @@ final class TodayMissionListViewModel {
     private let missionService: MissionServiceProtocol
     private let interestsService: InterestsService
     
+    private let retryCountRelay = PublishRelay<Int>()
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorRelay = PublishRelay<String>()
     private let currentMissionsRelay = BehaviorRelay<[MemberMission.MissionDTO]>(value: [])
@@ -56,27 +58,48 @@ final class TodayMissionListViewModel {
         
         initialLoad
             .withUnretained(self)
-            .flatMapLatest { [weak self] _ -> Observable<[MemberMission.MissionDTO]> in
-                guard let self else { return .empty() }
+            .flatMapLatest { [weak self] _ -> Observable<[MemberMission.MissionDTO]> in // 최종 리턴 타입은 [MissionDTO]
+                guard let self = self else { return .empty() }
                 
                 loadingSubject.onNext(true)
                 
                 return self.resolveMemberInterestId()
-                    .flatMap { id in
-                        self.missionService.fetchRecommendedMissions(memberInterestId: id)
+                    .flatMap { id -> Single<[MemberMission.MissionDTO]> in
+                        return self.missionService.requestRecommendedMissions(memberInterestId: id)
+                            .flatMap { response -> Single<[MemberMission.MissionDTO]> in
+                                let data = response.data
+                                let missions = data.missions
+                                
+                                self.retryCountRelay.accept(data.retryCount)
+                                
+                                if !missions.isEmpty {
+                                    // 데이터가 있으면 그대로 리턴
+                                    return .just(missions)
+                                } else {
+                                    // 데이터가 비어있으면 두 번째 API 호출 (다중 ID 추천)
+                                    // id를 배열 [id] 형태로 감싸서 전달
+                                    return self.missionService.requestRecommendedMultipleMissions(memberInterestIds: [id])
+                                        .map { multipleResponse in
+                                            self.retryCountRelay.accept(multipleResponse.data.retryCount)
+                                            // MultipleMissionDTO 배열을 MissionDTO 배열로 변환
+                                            return multipleResponse.data.missions.map { $0.toMissionDTO() }
+                                        }
+                                }
+                            }
                     }
                     .asObservable()
-                    .map { $0.data.missions }
                     .catch { err in
                         errorSubject.onNext(err.localizedDescription)
                         return .just([])
                     }
-                    .do(onDispose: { loadingSubject.onNext(false) })
+                    .do(onDispose: {
+                        loadingSubject.onNext(false)
+                    })
             }
             .subscribe(onNext: { [weak self] missions in
                 loadingSubject.onNext(false)
-                self?.currentMissionsRelay.accept(missions) // mission 데이터 보관
-                self?.selectedMissionIDRelay.accept([]) // 미션 새로 고침을 하였으니 선택 상태 해제
+                self?.currentMissionsRelay.accept(missions)
+                self?.selectedMissionIDRelay.accept([])
             })
             .disposed(by: disposeBag)
         
@@ -97,7 +120,11 @@ final class TodayMissionListViewModel {
                     }
                     .asObservable()
                     .map { (response: MemberMission.RetryRecommendResponseDTO) -> [MemberMission.MissionDTO] in
-                        let newRetryMissions = response.data.missions.first?.data ?? [] // 현재 가장 첫번째 값으로 구현
+                        let data = response.data
+                        
+                        self.retryCountRelay.accept(data.retryCount)
+                        
+                        let newRetryMissions = data.missions.first?.data ?? [] // 현재 가장 첫번째 값으로 구현
                         let newMissions = newRetryMissions.map { $0.toMissionDTO() }
                         
                         let needCount = max(0, 5 - selectedMissions.count)
@@ -175,6 +202,7 @@ final class TodayMissionListViewModel {
         
         return Output(
             missions: currentMissionsRelay.asObservable(),
+            retryCount: retryCountRelay.asObservable(),
             isLoading: loadingSubject.asObservable(),
             errorMessage: errorSubject.asObservable(),
             missionCompleted: missionCompleted,
@@ -185,10 +213,10 @@ final class TodayMissionListViewModel {
     
     private func resolveMemberInterestId() -> Single<Int> {
         // UserDefaults에 저장된 값 사용
-        if let saved = interestsService.selectedMemberInterestId {
+        if let saved = UserStorage.shared.selectedMemberInterestId {
             return .just(saved)
         }
-
+        
         // 없을 시 서버에 요청 후 데이터 값 저장
         return interestsService.fetchInterests()
             .map { [weak self] dto in
@@ -198,9 +226,8 @@ final class TodayMissionListViewModel {
                                   userInfo: [NSLocalizedDescriptionKey: "관심사가 없습니다."])
                 }
                 
-                self?.interestsService.selectedMemberInterestId = id // UserDefaults 값 업데이트
+                UserStorage.shared.selectedMemberInterestId = id // UserDefaults 값 업데이트
                 return id
             }
     }
-
 }

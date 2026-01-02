@@ -34,6 +34,53 @@ enum MemberMission {
         let targetDate: String
     }
     
+    /// 여러 관심사를 입력했을 대 얻을 수 있는 미션 추천
+    struct RecommendMultipleRequestDTO: Encodable {
+        let memberInterestId: [Int]
+    }
+
+    struct RecommendMultipleResponseDTO: Decodable {
+        let success: Bool
+        let data: MultipleMissionsDTO
+        let errorMessage: String?
+    }
+    
+    struct MultipleMissionsDTO: Decodable {
+        let missions: [MultipleMissionDTO]
+        let totalCount: Int
+        let retryCount: Int
+    }
+
+    struct MultipleMissionDTO: Decodable {
+        let memberMissionId: Int
+        let missionId: Int
+        let content: String
+        let directFullPath: [String]
+        let difficulty: Int
+        let expEarned: Int
+        let createdType: String
+        let relatedInterest: String
+        
+        enum CodingKeys: String, CodingKey {
+            case memberMissionId = "member_mission_id"
+            case missionId = "mission_id"
+            case content, directFullPath, difficulty, expEarned, createdType, relatedInterest
+        }
+        
+        // MultipleMissionDTO를 호출하는 경우가 있어서, 기존 호출 방식인 MissionDTO로 변경이 불가피하다
+        func toMissionDTO() -> MemberMission.MissionDTO {
+            return MemberMission.MissionDTO(
+                memberMissionId: self.memberMissionId,
+                missionStatus: "WAITING",
+                content: self.content,
+                directFullPath: self.directFullPath,
+                difficulty: self.difficulty,
+                expEarned: self.expEarned,
+                targetDate: ""
+            )
+        }
+    }
+    
     /// 미션 재 요청
     struct RetryRecommendRequestDTO: Encodable {
         let memberInterestId: Int
@@ -100,6 +147,7 @@ enum MemberMission {
     // MARK: 미션 목록
     struct FetchMissionRequestDTO: Encodable {
         let missionStatus: String = "ACTIVE,COMPLETED"
+        let memberInterestId: Int
     }
     
     struct FetchMissionResponseDTO: Decodable {

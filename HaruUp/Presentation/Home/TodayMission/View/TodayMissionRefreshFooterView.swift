@@ -146,6 +146,23 @@ final class TodayMissionRefreshFooterView: UIView {
             }
         }
     }
+    
+    func updateRefreshButtonCount(_ count: Int) {
+        guard var config = refreshButton.configuration else { return }
+        
+        var titleContainer = AttributeContainer()
+        titleContainer.font = Typography.retryButton.font // 기존 코드와 동일한 폰트 사용
+        
+        let newTitle = "다른 추천 \(count)/5"
+        config.attributedTitle = AttributedString(newTitle, attributes: titleContainer)
+        
+        refreshButton.configuration = config
+        
+        // 미션 재추천 5회를 한경우 해당 버튼 비활성화
+        if count == 5 {
+            refreshButton.isEnabled = false
+        } else {
+            refreshButton.isEnabled = true
+        }
+    }
 }
-
-

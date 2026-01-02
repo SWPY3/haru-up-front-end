@@ -6,7 +6,7 @@
 //
 
 //  유효성 검사 결과 타입 정의
-enum ValidationResult {
+enum NicknameValidationResult {
     case success
     case empty
     case tooShort

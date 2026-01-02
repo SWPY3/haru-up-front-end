@@ -19,12 +19,12 @@ final class LoadingCompleteCoordinator: Coordinator {
     }
     
     func start() {
-//        let loadingCompleteVM = LoadingCompleteViewModel()
         let loadingCompleteVC = LoadingCompleteViewController()
         
+        loadingCompleteVC.onFinish = { [weak self] in
+            self?.onFinsh?()
+        }
+        
         navigationController.setViewControllers([loadingCompleteVC], animated: true)
-        
-        
     }
-    
 }

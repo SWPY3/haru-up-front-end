@@ -51,7 +51,6 @@ final class LoadingViewModel {
                     switch event {
                     case .log(let log):
                         receivedSteps.insert(log.step)
-                        
                         if let step = LoadingStep(rawValue: log.step) {
                             print("✅ 매칭된 단계: \(step.rawValue) -> 박스 인덱스 \(step.boxIndex)")
                             
@@ -76,16 +75,15 @@ final class LoadingViewModel {
                                 
                             case .goalSet:
                                 showBoxRelay.accept(4)
-                                
-                            case .completed:
-                                //                                emitBoxOnce(5)
-                                loadingCompletedRelay.accept([])
                             }
                         }
                         
+                        // ViewModel 내부
                     case .completed(let memberInterestIds):
-                        print("🏁 최종 완료! memberInterestIds: \(memberInterestIds)")
-                        //                        emitBoxOnce(5)
+                        // 예외 처리: 데이터가 제대로 왔는지 확인 후 전달
+                        if memberInterestIds.isEmpty {
+                            print("관심사 ID가 없습니다.")
+                        }
                         loadingCompletedRelay.accept(memberInterestIds)
                     }
                 },

@@ -15,6 +15,7 @@ class HomeViewController: UIViewController {
     private let viewModel: HomeViewModel
     private let viewDidLoadRelay = PublishRelay<Void>() // PublishSubject에서 PublishRelay로 변경.
     private let viewDidAppearRelay = PublishRelay<Void>()
+    private let reloadSubject = PublishSubject<Void>()
     private let disposeBag = DisposeBag()
     
     var onSelectTodayMission: (() -> Void)? // Coordinator와의 연결은 단순히 클로저 사용
@@ -122,6 +123,7 @@ class HomeViewController: UIViewController {
         let input = HomeViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
             viewDidAppear: viewDidAppearRelay.asObservable(),
+            reload: reloadSubject.asObservable()
         )
         
         let output = viewModel.transform(input: input)
@@ -177,6 +179,11 @@ class HomeViewController: UIViewController {
                 print("Home Error Occurred: \(err)")
             })
             .disposed(by: disposeBag)
+    }
+    
+    // Mission 선택 후 Coordinator에서 호출
+    func didCompleteMissionSelection() {
+        reloadSubject.onNext(())
     }
 }
 

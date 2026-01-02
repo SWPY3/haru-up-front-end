@@ -82,25 +82,14 @@ extension CurationData {
     func toCurationRequest() -> CurationRequest? {
         // 디버깅: 어떤 값이 없는지 확인
         print("=== CurationData 디버깅 ===")
-        print("characterId: \(characterId ?? -1111)")
-        print("nickname: \(nickname ?? "")")
-        print("job: \(job?.id ?? -1111)")
-        print("jobDetail: \(jobDetail?.id ?? -1111)")
-        print("goal: \(goal?.name ?? "")")
-        print("interest: \(interest?.name ?? "")")
-        print("interestDetail: \(interestDetail?.name ?? "")")
-        print("interestDetailID: \(interestDetail?.id ?? -1111)")
-        
-        //        let goalPath = [interest?.name, interestDetail?.name, goal?.name]
-        //        guard let characterId = characterId,
-        //              let nickname = nickname,
-        //              let jobId = job?.id,
-        //              let jobDetailId = jobDetail?.id,
-        //              let goalId = goal?.id else {
-        //            return nil
-        //        }
-        
-        
+        print("characterId: \(characterId)")
+        print("nickname: \(nickname)")
+        print("job: \(job?.id)")
+        print("jobDetail: \(jobDetail?.id)")
+        print("goal: \(goal?.name)")
+        print("interest: \(interest?.name)")
+        print("interestDetail: \(interestDetail?.name)")
+        print("interestDetailID: \(interestDetail?.id)")
         
         guard let characterId = characterId else {
             print("❌ characterId가 없습니다")
