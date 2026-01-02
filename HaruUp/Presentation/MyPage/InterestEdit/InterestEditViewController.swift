@@ -36,7 +36,7 @@ final class InterestEditViewController: UIViewController {
     
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.body2, text: "관심사를 수정해도 캐릭터의 성장도는 유지돼요.")
+        label.setStyle(Typography.body1, text: "관심사를 수정해도 캐릭터의 성장도는 유지돼요.")
         label.textColor = .neutral800
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -174,6 +174,17 @@ final class InterestEditViewController: UIViewController {
     }()
     
     private let foreignLanguageInputRelay = PublishRelay<String>()
+    private weak var currentGoalBottomSheet: GoalInputBottomSheet?
+    private let goalInputTextRelay = PublishRelay<String>()
+    
+    private let goalWarningLabel: UILabel = {
+        let label = UILabel()
+        label.setStyle(Typography.body4, text: "")
+        label.textColor = .secondaryRed200
+        label.isHidden = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
     
     private let completeButton: UIButton = {
         let btn = UIButton()
@@ -264,6 +275,7 @@ final class InterestEditViewController: UIViewController {
         view.addSubview(interestDropdown)
         view.addSubview(detailInterestDropdown)
         view.addSubview(goalDropdown)
+        view.addSubview(goalWarningLabel)
         
         interestDropdown.isHidden = true
         detailInterestDropdown.isHidden = true
@@ -324,6 +336,9 @@ final class InterestEditViewController: UIViewController {
             goalSelectButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             goalSelectButton.heightAnchor.constraint(equalToConstant: 55),
             
+            goalWarningLabel.topAnchor.constraint(equalTo: goalSelectButton.bottomAnchor, constant: 8),
+            goalWarningLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            
             // Dropdowns
             interestDropdown.topAnchor.constraint(equalTo: interestSelectButton.bottomAnchor, constant: 4),
             interestDropdown.leadingAnchor.constraint(equalTo: interestSelectButton.leadingAnchor),
@@ -363,7 +378,8 @@ final class InterestEditViewController: UIViewController {
             detailInterestSelected: detailInterestDropdown.itemSelected.asObservable(),
             goalSelected: goalDropdown.itemSelected.asObservable(),
             completeButtonTapped: completeButton.rx.tap.asObservable(),
-            foreignLanguageInput: foreignLanguageInputRelay.asObservable()
+            foreignLanguageInput: foreignLanguageInputRelay.asObservable(),
+            goalInputText: goalInputTextRelay.asObservable()
         )
         
         let output = viewModel.transform(input: input)
@@ -561,6 +577,50 @@ final class InterestEditViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
+        output.showGoalInputBottomSheet
+            .emit(with: self) { owner, _ in
+                owner.showGoalInputSheet()
+            }
+            .disposed(by: disposeBag)
+        
+        output.goalValidationSuccess
+            .emit(with: self) { owner, _ in
+                owner.currentGoalBottomSheet?.validationSuccess.accept(())
+            }
+            .disposed(by: disposeBag)
+        
+        // 4. 목표 검증 실패 -> 에러 메시지 전달
+        output.goalValidationFailed
+            .emit(with: self) { owner, msg in
+                owner.currentGoalBottomSheet?.validationFailed.accept(msg)
+            }
+            .disposed(by: disposeBag)
+        
+        // 5. 3회 실패 락 팝업
+        output.showLockAlert
+            .emit(with: self) { owner, _ in
+                let alert = CustomAlertViewController() // 기존 CustomAlert 사용
+                alert.modalPresentationStyle = .overFullScreen
+                alert.modalTransitionStyle = .crossDissolve
+                owner.present(alert, animated: true)
+            }
+            .disposed(by: disposeBag)
+        
+        // 6. 타이머 메시지 표시
+        output.goalLockTimerMessage
+            .drive(with: self) { owner, msg in
+                if let message = msg {
+                    owner.goalWarningLabel.text = message
+                    owner.goalWarningLabel.isHidden = false
+                    // 락 상태에서는 드롭다운 닫기 & 아이콘 상태 변경
+                    owner.goalDropdown.isHidden = true
+                    owner.updateDropdownState(button: owner.goalSelectButton, arrow: owner.goalArrowImageView, isOpen: false)
+                } else {
+                    owner.goalWarningLabel.isHidden = true
+                }
+            }
+            .disposed(by: disposeBag)
+        
         // 완료 버튼 활성화 상태
         output.isCompleteEnabled
             .drive(with: self, onNext: { owner, isEnabled in
@@ -579,6 +639,19 @@ final class InterestEditViewController: UIViewController {
                     owner.navigationController?.popViewController(animated: true)
                 }
             })
+            .disposed(by: disposeBag)
+        
+        output.errorMessage
+            .emit(with: self) { owner, message in
+                owner.showToast(message: message) // 또는 Alert
+            }
+            .disposed(by: disposeBag)
+        
+        output.isLoading
+            .drive(with: self) { owner, isLoading in
+                owner.completeButton.isEnabled = !isLoading
+                // owner.activityIndicator.isHidden = !isLoading (필요 시)
+            }
             .disposed(by: disposeBag)
     }
     
@@ -651,6 +724,19 @@ final class InterestEditViewController: UIViewController {
         }
         
         self.present(bottomSheetVC, animated: true)
+    }
+    
+    private func showGoalInputSheet() {
+        let vc = GoalInputBottomSheet()
+        vc.modalPresentationStyle = .overFullScreen
+        
+        // 입력 완료 시 VM으로 전달
+        vc.onNextTapped = { [weak self] text in
+            self?.goalInputTextRelay.accept(text)
+        }
+        
+        self.currentGoalBottomSheet = vc
+        present(vc, animated: true)
     }
     
     private func showToast(message: String) {

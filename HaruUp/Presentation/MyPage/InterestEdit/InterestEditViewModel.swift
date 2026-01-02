@@ -21,11 +21,14 @@ final class InterestEditViewModel {
         let goalSelected: Observable<DropdownDisplayable>
         let completeButtonTapped: Observable<Void>
         let foreignLanguageInput: Observable<String>
+        let goalInputText: Observable<String>
     }
     
     struct Output {
         let isCompleteEnabled: Driver<Bool>
         let updateSuccess: Signal<Void>
+        let errorMessage: Signal<String>
+        let isLoading: Driver<Bool>
         
         // Interest 관련 Output
         let interestList: Driver<[DropdownDisplayable]>
@@ -38,6 +41,13 @@ final class InterestEditViewModel {
         let selectedDetailInterestId: Driver<Int?>
         let selectedGoalId: Driver<Int?>
         let showLanguageInputBottomSheet: Signal<Void>
+        
+        // Goal 관련 Output
+        let showGoalInputBottomSheet: Signal<Void>      // 목표 입력 바텀시트 열기
+        let goalValidationSuccess: Signal<Void>         // 유효성 검사 성공 (바텀시트 닫기용)
+        let goalValidationFailed: Signal<String>        // 유효성 검사 실패 (에러 메시지 표시용)
+        let showLockAlert: Signal<Void>                 // 3회 실패 팝업
+        let goalLockTimerMessage: Driver<String?>       // 메인 화면 타이머 메시지
     }
     
     private let disposeBag = DisposeBag()
@@ -51,26 +61,56 @@ final class InterestEditViewModel {
     let selectedDetailInterestRelay = BehaviorRelay<InterestDetail?>(
         value: TokenStorageService.shared.getCurationData()?.interestDetail.map { InterestDetail(from: $0) }
     )
-    
     let selectedGoalRelay = BehaviorRelay<Goal?>(
         value: TokenStorageService.shared.getCurationData()?.goal.map { Goal(from: $0) }
     )
+    
     private let interestListRelay = BehaviorRelay<[Interest]>(value: [])
     private let detailInterestListRelay = BehaviorRelay<[InterestDetail]>(value: [])
     private let goalListRelay = BehaviorRelay<[Goal]>(value: [])
     
     private let customDetailInterestNameRelay = BehaviorRelay<String?>(value: nil)
+    private let customGoalNameRelay = BehaviorRelay<String?>(value: nil)
+    
+    private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
+    
+    // 타이머 및 락 상태
+    private var invalidGoalAttemptCount = 0
+    private var goalLockoutRemainingSeconds = 0
+    private var goalLockoutTimer: Timer?
+    private let goalLockWarningRelay = BehaviorRelay<String?>(value: nil)
+    
     
     // 외부 의존성
     private let interestService: InterestsService
     
     init(interestService: InterestsService = .shared) {
         self.interestService = interestService
+        
+        if let data = TokenStorageService.shared.getCurationData() {
+            if let i = data.interest {
+                selectedInterestRelay.accept(Interest(from: i))
+            }
+            if let d = data.interestDetail {
+                selectedDetailInterestRelay.accept(InterestDetail(from: d))
+                // 저장된 이름이 기본 이름과 다르면 커스텀(외국어 등)일 수 있으므로 처리 가능하나,
+                // 여기서는 기본 객체 매핑만 수행합니다.
+            }
+            if let g = data.goal {
+                selectedGoalRelay.accept(Goal(from: g))
+            }
+        }
     }
     
     func transform(input: Input) -> Output {
         let updateSuccessRelay = PublishRelay<Void>()
         let showBottomSheetRelay = PublishRelay<Void>()
+        let errorMessageRelay = PublishRelay<String>()
+        
+        let showGoalBottomSheetRelay = PublishRelay<Void>()
+        let validationSuccessRelay = PublishRelay<Void>()
+        let validationFailedRelay = PublishRelay<String>()
+        let showLockAlertRelay = PublishRelay<Void>()
         
         // 1. 관심사 버튼 탭 -> Service 호출
         input.interestButtonTapped
@@ -157,38 +197,91 @@ final class InterestEditViewModel {
         input.goalSelected
             .map { $0 as? Goal }
             .compactMap { $0 }
-            .bind(to: selectedGoalRelay)
+            .subscribe(onNext: { [weak self] goal in
+                guard let self = self else { return }
+                
+                self.selectedGoalRelay.accept(goal)
+                
+                // "직접" 또는 "직접 입력" 포함 시 처리
+                if goal.name.contains("직접") {
+                    // 🔒 락 걸려있는지 확인
+                    if self.goalLockoutRemainingSeconds > 0 {
+                        self.selectedGoalRelay.accept(nil) // 선택 취소
+                        return
+                    }
+                    // 바텀시트 열기 전 기존 커스텀 값 초기화 (재입력 유도)
+                    self.customGoalNameRelay.accept(nil)
+                    showGoalBottomSheetRelay.accept(())
+                } else {
+                    // 일반 항목 선택 시 커스텀 값 제거
+                    self.customGoalNameRelay.accept(nil)
+                }
+            })
             .disposed(by: disposeBag)
         
-        // 7. 완료 버튼 활성화 조건
+        // 목표 유효성 검사 흐름 (Input -> API -> Success/Fail -> Lock/Timer)
+        input.goalInputText
+        // 1. 0.5초 동안 중복 입력 방지 (연타 방지)
+            .throttle(.milliseconds(500), scheduler: MainScheduler.instance)
+            .flatMapLatest { [weak self] text -> Observable<(String, Bool)> in
+                guard let self = self else { return .empty() }
+                
+                return self.interestService.validateGoalInput(text: text)
+                    .asObservable()
+                    .map { (text, $0) }
+                    .catch { error in
+                        // 2. 취소된 에러(explicitlyCancelled)는 실패로 간주하지 않고 무시함
+                        if let afError = error.asAFError, afError.isExplicitlyCancelledError {
+                            print("📡 이전 요청이 취소되었습니다. (무시함)")
+                            return .empty()
+                        }
+                        
+                        // 진짜 네트워크 에러나 API 오류만 실패로 처리
+                        print("❌ Validation Error: \(error)")
+                        return .just((text, false))
+                    }
+            }
+            .subscribe(onNext: { [weak self] (text, isValid) in
+                // ... (이후 로직은 기존과 동일) ...
+                guard let self = self else { return }
+                
+                if isValid {
+                    // ✅ 성공
+                    self.invalidGoalAttemptCount = 0
+                    self.customGoalNameRelay.accept(text)
+                    validationSuccessRelay.accept(())
+                } else {
+                    // ❌ 실패 (진짜 실패인 경우만 여기로 옴)
+                    self.invalidGoalAttemptCount += 1
+                    
+                    if self.invalidGoalAttemptCount >= 3 {
+                        self.startLockTimer()
+                        showLockAlertRelay.accept(())
+                        validationSuccessRelay.accept(())
+                        self.selectedGoalRelay.accept(nil)
+                    } else {
+                        validationFailedRelay.accept("*세부 관심사와 맞지 않는 목표예요.")
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 7. 완료 버튼 활성화 (하나라도 없으면 비활성)
         let isCompleteEnabled = Observable.combineLatest(
             selectedInterestRelay,
             selectedDetailInterestRelay,
             selectedGoalRelay
         )
-            .map { [weak self] (interest, detail, goal) -> Bool in
-                guard let self = self else { return false }
-                
-                // 관심사, 세부관심사, 목표가 모두 선택되어 있어야 함
-                guard interest != nil, detail != nil, goal != nil else {
-                    return false
-                }
-                
-                // 변경 여부 체크
-                let interestChanged = interest?.id != self.savedData?.interest?.id
-                let detailChanged = detail?.id != self.savedData?.interestDetail?.id
-                let goalChanged = goal?.id != self.savedData?.goal?.id
-                
-                // 하나라도 변경되었으면 활성화
-                return interestChanged || detailChanged || goalChanged
-            }
+            .map { $0 != nil && $1 != nil && $2 != nil }
             .asDriver(onErrorJustReturn: false)
         
-        // 8. 완료 버튼 탭 로직
+        // 8. 완료 버튼 탭 (최종 수정 API 호출)
         input.completeButtonTapped
+            .do(onNext: { [weak self] in
+                self?.isLoadingRelay.accept(true) // 로딩 시작
+            })
             .flatMapLatest { [weak self] _ -> Observable<Bool> in
                 guard let self = self else { return .just(false) }
-                
                 return self.requestUpdateInterest(
                     interestId: self.selectedInterestRelay.value?.id,
                     detailInterestId: self.selectedDetailInterestRelay.value?.id,
@@ -196,52 +289,48 @@ final class InterestEditViewModel {
                 )
             }
             .subscribe(onNext: { [weak self] success in
+                guard let self = self else { return }
+                self.isLoadingRelay.accept(false) // 로딩 종료
+                
                 if success {
-                    if let self = self {
-                        var currentData = TokenStorageService.shared.getCurationData() ?? CurationData()
-                        
-                        if let interest = self.selectedInterestRelay.value {
-                            currentData.interest = InterestData(id: interest.id, name: interest.title)
-                        } else {
-                            currentData.interest = nil
-                        }
-                        
-                        if let detail = self.selectedDetailInterestRelay.value {
-                            currentData.interestDetail = InterestData(id: detail.id, name: detail.name)
-                        } else {
-                            currentData.interestDetail = nil
-                        }
-                        
-                        if let goal = self.selectedGoalRelay.value {
-                            currentData.goal = InterestData(id: goal.id, name: goal.name)
-                        } else {
-                            currentData.goal = nil
-                        }
-                        
-                        TokenStorageService.shared.saveCurationData(currentData)
-                    }
+                    // ✅ API가 성공(true)했을 때만 로컬 데이터 업데이트
+                    print("💾 API 성공: 로컬 데이터 업데이트 실행")
+                    self.updateLocalData()
                     updateSuccessRelay.accept(())
+                } else {
+                    // ❌ API 실패(false) 시 에러 메시지
+                    print("💾 API 실패: 로컬 데이터 업데이트 안함")
+                    errorMessageRelay.accept("관심사 수정에 실패했어요. 다시 시도해주세요.")
                 }
             })
             .disposed(by: disposeBag)
         
+        // 화면 표시용 이름 (커스텀 값 우선)
+//        let currentDetailName = Driver.combineLatest(
+//            selectedDetailInterestRelay.asDriver(),
+//            customDetailInterestNameRelay.asDriver()
+//        ) { detail, custom -> String? in
+//            if let c = custom, !c.isEmpty { return c }
+//            return detail!.name
+//        }
+//        
+//        let currentGoalName = Driver.combineLatest(
+//            selectedGoalRelay.asDriver(),
+//            customGoalNameRelay.asDriver()
+//        ) { goal, custom  -> String? in
+//            if let c = custom, !c.isEmpty { return c }
+//            return goal!.name
+        //        }
         
-        let currentDetailName = Driver.combineLatest(
-            selectedDetailInterestRelay.asDriver(),
-            customDetailInterestNameRelay.asDriver()
-        ) { detail, customName -> String? in
-            guard let detail = detail else { return nil }
-            // 커스텀 이름이 있으면 그것을 우선 표시 (예: "기타" -> "프랑스어")
-            if let custom = customName, !custom.isEmpty {
-                return custom
-            }
-            return detail.name
-        }
+        let currentDetailName = Driver.combineLatest(selectedDetailInterestRelay.asDriver(), customDetailInterestNameRelay.asDriver()) { $1?.isEmpty == false ? $1 : $0?.name }
+        let currentGoalName = Driver.combineLatest(selectedGoalRelay.asDriver(), customGoalNameRelay.asDriver()) { $1?.isEmpty == false ? $1 : $0?.name }
         
         
         return Output(
             isCompleteEnabled: isCompleteEnabled,
             updateSuccess: updateSuccessRelay.asSignal(),
+            errorMessage: errorMessageRelay.asSignal(),
+            isLoading: isLoadingRelay.asDriver(),
             
             interestList: interestListRelay.map { $0 as [DropdownDisplayable] }.asDriver(onErrorJustReturn: []),
             detailInterestList: detailInterestListRelay.map { $0 as [DropdownDisplayable] }.asDriver(onErrorJustReturn: []),
@@ -249,71 +338,121 @@ final class InterestEditViewModel {
             
             currentInterestName: selectedInterestRelay.map { $0?.title }.asDriver(onErrorJustReturn: nil),
             currentDetailInterestName: currentDetailName,
-            currentGoalName: selectedGoalRelay.map { $0?.name }.asDriver(onErrorJustReturn: nil),
+            currentGoalName: currentGoalName,
             
             selectedInterestId: selectedInterestRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
             selectedDetailInterestId: selectedDetailInterestRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
             selectedGoalId: selectedGoalRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
             
-            showLanguageInputBottomSheet: showBottomSheetRelay.asSignal()
+            showLanguageInputBottomSheet: showBottomSheetRelay.asSignal(),
+            
+            showGoalInputBottomSheet: showGoalBottomSheetRelay.asSignal(),
+            goalValidationSuccess: validationSuccessRelay.asSignal(),
+            goalValidationFailed: validationFailedRelay.asSignal(),
+            showLockAlert: showLockAlertRelay.asSignal(),
+            goalLockTimerMessage: goalLockWarningRelay.asDriver()
         )
+    }
+    
+    private func updateLocalData() {
+        var currentData = TokenStorageService.shared.getCurationData() ?? CurationData()
+        
+        if let interest = self.selectedInterestRelay.value {
+            currentData.interest = InterestData(id: interest.id, name: interest.title)
+        }
+        if let detail = self.selectedDetailInterestRelay.value {
+            // 커스텀 이름이 있으면 그걸로 저장
+            let name = self.customDetailInterestNameRelay.value ?? detail.name
+            currentData.interestDetail = InterestData(id: detail.id, name: name)
+        }
+        if let goal = self.selectedGoalRelay.value {
+            // 커스텀 이름이 있으면 그걸로 저장
+            let name = self.customGoalNameRelay.value ?? goal.name
+            currentData.goal = InterestData(id: goal.id, name: name)
+        }
+        
+        TokenStorageService.shared.saveCurationData(currentData)
+    }
+    
+    // MARK: - Timer Logic
+    private func startLockTimer() {
+        goalLockoutRemainingSeconds = 30 * 60 // 30분
+        updateTimerMessage()
+        
+        goalLockoutTimer?.invalidate()
+        goalLockoutTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] t in
+            guard let self = self else { t.invalidate(); return }
+            self.goalLockoutRemainingSeconds -= 1
+            
+            if self.goalLockoutRemainingSeconds <= 0 {
+                t.invalidate()
+                self.invalidGoalAttemptCount = 0
+                self.goalLockWarningRelay.accept(nil) // 메시지 제거 (락 해제)
+            } else {
+                self.updateTimerMessage()
+            }
+        }
+    }
+    
+    private func updateTimerMessage() {
+        let min = goalLockoutRemainingSeconds / 60
+        let sec = goalLockoutRemainingSeconds % 60
+        // 메시지 포맷
+        let msg = "*직접입력 목표는 \(min)분 \(sec)초 후에 입력가능해요"
+        goalLockWarningRelay.accept(msg)
     }
     
     // MARK: - API Request
     private func requestUpdateInterest(interestId: Int?, detailInterestId: Int?, goalId: Int?) -> Observable<Bool> {
-        return Observable.create { observer in
+        return Observable.create { [weak self] observer in
+            guard let self = self else { return Disposables.create() }
+            
+            // 1. MemberInterestId
             var targetMemberInterestId: Int? = UserStorage.shared.selectedMemberInterestId
-            
             if targetMemberInterestId == nil {
-                // UserStorage에 없다면 CurationData에서 찾아봄 (Fallback)
-                if let curationData = TokenStorageService.shared.getCurationData(),
-                   let ids = curationData.memberInterestIds,
-                   let firstId = ids.first {
-                    targetMemberInterestId = firstId
+                if let data = TokenStorageService.shared.getCurationData(),
+                   let ids = data.memberInterestIds,
+                   let first = ids.first {
+                    targetMemberInterestId = first
                 }
             }
             
-            // ID가 여전히 없으면 에러 처리
-            guard let memberInterestId = targetMemberInterestId else {
-                print("❌ memberInterestId를 찾을 수 없습니다. (UserStorage 및 CurationData 모두 없음)")
-                observer.onNext(false)
-                observer.onCompleted()
+            guard let memberInterestId = targetMemberInterestId,
+                  let finalInterestId = goalId else {
+                print("❌ ID 정보 누락")
+                observer.onNext(false); observer.onCompleted()
                 return Disposables.create()
             }
             
-            // 2. 목표 ID가 최종 interestId (필수)
-            guard let finalInterestId = goalId else {
-                print("❌ 목표(Goal)를 선택해야 합니다")
-                observer.onNext(false)
-                observer.onCompleted()
-                return Disposables.create()
-            }
-            
-            // 3. directFullPath 생성
+            // 2. DirectFullPath 생성
             var directFullPath: [String] = []
+            if let i = self.selectedInterestRelay.value { directFullPath.append(i.title) }
             
-            if let interest = self.selectedInterestRelay.value {
-                directFullPath.append(interest.title)
-            }
-            if let detail = self.selectedDetailInterestRelay.value {
-                if let customName = self.customDetailInterestNameRelay.value, !customName.isEmpty {
-                    // "기타" 대신 입력값("프랑스어") 추가
-                    directFullPath.append(customName)
+            // 세부 관심사 (커스텀 체크)
+            if let d = self.selectedDetailInterestRelay.value {
+                if let custom = self.customDetailInterestNameRelay.value, !custom.isEmpty {
+                    directFullPath.append(custom)
                 } else {
-                    directFullPath.append(detail.name)
+                    directFullPath.append(d.name)
                 }
             }
-            if let goal = self.selectedGoalRelay.value {
-                directFullPath.append(goal.name)
+            
+            // 목표 (커스텀 체크)
+            if let g = self.selectedGoalRelay.value {
+                if let custom = self.customGoalNameRelay.value, !custom.isEmpty {
+                    directFullPath.append(custom)
+                } else {
+                    directFullPath.append(g.name)
+                }
             }
             
-            guard directFullPath.count == 3 else {
-                print("❌ directFullPath가 완전하지 않음 (관심사, 세부관심사, 목표 모두 필요)")
-                observer.onNext(false)
-                observer.onCompleted()
+            if directFullPath.count != 3 {
+                print("❌ Path 구성 실패")
+                observer.onNext(false); observer.onCompleted()
                 return Disposables.create()
             }
             
+            // 3. Service 호출 (Single 구독 수정 완료)
             let disposable = self.interestService.updateMemberInterest(
                 memberInterestId: memberInterestId,
                 interestId: finalInterestId,
@@ -321,72 +460,101 @@ final class InterestEditViewModel {
             )
                 .subscribe(
                     onSuccess: { _ in
-                        // 성공 시: Void가 넘어오지만, ViewModel에서는 true를 방출
-                        print("✅ 관심사 수정 성공")
+                        print("✅ 수정 성공")
                         observer.onNext(true)
                         observer.onCompleted()
                     },
                     onFailure: { error in
-                        // 실패 시: false 방출
-                        print("❌ 관심사 수정 실패: \(error.localizedDescription)")
+                        print("❌ 수정 실패: \(error)")
                         observer.onNext(false)
                         observer.onCompleted()
                     }
                 )
             
-            // 구독 해제 시 처리
-            return Disposables.create {
-                disposable.dispose()
-            }
-            
-            //            // 4. URL 생성 (memberInterestId 포함)
-            //            let urlString = "\(NetworkDefine.InterestsAPI.member.url)/\(memberInterestId)"
-            //
-//            guard let accessToken = TokenStorageService.shared.getAccessToken() else {
-//                print("❌ Access Token 없음")
-//                observer.onNext(false)
-//                observer.onCompleted()
-//                return Disposables.create()
-//            }
-//            
-//            let headers: HTTPHeaders = [
-//                "Content-Type": "application/json",
-//                "Authorization": "Bearer \(accessToken)"
-//            ]
-//            
-//            let parameters: [String: Any] = [
-//                "interestId": finalInterestId,
-//                "directFullPath": directFullPath
-//            ]
-//            
-//            print("📡 관심사 수정 요청: \(urlString)")
-//            print("📦 파라미터: \(parameters)")
-//            
-//            let request = AF.request(
-//                urlString,
-//                method: .put,
-//                parameters: parameters,
-//                encoding: JSONEncoding.default,
-//                headers: headers
-//            )
-//                .validate()
-//                .responseJSON { response in
-//                    switch response.result {
-//                    case .success(let value):
-//                        print("📥 관심사 수정 응답: \(value)")
-//                        observer.onNext(true)
-//                        
-//                    case .failure(let error):
-//                        print("❌ 요청 실패: \(error.localizedDescription)")
-//                        observer.onNext(false)
-//                    }
-//                    observer.onCompleted()
-//                }
-//            
-//            return Disposables.create {
-//                request.cancel()
-//            }
+            return Disposables.create { disposable.dispose() }
         }
+        
+        //    private func requestUpdateInterest(interestId: Int?, detailInterestId: Int?, goalId: Int?) -> Observable<Bool> {
+        //        return Observable.create { observer in
+        //            var targetMemberInterestId: Int? = UserStorage.shared.selectedMemberInterestId
+        //
+        //            if targetMemberInterestId == nil {
+        //                // UserStorage에 없다면 CurationData에서 찾아봄 (Fallback)
+        //                if let curationData = TokenStorageService.shared.getCurationData(),
+        //                   let ids = curationData.memberInterestIds,
+        //                   let firstId = ids.first {
+        //                    targetMemberInterestId = firstId
+        //                }
+        //            }
+        //
+        //            // ID가 여전히 없으면 에러 처리
+        //            guard let memberInterestId = targetMemberInterestId else {
+        //                print("❌ memberInterestId를 찾을 수 없습니다. (UserStorage 및 CurationData 모두 없음)")
+        //                observer.onNext(false)
+        //                observer.onCompleted()
+        //                return Disposables.create()
+        //            }
+        //
+        //            // 2. 목표 ID가 최종 interestId (필수)
+        //            guard let finalInterestId = goalId else {
+        //                print("❌ 목표(Goal)를 선택해야 합니다")
+        //                observer.onNext(false)
+        //                observer.onCompleted()
+        //                return Disposables.create()
+        //            }
+        //
+        //            // 3. directFullPath 생성
+        //            var directFullPath: [String] = []
+        //
+        //            if let interest = self.selectedInterestRelay.value {
+        //                directFullPath.append(interest.title)
+        //            }
+        //            if let detail = self.selectedDetailInterestRelay.value {
+        //                if let customName = self.customDetailInterestNameRelay.value, !customName.isEmpty {
+        //                    // "기타" 대신 입력값("프랑스어") 추가
+        //                    directFullPath.append(customName)
+        //                } else {
+        //                    directFullPath.append(detail.name)
+        //                }
+        //            }
+        //            if let goal = self.selectedGoalRelay.value {
+        //                directFullPath.append(goal.name)
+        //            }
+        //
+        //            guard directFullPath.count == 3 else {
+        //                print("❌ directFullPath가 완전하지 않음 (관심사, 세부관심사, 목표 모두 필요)")
+        //                observer.onNext(false)
+        //                observer.onCompleted()
+        //                return Disposables.create()
+        //            }
+        //
+        //            let disposable = self.interestService.updateMemberInterest(
+        //                memberInterestId: memberInterestId,
+        //                interestId: finalInterestId,
+        //                directFullPath: directFullPath
+        //            )
+        //                .subscribe(
+        //                    onSuccess: { _ in
+        //                        // 성공 시: Void가 넘어오지만, ViewModel에서는 true를 방출
+        //                        print("✅ 관심사 수정 성공")
+        //                        observer.onNext(true)
+        //                        observer.onCompleted()
+        //                    },
+        //                    onFailure: { error in
+        //                        // 실패 시: false 방출
+        //                        print("❌ 관심사 수정 실패: \(error.localizedDescription)")
+        //                        observer.onNext(false)
+        //                        observer.onCompleted()
+        //                    }
+        //                )
+        //
+        //            // 구독 해제 시 처리
+        //            return Disposables.create {
+        //                disposable.dispose()
+        //            }
+        //
+        //        }
+        //    }
     }
+    
 }
-

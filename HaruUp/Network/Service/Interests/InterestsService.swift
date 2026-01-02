@@ -146,6 +146,63 @@ final class InterestsService: Service {
         }
     }
     
+    func validateGoalInput(text: String) -> Single<Bool> {
+        return Single.create { single in
+            let url = NetworkDefine.InterestAPI.validation.url
+            
+            // 헤더 설정 (content-type, jwt-token: refreshToken)
+            var headers: HTTPHeaders = [
+                "Content-Type": "application/json"
+            ]
+            if let refreshToken = TokenStorageService.shared.getRefreshToken() {
+                headers.add(name: "jwt-token", value: refreshToken)
+            }
+            
+            let parameters: [String: Any] = [
+                "interest": text
+            ]
+            
+            print("📡 유효성 검사 요청: \(text)")
+            
+            let request = AF.request(
+                url,
+                method: .post,
+                parameters: parameters,
+                encoding: JSONEncoding.default,
+                headers: headers
+            )
+                .validate()
+                .responseJSON { response in
+                    switch response.result {
+                    case .success(let value):
+                        // 응답 파싱: { "success": true, "data": { "isValid": true, ... } }
+                        print("📥 유효성 검사 응답 Raw Data: \(value)")
+                        if let json = value as? [String: Any],
+                           let data = json["data"] as? [String: Any],
+                           let isValid = data["isValid"] as? Bool {
+                            if !isValid {
+                                let reason = data["reason"] as? String ?? "이유 없음"
+                                print("❌ 서버 판정: 유효하지 않음 (사유: \(reason))")
+                            } else {
+                                print("✅ 서버 판정: 유효함")
+                            }
+                            single(.success(isValid))
+                        } else {
+                            print("⚠️ JSON 파싱 실패: 예상한 구조(data.isValid)가 아님")
+                            // 파싱 실패 시 기본값 false
+                            single(.success(false))
+                        }
+                        
+                    case .failure(let error):
+                        print("❌ 유효성 검사 API 실패: \(error)")
+                        single(.failure(error))
+                    }
+                }
+            
+            return Disposables.create { request.cancel() }
+        }
+    }
+    
 }
 
 struct InterestAPIResponse: Decodable {

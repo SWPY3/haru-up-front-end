@@ -119,9 +119,15 @@ enum NetworkDefine {
         case getInterestList
         case getInterestDetail(parentId: Int)
         case getGoalList(parentId: Int)
+        case validation
         
         var path: String {
-            return "api/interests/data"
+            switch self {
+            case .getInterestList, .getInterestDetail, .getGoalList:
+                return "api/interests/data"
+            case .validation:
+                return "api/interests/interest/validation" 
+            }
         }
         
         var url: String {
