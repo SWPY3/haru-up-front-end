@@ -20,6 +20,7 @@ class HomeViewController: UIViewController {
     
     var onSelectTodayMission: (() -> Void)? // Coordinator와의 연결은 단순히 클로저 사용
     var onShowBottomSheet: ((Mission) -> Void)?
+    var onShowChallengeBottomSheet: (([DailyMissionData]) -> Void)?
     
     private let tableView: UITableView = {
         let tableView = UITableView()

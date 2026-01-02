@@ -35,6 +35,10 @@ final class HomeCoordinator: Coordinator {
             })
         }
         
+        homeVC.onShowChallengeBottomSheet = { [weak self] data in
+            self?.presentChallengeBottomSheet(weeklyData: data)
+        }
+        
         navigationController.setViewControllers([homeVC], animated: false)
     }
     
@@ -74,6 +78,14 @@ final class HomeCoordinator: Coordinator {
         bottomSheetVC.onMissionStatusChanged = {
             onActionCompleted()
         }
+        
+        navigationController.present(bottomSheetVC, animated: false)
+    }
+    
+    private func presentChallengeBottomSheet(weeklyData: [DailyMissionData]) {
+        let bottomSheetVC = MissionDayBottomSheetViewController()
+        bottomSheetVC.modalPresentationStyle = .overFullScreen
+        bottomSheetVC.weeklyData = weeklyData
         
         navigationController.present(bottomSheetVC, animated: false)
     }
