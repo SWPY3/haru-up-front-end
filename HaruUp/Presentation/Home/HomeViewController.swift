@@ -181,7 +181,7 @@ class HomeViewController: UIViewController {
             .disposed(by: disposeBag)
     }
     
-    // Mission 선택 후 Coordinator에서 호출
+    // Mission 선택 후 Coordinator에서 호출, 미션 완료 및 삭제 일때도 가능하게 구현
     func didCompleteMissionSelection() {
         reloadSubject.onNext(())
     }

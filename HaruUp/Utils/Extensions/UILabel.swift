@@ -67,4 +67,35 @@ extension UILabel {
 
         self.attributedText = attributed
     }
+    
+    /// 텍스트에 취소선을 긋거나 제거하는 함수
+    func setStrikethrough(_ isActive: Bool, color: UIColor? = nil) {
+        guard let text = self.text else { return }
+        
+        let attributedString: NSMutableAttributedString
+        
+        // 이미 attributedText가 있다면 그것을 기반으로, 없다면 일반 text를 기반으로 생성
+        if let currentAttr = self.attributedText {
+            attributedString = NSMutableAttributedString(attributedString: currentAttr)
+        } else {
+            attributedString = NSMutableAttributedString(string: text)
+        }
+        
+        let range = NSMakeRange(0, attributedString.length)
+        
+        if isActive {
+            // 취소선 추가
+            attributedString.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+            // (선택) 색상을 회색 등으로 변경하고 싶다면 함께 적용
+            if let color = color {
+                attributedString.addAttribute(.foregroundColor, value: color, range: range)
+            }
+        } else {
+            // 취소선 제거 (셀 재사용 시 필수)
+            attributedString.removeAttribute(.strikethroughStyle, range: range)
+            // 색상을 원래대로 돌리려면 별도 처리가 필요하거나, configure에서 textColor를 다시 지정해야 합니다.
+        }
+        
+        self.attributedText = attributedString
+    }
 }

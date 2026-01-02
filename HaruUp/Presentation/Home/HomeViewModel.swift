@@ -76,12 +76,21 @@ final class HomeViewModel {
 
         let rows = selectedMissionsRelay
             .map { selected -> [TodayMissionRow] in
-                if selected.isEmpty {
+                let sortedMissions = selected.sorted { lhs, rhs in
+                    if lhs.isCompleted != rhs.isCompleted {
+                        return !lhs.isCompleted
+                    }
+                    
+                    return lhs.difficulty.rawValue > rhs.difficulty.rawValue
+                }
+                
+                if sortedMissions.isEmpty {
                     return [.empty]
-                } else if selected.count < 5 {
-                    return selected.map { .mission($0) } + [.add]
+                } else if sortedMissions.count < 5 {
+                    // 정렬된 미션들 뒤에 .add 버튼 붙이기
+                    return sortedMissions.map { .mission($0) } + [.add]
                 } else {
-                    return selected.map { .mission($0) }
+                    return sortedMissions.map { .mission($0) }
                 }
             }
             .asDriver(onErrorJustReturn: [.empty])

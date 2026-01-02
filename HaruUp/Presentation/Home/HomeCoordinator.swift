@@ -28,8 +28,11 @@ final class HomeCoordinator: Coordinator {
             }
         }
         
-        homeVC.onShowBottomSheet = { [weak self] mission in
-            self?.presentMissionBottomSheet(mission: mission)
+        homeVC.onShowBottomSheet = { [weak self, weak homeVC] mission in
+            self?.presentMissionBottomSheet(mission: mission, onActionCompleted: {
+                // 바텀시트에서 완료/삭제가 일어나면 HomeVC를 갱신
+                homeVC?.didCompleteMissionSelection()
+            })
         }
         
         navigationController.setViewControllers([homeVC], animated: false)
@@ -61,12 +64,16 @@ final class HomeCoordinator: Coordinator {
         navigationController.present(modalNavigationController, animated: true)
     }
 
-    private func presentMissionBottomSheet(mission: Mission) {
+    private func presentMissionBottomSheet(mission: Mission, onActionCompleted: @escaping () -> Void) {
         let bottomSheetViewModel = MissionBottomSheetViewModel(
             mission: mission,
             missionService: self.missionService
         )
         let bottomSheetVC = MissionBottomSheetViewController(viewModel: bottomSheetViewModel)
+        
+        bottomSheetVC.onMissionStatusChanged = {
+            onActionCompleted()
+        }
         
         navigationController.present(bottomSheetVC, animated: false)
     }
