@@ -11,6 +11,8 @@ import Alamofire
 
 final class InterestsService: Service {
     
+    // MARK: - Fetch Interests
+    // 관심사 목록 가져오기
     func fetchInterests() -> Single<Interests.InterestsDTO> {
         
         let url: String = NetworkDefine.InterestsAPI.member.url

@@ -7,13 +7,6 @@
 
 import Foundation
 
-struct InterestResponse: Codable {
-    let interests: [InterestData]
-    let totalCount: Int
-}
-
-
-
 struct InterestData: Codable, Sendable {
     let id: Int
     let name: String
