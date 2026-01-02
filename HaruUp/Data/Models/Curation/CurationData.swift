@@ -18,6 +18,8 @@ class CurationData: Codable{
     var interestDetail: InterestData?
     var goal: InterestData?
     
+    var memberInterestIds: [Int]?
+    
     init() {}
     
     
@@ -34,20 +36,15 @@ class CurationData: Codable{
         goal != nil
     }
     
-    // 백엔드로 보낼 딕셔너리 형태로 변환
-    //    func toDictionary() -> [String: Any] {
-    //        return [
-    //            "characterId": characterId ?? 999,
-    //            "nickname": nickname ?? "",
-    //            "job": job ?? "",
-    //            "jobDetail": jobDetail ?? "",
-    //            "gender": gender ?? "",
-    //            "birthDate": birthDate ?? "",
-    //            "interest": interest ?? "",
-    //            "interestDetail": interestDetail ?? "",
-    //            "goal": goal ?? ""
-    //        ]
-    //    }
+    enum CodingKeys: String, CodingKey {
+        case nickname
+        case job
+        case jobDetail
+        case interest
+        case interestDetail
+        case goal
+        case memberInterestIds
+    }
 }
 
 extension CurationData {
