@@ -20,6 +20,7 @@ final class InterestEditViewModel {
         let detailInterestSelected: Observable<DropdownDisplayable>
         let goalSelected: Observable<DropdownDisplayable>
         let completeButtonTapped: Observable<Void>
+        let foreignLanguageInput: Observable<String>
     }
     
     struct Output {
@@ -36,6 +37,7 @@ final class InterestEditViewModel {
         let selectedInterestId: Driver<Int?>
         let selectedDetailInterestId: Driver<Int?>
         let selectedGoalId: Driver<Int?>
+        let showLanguageInputBottomSheet: Signal<Void>
     }
     
     private let disposeBag = DisposeBag()
@@ -57,6 +59,8 @@ final class InterestEditViewModel {
     private let detailInterestListRelay = BehaviorRelay<[InterestDetail]>(value: [])
     private let goalListRelay = BehaviorRelay<[Goal]>(value: [])
     
+    private let customDetailInterestNameRelay = BehaviorRelay<String?>(value: nil)
+    
     // 외부 의존성
     private let interestService: InterestsService
     
@@ -66,6 +70,7 @@ final class InterestEditViewModel {
     
     func transform(input: Input) -> Output {
         let updateSuccessRelay = PublishRelay<Void>()
+        let showBottomSheetRelay = PublishRelay<Void>()
         
         // 1. 관심사 버튼 탭 -> Service 호출
         input.interestButtonTapped
@@ -120,6 +125,17 @@ final class InterestEditViewModel {
                 // 세부 관심사가 변경되면 목표 초기화
                 self?.selectedGoalRelay.accept(nil)
                 self?.goalListRelay.accept([])
+                self?.customDetailInterestNameRelay.accept(nil)
+                
+                if detail.name.contains("기타") {
+                    showBottomSheetRelay.accept(())
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        input.foreignLanguageInput
+            .subscribe(onNext: { [weak self] text in
+                self?.customDetailInterestNameRelay.accept(text)
             })
             .disposed(by: disposeBag)
         
@@ -209,20 +225,20 @@ final class InterestEditViewModel {
             })
             .disposed(by: disposeBag)
         
-//        return Output(
-//            isCompleteEnabled: isCompleteEnabled,
-//            updateSuccess: updateSuccessRelay.asSignal(),
-//            
-//            interestList: interestListRelay.map { $0 as [DropdownDisplayable] }.asDriver(onErrorJustReturn: []),
-//            detailInterestList: detailInterestListRelay.map { $0 as [DropdownDisplayable] }.asDriver(onErrorJustReturn: []),
-//            goalList: goalListRelay.map { $0 as [DropdownDisplayable] }.asDriver(onErrorJustReturn: []),
-//            currentInterestName: selectedInterestRelay.map { $0?.name }.asDriver(onErrorJustReturn: nil),
-//            currentDetailInterestName: selectedDetailInterestRelay.map { $0?.name }.asDriver(onErrorJustReturn: nil),
-//            currentGoalName: selectedGoalRelay.map { $0?.name }.asDriver(onErrorJustReturn: nil),
-//            selectedInterestId: selectedInterestRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
-//            selectedDetailInterestId: selectedDetailInterestRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
-        //            selectedGoalId: selectedGoalRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil)
-        //        )
+        
+        let currentDetailName = Driver.combineLatest(
+            selectedDetailInterestRelay.asDriver(),
+            customDetailInterestNameRelay.asDriver()
+        ) { detail, customName -> String? in
+            guard let detail = detail else { return nil }
+            // 커스텀 이름이 있으면 그것을 우선 표시 (예: "기타" -> "프랑스어")
+            if let custom = customName, !custom.isEmpty {
+                return custom
+            }
+            return detail.name
+        }
+        
+        
         return Output(
             isCompleteEnabled: isCompleteEnabled,
             updateSuccess: updateSuccessRelay.asSignal(),
@@ -232,13 +248,14 @@ final class InterestEditViewModel {
             goalList: goalListRelay.map { $0 as [DropdownDisplayable] }.asDriver(onErrorJustReturn: []),
             
             currentInterestName: selectedInterestRelay.map { $0?.title }.asDriver(onErrorJustReturn: nil),
-            
-            currentDetailInterestName: selectedDetailInterestRelay.map { $0?.name }.asDriver(onErrorJustReturn: nil),
+            currentDetailInterestName: currentDetailName,
             currentGoalName: selectedGoalRelay.map { $0?.name }.asDriver(onErrorJustReturn: nil),
             
             selectedInterestId: selectedInterestRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
             selectedDetailInterestId: selectedDetailInterestRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
-            selectedGoalId: selectedGoalRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil)
+            selectedGoalId: selectedGoalRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
+            
+            showLanguageInputBottomSheet: showBottomSheetRelay.asSignal()
         )
     }
     
@@ -279,7 +296,12 @@ final class InterestEditViewModel {
                 directFullPath.append(interest.title)
             }
             if let detail = self.selectedDetailInterestRelay.value {
-                directFullPath.append(detail.name)
+                if let customName = self.customDetailInterestNameRelay.value, !customName.isEmpty {
+                    // "기타" 대신 입력값("프랑스어") 추가
+                    directFullPath.append(customName)
+                } else {
+                    directFullPath.append(detail.name)
+                }
             }
             if let goal = self.selectedGoalRelay.value {
                 directFullPath.append(goal.name)
@@ -292,53 +314,78 @@ final class InterestEditViewModel {
                 return Disposables.create()
             }
             
-            // 4. URL 생성 (memberInterestId 포함)
-            let urlString = "\(NetworkDefine.InterestsAPI.member.url)/\(memberInterestId)"
-            
-            guard let accessToken = TokenStorageService.shared.getAccessToken() else {
-                print("❌ Access Token 없음")
-                observer.onNext(false)
-                observer.onCompleted()
-                return Disposables.create()
-            }
-            
-            let headers: HTTPHeaders = [
-                "Content-Type": "application/json",
-                "Authorization": "Bearer \(accessToken)"
-            ]
-            
-            let parameters: [String: Any] = [
-                "interestId": finalInterestId,
-                "directFullPath": directFullPath
-            ]
-            
-            print("📡 관심사 수정 요청: \(urlString)")
-            print("📦 파라미터: \(parameters)")
-            
-            let request = AF.request(
-                urlString,
-                method: .put,
-                parameters: parameters,
-                encoding: JSONEncoding.default,
-                headers: headers
+            let disposable = self.interestService.updateMemberInterest(
+                memberInterestId: memberInterestId,
+                interestId: finalInterestId,
+                directFullPath: directFullPath
             )
-                .validate()
-                .responseJSON { response in
-                    switch response.result {
-                    case .success(let value):
-                        print("📥 관심사 수정 응답: \(value)")
+                .subscribe(
+                    onSuccess: { _ in
+                        // 성공 시: Void가 넘어오지만, ViewModel에서는 true를 방출
+                        print("✅ 관심사 수정 성공")
                         observer.onNext(true)
-                        
-                    case .failure(let error):
-                        print("❌ 요청 실패: \(error.localizedDescription)")
+                        observer.onCompleted()
+                    },
+                    onFailure: { error in
+                        // 실패 시: false 방출
+                        print("❌ 관심사 수정 실패: \(error.localizedDescription)")
                         observer.onNext(false)
+                        observer.onCompleted()
                     }
-                    observer.onCompleted()
-                }
+                )
             
+            // 구독 해제 시 처리
             return Disposables.create {
-                request.cancel()
+                disposable.dispose()
             }
+            
+            //            // 4. URL 생성 (memberInterestId 포함)
+            //            let urlString = "\(NetworkDefine.InterestsAPI.member.url)/\(memberInterestId)"
+            //
+//            guard let accessToken = TokenStorageService.shared.getAccessToken() else {
+//                print("❌ Access Token 없음")
+//                observer.onNext(false)
+//                observer.onCompleted()
+//                return Disposables.create()
+//            }
+//            
+//            let headers: HTTPHeaders = [
+//                "Content-Type": "application/json",
+//                "Authorization": "Bearer \(accessToken)"
+//            ]
+//            
+//            let parameters: [String: Any] = [
+//                "interestId": finalInterestId,
+//                "directFullPath": directFullPath
+//            ]
+//            
+//            print("📡 관심사 수정 요청: \(urlString)")
+//            print("📦 파라미터: \(parameters)")
+//            
+//            let request = AF.request(
+//                urlString,
+//                method: .put,
+//                parameters: parameters,
+//                encoding: JSONEncoding.default,
+//                headers: headers
+//            )
+//                .validate()
+//                .responseJSON { response in
+//                    switch response.result {
+//                    case .success(let value):
+//                        print("📥 관심사 수정 응답: \(value)")
+//                        observer.onNext(true)
+//                        
+//                    case .failure(let error):
+//                        print("❌ 요청 실패: \(error.localizedDescription)")
+//                        observer.onNext(false)
+//                    }
+//                    observer.onCompleted()
+//                }
+//            
+//            return Disposables.create {
+//                request.cancel()
+//            }
         }
     }
 }

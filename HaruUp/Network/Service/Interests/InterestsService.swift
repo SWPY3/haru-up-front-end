@@ -98,6 +98,54 @@ final class InterestsService: Service {
             return Disposables.create()
         }
     }
+    
+    func updateMemberInterest(memberInterestId: Int, interestId: Int, directFullPath: [String]) -> Single<Void> {
+        return Single.create { single in
+            let urlString = "\(NetworkDefine.InterestsAPI.member.url)/\(memberInterestId)"
+            
+            guard let accessToken = TokenStorageService.shared.getAccessToken() else {
+                let error = NSError(domain: "AuthError", code: 401, userInfo: [NSLocalizedDescriptionKey: "Access Token Missing"])
+                single(.failure(error))
+                return Disposables.create()
+            }
+            
+            let headers: HTTPHeaders = [
+                "Content-Type": "application/json",
+                "Authorization": "Bearer \(accessToken)"
+            ]
+            
+            let parameters: [String: Any] = [
+                "interestId": interestId,
+                "directFullPath": directFullPath
+            ]
+            
+            print("📡 관심사 수정 요청: \(urlString)")
+            print("📦 파라미터: \(parameters)")
+            
+            
+            let request = AF.request(
+                urlString,
+                method: .put,
+                parameters: parameters,
+                encoding: JSONEncoding.default,
+                headers: headers
+            )
+                .validate()
+                .responseJSON { response in
+                    switch response.result {
+                    case .success(let value):
+                        single(.success(()))
+                        print("📥 관심사 수정 응답: \(value)")
+                    case .failure(let error):
+                        print("❌ 요청 실패: \(error.localizedDescription)")
+                        single(.failure(error))
+                    }
+                }
+            
+            return Disposables.create { request.cancel() }
+        }
+    }
+    
 }
 
 struct InterestAPIResponse: Decodable {

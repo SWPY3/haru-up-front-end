@@ -213,7 +213,7 @@ class MyPageViewController: UIViewController {
     private func bind() {
         let input = MyPageViewModel.Input(
             viewDidLoad: Observable.just(()),
-            viewWillAppear: rx.methodInvoked(#selector(viewWillAppear(_:))).map { _ in }, // viewWillAppear 바인딩
+            viewWillAppear: rx.methodInvoked(#selector(viewWillAppear(_:))).map { _ in },
             editInterestTapped: editInterestBtn.rx.tap,
             feedbackTapped: feedbackBtn.rx.tap,
             inquiryTapped: inquiryBtn.rx.tap,

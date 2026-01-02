@@ -173,6 +173,8 @@ final class InterestEditViewController: UIViewController {
         return btn
     }()
     
+    private let foreignLanguageInputRelay = PublishRelay<String>()
+    
     private let completeButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("완료", for: .normal)
@@ -360,7 +362,8 @@ final class InterestEditViewController: UIViewController {
             interestSelected: interestDropdown.itemSelected.asObservable(),
             detailInterestSelected: detailInterestDropdown.itemSelected.asObservable(),
             goalSelected: goalDropdown.itemSelected.asObservable(),
-            completeButtonTapped: completeButton.rx.tap.asObservable()
+            completeButtonTapped: completeButton.rx.tap.asObservable(),
+            foreignLanguageInput: foreignLanguageInputRelay.asObservable()
         )
         
         let output = viewModel.transform(input: input)
@@ -552,6 +555,12 @@ final class InterestEditViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
+        output.showLanguageInputBottomSheet
+            .emit(with: self, onNext: { owner, _ in
+                owner.showForeignLanguageInputBottomSheet()
+            })
+            .disposed(by: disposeBag)
+        
         // 완료 버튼 활성화 상태
         output.isCompleteEnabled
             .drive(with: self, onNext: { owner, isEnabled in
@@ -623,6 +632,25 @@ final class InterestEditViewController: UIViewController {
             updateDropdownState(button: goalSelectButton, arrow: goalArrowImageView, isOpen: false)
         }
         view.endEditing(true)
+    }
+    
+    private func showForeignLanguageInputBottomSheet() {
+        let bottomSheetViewModel = ForeignLanguageInputBottomSheetViewModel()
+        let bottomSheetVC = ForeignLanguageInputBottomSheet(viewModel: bottomSheetViewModel)
+        
+        bottomSheetVC.modalPresentationStyle = .overFullScreen
+        bottomSheetVC.modalTransitionStyle = .crossDissolve
+        
+        // 바텀시트에서 '다음' 버튼 누르면 실행될 콜백
+        bottomSheetVC.onFinish = { [weak self] inputText in
+            // ViewModel로 텍스트 전달
+            self?.foreignLanguageInputRelay.accept(inputText)
+            
+            // UI 업데이트: "세부 관심사 선택" 버튼을 사용자가 입력한 텍스트로 즉시 변경하고 싶다면 여기서 처리해도 되지만,
+            // ViewModel의 currentDetailInterestName Driver가 자동으로 처리하도록 해두었습니다.
+        }
+        
+        self.present(bottomSheetVC, animated: true)
     }
     
     private func showToast(message: String) {
