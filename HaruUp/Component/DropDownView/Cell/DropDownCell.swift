@@ -26,13 +26,13 @@ final class DropdownCell: UITableViewCell {
     func configure(text: String, isSelected: Bool) {
         label.text = text
         if isSelected {
-            contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-            label.textColor = .systemBlue
-            label.font = UIFont.boldSystemFont(ofSize: 15)
+            contentView.backgroundColor = .primaryBlue50
+            label.textColor = .primaryBlue700
+            label.setStyle(Typography.body1, text: text)
         } else {
             contentView.backgroundColor = .white
             label.textColor = .black
-            label.font = UIFont.systemFont(ofSize: 15)
+            label.setStyle(Typography.body1, text: text)
         }
     }
 }

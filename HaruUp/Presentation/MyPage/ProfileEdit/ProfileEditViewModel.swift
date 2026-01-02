@@ -37,17 +37,20 @@ final class ProfileEditViewModel {
         let currentDetailJobName: Driver<String?>           // 버튼 텍스트용
         let selectedJobId: Driver<Int?>                     // 드롭다운 하이라이트용
         let selectedDetailJobId: Driver<Int?>               // 드롭다운 하이라이트용
+        let isDetailJobEnabled: Driver<Bool>
     }
     
     private let disposeBag = DisposeBag()
     
     // UI 상태 관리
     private let nicknameRelay: BehaviorRelay<String>
-    private let initialNicknameValue: String
+    let initialNicknameValue: String
+    
+    let savedData = TokenStorageService.shared.getCurationData()
     
     // Job 상태관리
-    private let selectedJobRelay = BehaviorRelay<Job?>(value: nil)
-    private let selectedDetailJobRelay = BehaviorRelay<JobDetail?>(value: nil)
+    let selectedJobRelay = BehaviorRelay<Job?>(value: TokenStorageService.shared.getCurationData()?.job)
+    let selectedDetailJobRelay = BehaviorRelay<JobDetail?>(value: TokenStorageService.shared.getCurationData()?.jobDetail)
     private let jobListRelay = BehaviorRelay<[Job]>(value: [])
     private let detailJobListRelay = BehaviorRelay<[JobDetail]>(value: [])
     
@@ -82,14 +85,30 @@ final class ProfileEditViewModel {
             .disposed(by: disposeBag)
         
         // 4. 완료 버튼 활성화 조건
-        let isCompleteEnabled = nicknameRelay
-            .map { [weak self] text -> Bool in
+        let isCompleteEnabled = Observable.combineLatest(
+            nicknameRelay,
+            selectedJobRelay,
+            selectedDetailJobRelay
+        )
+            .map { [weak self] (nickname, job, jobDetail) -> Bool in
                 guard let self = self else { return false }
-                let trimmed = text.trimmingCharacters(in: .whitespaces)
-                let isChanged = trimmed != self.initialNicknameValue
-                let isNotEmpty = !trimmed.isEmpty
                 
-                return isChanged && isNotEmpty
+                let trimmed = nickname.trimmingCharacters(in: .whitespaces)
+                
+                // 닉네임이 비어있으면 무조건 비활성화
+                if trimmed.isEmpty { return false }
+                
+                // 닉네임 변경 여부
+                let nicknameChanged = trimmed != self.initialNicknameValue
+                
+                // 직업 변경 여부
+                let jobChanged = job?.id != self.savedData?.job?.id
+                
+                // 세부직업 변경 여부
+                let jobDetailChanged = jobDetail?.id != self.savedData?.jobDetail?.id
+                
+                // 하나라도 변경되었으면 활성화
+                return nicknameChanged || jobChanged || jobDetailChanged
             }
             .asDriver(onErrorJustReturn: false)
         
@@ -132,12 +151,24 @@ final class ProfileEditViewModel {
             .compactMap { $0 }
             .bind(to: selectedDetailJobRelay)
             .disposed(by: disposeBag)
-        
+
         // 완료 버튼 탭 로직
         input.completeButtonTapped
-            .withLatestFrom(nicknameRelay) // 현재 닉네임 가져오기
-            .flatMapLatest { [weak self] nickname -> Observable<ValidationResult> in
+            .withLatestFrom(Observable.combineLatest(
+                nicknameRelay,
+                selectedJobRelay,
+                selectedDetailJobRelay
+            ))
+            .flatMapLatest { [weak self] (nickname, job, jobDetail) -> Observable<ValidationResult> in
                 guard let self = self else { return .just(.empty) }
+                
+                // 닉네임 변경 여부 확인
+                let nicknameChanged = nickname.trimmingCharacters(in: .whitespaces) != self.initialNicknameValue
+                
+                // 닉네임이 변경되지 않았으면 중복 체크 건너뛰기
+                if !nicknameChanged {
+                    return .just(.success)
+                }
                 
                 // [Step 1] 기본 유효성 검사 (길이, 한글 등)
                 let basicValidation = self.validateNickname(nickname)
@@ -156,7 +187,11 @@ final class ProfileEditViewModel {
                 
                 if result == .success {
                     // [Step 3] 중복 체크 통과 시 -> 프로필 수정 API 호출
-                    return self.requestUpdateProfile(nickname: self.nicknameRelay.value)
+                    return self.requestUpdateProfile(
+                        nickname: self.nicknameRelay.value,
+                        jobId: self.selectedJobRelay.value?.id,
+                        jobDetailId: self.selectedDetailJobRelay.value?.id
+                    )
                 } else {
                     // 중복이거나 기타 오류면 중단
                     return .just(false)
@@ -167,12 +202,21 @@ final class ProfileEditViewModel {
                     if let self = self {
                         var currentData = TokenStorageService.shared.getCurationData() ?? CurationData()
                         currentData.nickname = self.nicknameRelay.value
+                        currentData.job = self.selectedJobRelay.value
+                        currentData.jobDetail = self.selectedDetailJobRelay.value
                         TokenStorageService.shared.saveCurationData(currentData)
                     }
                     updateSuccessRelay.accept(())
                 }
             })
             .disposed(by: disposeBag)
+        
+        let isDetailJobEnabled = selectedJobRelay
+            .map { job -> Bool in
+                guard let jobName = job?.jobName else { return false }
+                return jobName != "자영업"  // 자영업이 아니면 활성화
+            }
+            .asDriver(onErrorJustReturn: false)
         
         return Output(
             initialNickname: initialNicknameDriver,
@@ -186,13 +230,13 @@ final class ProfileEditViewModel {
             currentJobName: selectedJobRelay.map { $0?.jobName }.asDriver(onErrorJustReturn: nil),
             currentDetailJobName: selectedDetailJobRelay.map { $0?.jobDetailName }.asDriver(onErrorJustReturn: nil),
             selectedJobId: selectedJobRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
-            selectedDetailJobId: selectedDetailJobRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil)
-            
+            selectedDetailJobId: selectedDetailJobRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
+            isDetailJobEnabled: isDetailJobEnabled
         )
     }
     
     // MARK: - API Request
-    private func requestUpdateProfile(nickname: String) -> Observable<Bool> {
+    private func requestUpdateProfile(nickname: String, jobId: Int?, jobDetailId: Int?) -> Observable<Bool> {
         return Observable.create { observer in
             // 1. NetworkDefine에서 정의한 URL 사용
             let urlString = NetworkDefine.ProfileAPI.updateProfile.url
@@ -211,18 +255,26 @@ final class ProfileEditViewModel {
                 "jwt-token": refreshToken
             ]
             
-            // 4. 바디 파라미터 설정
-            let parameters: [String: Any] = [
+            // 4. 바디 파라미터 설정 (직업 정보 추가)
+            var parameters: [String: Any] = [
                 "nickname": nickname
             ]
+            
+            if let jobId = jobId {
+                parameters["jobId"] = jobId
+            }
+            
+            if let jobDetailId = jobDetailId {
+                parameters["jobDetailId"] = jobDetailId
+            }
             
             print("📡 프로필 수정 요청: \(urlString)")
             print("📦 파라미터: \(parameters)")
             
-            // 5. Alamofire 요청 (Method: PATCH)
+            // 5. Alamofire 요청 (Method: PUT)
             let request = AF.request(
                 urlString,
-                method: .put, // 명세에 맞게 PATCH 사용
+                method: .put,
                 parameters: parameters,
                 encoding: JSONEncoding.default,
                 headers: headers
@@ -238,10 +290,7 @@ final class ProfileEditViewModel {
                            let success = json["success"] as? Bool {
                             
                             if success {
-                                var currentData = TokenStorageService.shared.getCurationData() ?? CurationData()
-                                currentData.nickname = self.nicknameRelay.value
-                                TokenStorageService.shared.saveCurationData(currentData)
-            
+                                // TokenStorageService에 저장은 subscribe에서 처리
                                 observer.onNext(true)
                             } else {
                                 // success가 false인 경우 (메시지 출력 등)

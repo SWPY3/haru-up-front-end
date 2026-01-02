@@ -36,8 +36,8 @@ final class DropdownView: UIView {
     
     private func setupUI() {
         backgroundColor = .clear
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.1
+        layer.shadowColor = UIColor(red: 218/255, green: 225/255, blue: 240/255, alpha: 1.0).cgColor
+        layer.shadowOpacity = 0.7
         layer.shadowOffset = CGSize(width: 0, height: 4)
         layer.shadowRadius = 8
         
