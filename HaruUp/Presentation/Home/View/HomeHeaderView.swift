@@ -95,6 +95,7 @@ final class HomeHeaderView: UIView {
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         imageView.image = .characterWhiteLevel1
+        imageView.isUserInteractionEnabled = true
         
         return imageView
     }()
@@ -219,10 +220,24 @@ final class HomeHeaderView: UIView {
         return label
     }()
     
+    private var userNickname: String = "사용자"
+    private var userInterest: String = "외국어 공부"
+    
+    private var currentMessageIndex: Int = 0
+    
+    private var messages: [String] {
+        return [
+            "오늘 하루도 함께 나아가볼까요?",
+            "\(userNickname)님의 \(userInterest)을(를) 응원해요!",
+            "큰 변화는 필요 없어요. 작은 미션 하나면 충분해요."
+        ]
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
         setupView()
+        setActions()
     }
     
     required init?(coder: NSCoder) {
@@ -398,5 +413,28 @@ final class HomeHeaderView: UIView {
             expStackView.leadingAnchor.constraint(equalTo: expContainer.leadingAnchor, constant: 20),
             expStackView.trailingAnchor.constraint(equalTo: expContainer.trailingAnchor, constant: -20),
         ])
+    }
+    
+    private func setActions() {
+        characterImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapCharacter)))
+    }
+    
+    @objc private func didTapCharacter() {
+        updateBubbleText()
+    }
+    
+    private func updateBubbleText() {
+        guard !messages.isEmpty else { return }
+        
+        currentMessageIndex = (currentMessageIndex + 1) % messages.count
+        
+        let message = messages[currentMessageIndex]
+        bubbleView.setText(message)
+    }
+    
+    // TODO: 레벨, 닉네임, 캐릭터, 경험치 등이 모두 들어와야함. 그때 적용
+    func configureUserData(nickname: String, interest: String) {
+        self.userNickname = nickname
+        self.userInterest = interest
     }
 }
