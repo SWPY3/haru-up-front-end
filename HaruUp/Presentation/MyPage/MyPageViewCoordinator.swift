@@ -34,6 +34,10 @@ final class MyPageViewCoordinator: Coordinator {
             self?.showProfileEdit()
         }
         
+        myPageVC.onEditInterest = { [weak self] in
+            self?.showInterestEdit()
+        }
+        
         myPageVC.onLogout = { [weak self] in
             self?.onFinish?()
         }
@@ -60,6 +64,17 @@ final class MyPageViewCoordinator: Coordinator {
         
         let vc = ProfileEditViewController(viewModel: vm)
         // 3. Coordinator에서 push
+        navigationController.pushViewController(vc, animated: true)
+    }
+    
+    func showInterestEdit() {
+        print("=== 관심사 수정 진입 ===")
+        
+        // ViewModel 생성
+        let vm = InterestEditViewModel()
+        
+        let vc = InterestEditViewController(viewModel: vm)
+        // Coordinator에서 push
         navigationController.pushViewController(vc, animated: true)
     }
 }

@@ -7,6 +7,12 @@
 
 import Foundation
 
+struct InterestResponse: Codable {
+    let interests: [InterestData]
+    let totalCount: Int
+}
+
+
 struct InterestData: Codable, Sendable {
     let id: Int
     let name: String
@@ -43,5 +49,48 @@ struct Interest {
         default:
             return "📌"
         }
+    }
+}
+
+// MARK: - Interest Extension
+extension Interest: DropdownDisplayable {
+    var displayName: String {
+        return title
+    }
+    
+    // memberInterestId는 CurationData에서 가져온 Interest에만 존재
+    // API 응답에서 새로 가져온 Interest에는 없을 수 있음
+    var memberInterestId: Int? {
+        // 이 값은 InterestDTO에서 가져와야 하므로 별도 처리 필요
+        return nil
+    }
+}
+
+struct InterestDetail: DropdownDisplayable {
+    let id: Int
+    let name: String
+    
+    var displayName: String {
+        return name
+    }
+    
+    init(from data: InterestData) {
+        self.id = data.id
+        self.name = data.name
+    }
+}
+
+// MARK: - Goal Model
+struct Goal: DropdownDisplayable {
+    let id: Int
+    let name: String
+    
+    var displayName: String {
+        return name
+    }
+    
+    init(from data: InterestData) {
+        self.id = data.id
+        self.name = data.name
     }
 }

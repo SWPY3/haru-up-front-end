@@ -151,3 +151,10 @@ extension CurationData {
         return request
     }
 }
+
+
+extension CurationData {
+    var primaryMemberInterestId: Int? {
+        return memberInterestIds?.first
+    }
+}
