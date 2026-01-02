@@ -159,7 +159,6 @@ enum MemberMission {
     struct MissionListDTO: Decodable {
         let id: Int
         let memberId: Int
-        let missionId: Int
         let memberInterestId: Int
         let missionStatus: String
         let expEarned: Int
@@ -184,5 +183,22 @@ enum MemberMission {
         let success: Bool
         let data: String
         let errorMessage: String?
+    }
+    
+    // MARK: 연속 미션 달성일
+    struct ChallengeRequestDTO: Encodable {
+        let startDate: String   // yyyy-MM-dd
+        let endDate: String     // yyyy-MM-dd
+    }
+    
+    struct ChallengeResponseDTO: Decodable {
+        let success: Bool
+        let data: [ChallengeDataDTO]
+        let errorMessage: String?
+    }
+    
+    struct ChallengeDataDTO: Decodable {
+        let targetDate: String  // yyyy-MM-dd
+        let isCompleted: Bool
     }
 }

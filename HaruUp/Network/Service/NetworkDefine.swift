@@ -41,6 +41,7 @@ enum NetworkDefine {
         case select                /// 오늘의 미션 선택
         case list                  /// 오늘의 미션 목록
         case status                /// 미션 성공 및 실패
+        case challenge             /// 미션 달성 여부
         
         var path: String {
             switch self {
@@ -56,6 +57,8 @@ enum NetworkDefine {
                 return "api/member/mission"
             case .status:
                 return "api/member/mission/status"
+            case .challenge:
+                return "api/member/mission/completion-status"
             }
         }
         

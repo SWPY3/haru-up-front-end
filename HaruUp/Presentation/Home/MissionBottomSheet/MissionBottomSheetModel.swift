@@ -8,5 +8,4 @@
 enum MissionStatus: String {
     case completed = "COMPLETED"
     case inactive = "INACTIVE"
-    
 }

@@ -58,26 +58,11 @@ final class MissionDayBottomSheetViewController: UIViewController {
         return label
     }()
     
-    private let dayStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.spacing = 3
-        
-        return stackView
-    }()
-    
     private let dayLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.head1, text: "1")
-        label.textColor = .primaryBlue700
+        label.setStyledText(Typography.title2, fullText: "3 일차", highlightedText: "3", highlightedColor: .primaryBlue700, defaultColor: .black, highlightedFont: Typography.head2.font)
         
-        return label
-    }()
-    
-    private let dayUnitLabel: UILabel = {
-        let label = UILabel()
-        label.setStyle(Typography.title2, text: "일차")
-        label.textColor = .black
+        label.textAlignment = .center
         
         return label
     }()
@@ -103,7 +88,7 @@ final class MissionDayBottomSheetViewController: UIViewController {
     private let confirmButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .cta
-        button.setTitle("삭제할래요", for: .normal)
+        button.setTitle("확인", for: .normal)
         button.titleLabel?.font = Typography.subtitle2.font
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 16
@@ -113,10 +98,16 @@ final class MissionDayBottomSheetViewController: UIViewController {
     }()
     
     private var dayViews: [DayItemView] = []
+    var countDay: Int = 0
     var weeklyData: [DailyMissionData] = []
+    
+    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleDimmedViewTap))
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        setupView()
+        setAction()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -129,8 +120,8 @@ final class MissionDayBottomSheetViewController: UIViewController {
         configureBackgroundView()
         configureImageView()
         configureLabel()
-        configureDayStackView()
         configureButton()
+        configureDayStackView()
     }
     
     private func configureBackgroundView(){
@@ -170,13 +161,11 @@ final class MissionDayBottomSheetViewController: UIViewController {
         bottomSheetView.addSubview(textStackView)
         textStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        [titleLabel, dayStackView, descriptionLabel].forEach {
+        [titleLabel, dayLabel, descriptionLabel].forEach {
             textStackView.addArrangedSubview($0)
         }
         
-        [dayLabel, dayUnitLabel].forEach {
-            dayStackView.addArrangedSubview($0)
-        }
+        dayLabel.setStyledText(Typography.title2, fullText: "\(countDay) 일차", highlightedText: "\(countDay)", highlightedColor: .primaryBlue700, defaultColor: .black, highlightedFont: Typography.head2.font)
         
         NSLayoutConstraint.activate([
             textStackView.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 12),
@@ -185,19 +174,20 @@ final class MissionDayBottomSheetViewController: UIViewController {
     }
     
     private func configureDayStackView() {
-        bottomSheetView.addSubview(dayStackView)
-        dayStackView.translatesAutoresizingMaskIntoConstraints = false
+        bottomSheetView.addSubview(dayIconStackView)
+        dayIconStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        for (index, data) in weeklyData.enumerated() {
+        for data in weeklyData {
             let view = DayItemView()
             view.configure(data: data)
-            dayStackView.addArrangedSubview(view)
+            dayIconStackView.addArrangedSubview(view)
         }
         
         NSLayoutConstraint.activate([
-            dayStackView.topAnchor.constraint(equalTo: textStackView.bottomAnchor, constant: 28),
-            dayStackView.leadingAnchor.constraint(equalTo: bottomSheetView.leadingAnchor, constant: 33),
-            dayStackView.trailingAnchor.constraint(equalTo: bottomSheetView.trailingAnchor, constant: -33)
+            dayIconStackView.topAnchor.constraint(equalTo: textStackView.bottomAnchor, constant: 28),
+            dayIconStackView.leadingAnchor.constraint(equalTo: bottomSheetView.leadingAnchor, constant: 33),
+            dayIconStackView.trailingAnchor.constraint(equalTo: bottomSheetView.trailingAnchor, constant: -33),
+            dayIconStackView.bottomAnchor.constraint(equalTo: confirmButton.topAnchor, constant: -40)
         ])
     }
     
@@ -206,12 +196,17 @@ final class MissionDayBottomSheetViewController: UIViewController {
         confirmButton.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            confirmButton.topAnchor.constraint(equalTo: dayStackView.bottomAnchor, constant: 40),
             confirmButton.bottomAnchor.constraint(equalTo: bottomSheetView.bottomAnchor, constant: -45),
             confirmButton.leadingAnchor.constraint(equalTo: bottomSheetView.leadingAnchor, constant: 20),
             confirmButton.trailingAnchor.constraint(equalTo: bottomSheetView.trailingAnchor, constant: -20),
             confirmButton.heightAnchor.constraint(equalToConstant: 56)
         ])
+    }
+    
+    // MARK: Actions
+    private func setAction() {
+        dimmedView.addGestureRecognizer(tapGesture)
+        confirmButton.addTarget(self, action: #selector(handleCompleteButtonTap), for: .touchUpInside)
     }
     
     private func showBottomSheet() {
@@ -222,6 +217,27 @@ final class MissionDayBottomSheetViewController: UIViewController {
         self.bottomSheetViewBottomConstraint?.constant = 0
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
             self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc private func handleDimmedViewTap() {
+        hideBottomSheet()
+    }
+    
+    @objc private func handleCompleteButtonTap() {
+        hideBottomSheet()
+    }
+    
+    private func hideBottomSheet(completion: @escaping () -> Void = {}) {
+        UIView.animate(withDuration: 0.25) {
+            self.dimmedView.alpha = 0
+        }
+        
+        self.bottomSheetViewBottomConstraint?.constant = bottomSheetHeight
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseIn) {
+            self.view.layoutIfNeeded()
+        } completion: { _ in
+            self.dismiss(animated: false, completion: completion)
         }
     }
 }

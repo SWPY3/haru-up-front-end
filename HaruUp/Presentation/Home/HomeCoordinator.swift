@@ -35,8 +35,8 @@ final class HomeCoordinator: Coordinator {
             })
         }
         
-        homeVC.onShowChallengeBottomSheet = { [weak self] data in
-            self?.presentChallengeBottomSheet(weeklyData: data)
+        homeVC.onShowChallengeBottomSheet = { [weak self] count, data in
+            self?.presentChallengeBottomSheet(countDay: count, weeklyData: data)
         }
         
         navigationController.setViewControllers([homeVC], animated: false)
@@ -50,7 +50,6 @@ final class HomeCoordinator: Coordinator {
         let coordinator = TodayMissionCoordinator(navigationController: modalNavigationController, missionService: missionService, interestsService: interestsService)
 
         coordinator.onFinish = { [weak self, weak modalNavigationController, weak coordinator] in
-            print("창 종료")
             modalNavigationController?.dismiss(animated: true, completion: {
                 onDismiss() // 해당 위치에서 갱신 요청
             })
@@ -82,9 +81,10 @@ final class HomeCoordinator: Coordinator {
         navigationController.present(bottomSheetVC, animated: false)
     }
     
-    private func presentChallengeBottomSheet(weeklyData: [DailyMissionData]) {
+    private func presentChallengeBottomSheet(countDay: Int, weeklyData: [DailyMissionData]) {
         let bottomSheetVC = MissionDayBottomSheetViewController()
         bottomSheetVC.modalPresentationStyle = .overFullScreen
+        bottomSheetVC.countDay = countDay
         bottomSheetVC.weeklyData = weeklyData
         
         navigationController.present(bottomSheetVC, animated: false)

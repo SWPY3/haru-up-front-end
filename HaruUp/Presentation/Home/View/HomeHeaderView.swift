@@ -41,6 +41,7 @@ final class HomeHeaderView: UIView {
         stackView.alignment = .center
         stackView.spacing = 8
         stackView.backgroundColor = .clear
+        stackView.isUserInteractionEnabled = true
         
         return stackView
     }()
@@ -57,7 +58,7 @@ final class HomeHeaderView: UIView {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
-        imageView.image = .iconFireActive
+        imageView.image = .iconFireInactive
         
         return imageView
     }()
@@ -224,6 +225,8 @@ final class HomeHeaderView: UIView {
     private var userInterest: String = "외국어 공부"
     
     private var currentMessageIndex: Int = 0
+    
+    var onTapChallenge: (() -> Void)?
     
     private var messages: [String] {
         return [
@@ -415,12 +418,20 @@ final class HomeHeaderView: UIView {
         ])
     }
     
+    // MARK: Actions
     private func setActions() {
         characterImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapCharacter)))
+        achievementStackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapAchievement)))
     }
     
     @objc private func didTapCharacter() {
+        print("didTapCharacter")
         updateBubbleText()
+    }
+    
+    @objc private func didTapAchievement() {
+        print("didTapAchievement")
+        onTapChallenge?()
     }
     
     private func updateBubbleText() {
@@ -436,5 +447,14 @@ final class HomeHeaderView: UIView {
     func configureUserData(nickname: String, interest: String) {
         self.userNickname = nickname
         self.userInterest = interest
+    }
+    
+    func updateChallengeDay(_ day: Int) {
+        achievementLabel.setStyle(Typography.subtitle2, text: "\(day)")
+        if day == 0 {
+            achievementImageView.image = .iconFireInactive
+        } else {
+            achievementImageView.image = .iconFireActive
+        }
     }
 }
