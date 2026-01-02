@@ -25,6 +25,8 @@ protocol MissionServiceProtocol {
     func fetchMissionList(memberInterestId: Int) -> Single<MemberMission.FetchMissionResponseDTO>
     // 미션 완료 및 삭제
     func setMissionStatus(id: Int, status: String) -> Single<MemberMission.MissionStatusResponseDTO>
+    // 미션 달성 일정
+    func fetchChallengeDate() -> Single<MemberMission.ChallengeResponseDTO>
 }
 
 final class MissionService: Service, MissionServiceProtocol {
@@ -119,6 +121,25 @@ final class MissionService: Service, MissionServiceProtocol {
         
         return request(url, method: .put, header: headers, body: body)
     }
+    
+    func fetchChallengeDate() -> Single<MemberMission.ChallengeResponseDTO> {
+        
+        let url: String = NetworkDefine.MissionAPI.challenge.url
+        
+        var headers: HTTPHeaders = ["Accept": "application/json"]
+
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
+        
+        let date = getDateRangeStrings()
+        let startDate = date.sixDaysAgo
+        let endDate = date.today
+        
+        let query = MemberMission.ChallengeRequestDTO(startDate: startDate, endDate: endDate)
+
+        return request(url, method: .get, header: headers, query: query)
+    }
 }
 
 // MARK: UserDefaults - 미션 선택 여부
@@ -139,5 +160,24 @@ extension MissionService {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         return dateFormatter.string(from: Date())
+    }
+}
+
+// MARK: 오늘 포함 7일간의 날짜 계산
+extension MissionService {
+    func getDateRangeStrings() -> (today: String, sixDaysAgo: String) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "ko_KR")   // 한국 시간 기준
+        formatter.timeZone = TimeZone.current            // 현재 기기 시간대 사용
+        
+        let now = Date()
+        
+        let sixDaysAgoDate = Calendar.current.date(byAdding: .day, value: -6, to: now) ?? now
+        
+        let todayString = formatter.string(from: now)
+        let sixDaysAgoString = formatter.string(from: sixDaysAgoDate)
+        
+        return (today: todayString, sixDaysAgo: sixDaysAgoString)
     }
 }

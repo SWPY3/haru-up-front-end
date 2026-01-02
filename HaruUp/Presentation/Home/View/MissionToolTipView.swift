@@ -40,7 +40,7 @@ final class MissionToolTipView: UIView {
         self.arrowPosition = arrowPosition
         super.init(frame: .zero)
         
-        label.setStyle(Typography.body3, text: text)
+        label.setStyle(Typography.body4, text: text)
         setupView()
     }
     

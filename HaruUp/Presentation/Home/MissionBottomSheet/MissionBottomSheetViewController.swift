@@ -14,6 +14,8 @@ final class MissionBottomSheetViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel: MissionBottomSheetViewModel
     
+    var onMissionStatusChanged: (() -> Void)?
+    
     private var bottomSheetViewBottomConstraint: NSLayoutConstraint?
     private let bottomSheetHeight: CGFloat = 223
     
@@ -216,12 +218,16 @@ final class MissionBottomSheetViewController: UIViewController {
         output.complete
             .emit(onNext: { [weak self] _ in
                 self?.showCompleteView()
+                
+                self?.onMissionStatusChanged?()
             })
             .disposed(by: disposeBag)
         
         output.dismiss
             .emit(onNext: { [weak self] in
                 self?.hideBottomSheet()
+                
+                self?.onMissionStatusChanged?()
             })
             .disposed(by: disposeBag)
     }
