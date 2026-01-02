@@ -90,10 +90,19 @@ final class ProfileEditViewController: UIViewController {
         return label
     }()
     
+    private let jobArrowImageView: UIImageView = {
+        let img = UIImage(named: "chevron_bottom")
+        let imgView = UIImageView(image: img)
+        imgView.translatesAutoresizingMaskIntoConstraints = false
+        return imgView
+    }()
+    
     // 직업 선택 버튼
-    private let jobSelectButton: UIButton = {
+    private lazy var jobSelectButton: UIButton = {
         let btn = UIButton()
-        btn.setAttributedTitle(NSAttributedString(string: TokenStorageService.shared.getCurationData()?.job?.jobName ?? "직업선택", attributes: [.font: Typography.body1.font, .foregroundColor: UIColor.cta]), for: .normal)
+        let initialTitle = TokenStorageService.shared.getCurationData()?.job?.jobName ?? "직업선택"
+        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.job != nil ? .cta : .neutral800
+        btn.setAttributedTitle(NSAttributedString(string: initialTitle, attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]), for: .normal)
         btn.contentHorizontalAlignment = .left
         btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         btn.backgroundColor = .white
@@ -102,31 +111,35 @@ final class ProfileEditViewController: UIViewController {
         btn.layer.borderColor = UIColor.neutral200.cgColor
         btn.translatesAutoresizingMaskIntoConstraints = false
         
-        // Arrow Icon
-        let img = UIImage(named: "chevron_bottom")
-        let imgView = UIImageView(image: img)
-        imgView.translatesAutoresizingMaskIntoConstraints = false
-        btn.addSubview(imgView)
+        btn.addSubview(jobArrowImageView)
         NSLayoutConstraint.activate([
-            imgView.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
-            imgView.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -16)
+            jobArrowImageView.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
+            jobArrowImageView.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -16)
         ])
-        
         return btn
     }()
     
     private let detailJobTitleLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.body4, text: "직업")
+        label.setStyle(Typography.body4, text: "세부 직무")
         label.textColor = .neutral800
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
+    private let detailJobArrowImageView: UIImageView = {
+        let img = UIImage(named: "chevron_bottom")
+        let imgView = UIImageView(image: img)
+        imgView.translatesAutoresizingMaskIntoConstraints = false
+        return imgView
+    }()
+    
     // 디자이너 (Unselected State Mock)
-    private let detailJobSelectButton: UIButton = {
+    private lazy var detailJobSelectButton: UIButton = {
         let btn = UIButton()
-        btn.setAttributedTitle(NSAttributedString(string: TokenStorageService.shared.getCurationData()?.jobDetail?.jobDetailName ?? "세부 직무 선택", attributes: [.font: Typography.body1.font, .foregroundColor: UIColor.cta]), for: .normal)
+        let initialTitle = TokenStorageService.shared.getCurationData()?.jobDetail?.jobDetailName ?? "세부 직무 선택"
+        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.jobDetail != nil ? .cta : .neutral800
+        btn.setAttributedTitle(NSAttributedString(string: initialTitle, attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]), for: .normal)
         btn.contentHorizontalAlignment = .left
         btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         btn.backgroundColor = .white
@@ -135,14 +148,10 @@ final class ProfileEditViewController: UIViewController {
         btn.layer.borderColor = UIColor.neutral200.cgColor
         btn.translatesAutoresizingMaskIntoConstraints = false
         
-        // Arrow Icon
-        let img = UIImage(named: "chevron_bottom")
-        let imgView = UIImageView(image: img)
-        imgView.translatesAutoresizingMaskIntoConstraints = false
-        btn.addSubview(imgView)
+        btn.addSubview(detailJobArrowImageView)
         NSLayoutConstraint.activate([
-            imgView.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
-            imgView.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -16)
+            detailJobArrowImageView.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
+            detailJobArrowImageView.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -16)
         ])
         
         return btn
@@ -201,7 +210,7 @@ final class ProfileEditViewController: UIViewController {
         
         nicknameTextField.becomeFirstResponder()
     }
-
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         nicknameTextField.becomeFirstResponder()
@@ -265,8 +274,6 @@ final class ProfileEditViewController: UIViewController {
     private func setupConstraints() {
         completeButtonBottomConstraint = completeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10)
         
-        completeButtonBottomConstraint = completeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -5)
-        
         NSLayoutConstraint.activate([
             customNavBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -307,7 +314,7 @@ final class ProfileEditViewController: UIViewController {
             warningLabel.topAnchor.constraint(equalTo: textFieldContainer.bottomAnchor, constant: 6),
             warningLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             
-            // [New] Job Selection UI Constraints
+            // Job Selection UI Constraints
             jobTitleLabel.topAnchor.constraint(equalTo: textFieldContainer.bottomAnchor, constant: 40),
             jobTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             
@@ -398,77 +405,183 @@ final class ProfileEditViewController: UIViewController {
         
         // Job Binding
         // 1. 직업 목록 데이터 바인딩
-                Driver.combineLatest(output.jobList, output.selectedJobId)
-                    .drive(with: self, onNext: { owner, data in
-                        owner.jobDropdown.bind(items: data.0, selectedId: data.1)
-                    })
-                    .disposed(by: disposeBag)
-                    
-                // 2. 세부직무 목록 데이터 바인딩
-                Driver.combineLatest(output.detailJobList, output.selectedDetailJobId)
-                    .drive(with: self, onNext: { owner, data in
-                        owner.detailJobDropdown.bind(items: data.0, selectedId: data.1)
-                    })
-                    .disposed(by: disposeBag)
+        Driver.combineLatest(output.jobList, output.selectedJobId)
+            .drive(with: self, onNext: { owner, data in
+                print("💻 JobDropdown 데이터 바인딩: \(data.0.count)건")
+                owner.jobDropdown.bind(items: data.0, selectedId: data.1)
+            })
+            .disposed(by: disposeBag)
+        
+        // 2. 세부직무 목록 데이터 바인딩
+        Driver.combineLatest(output.detailJobList, output.selectedDetailJobId)
+            .drive(with: self, onNext: { owner, data in
+                print("💻 DetailJobDropdown 데이터 바인딩: \(data.0.count)건")
+                owner.detailJobDropdown.bind(items: data.0, selectedId: data.1)
+            })
+            .disposed(by: disposeBag)
+        
+        // 2-1. 세부직무 버튼 활성화/비활성화 상태 바인딩 (추가)
+        output.isDetailJobEnabled
+            .drive(with: self, onNext: { owner, isEnabled in
+                owner.detailJobSelectButton.isEnabled = isEnabled
                 
-                // 3. 직업 선택 상태 업데이트 (버튼 UI)
-                output.currentJobName
-                    .drive(with: self, onNext: { owner, name in
-                        if let name = name {
-                            owner.jobSelectButton.setTitle(name, for: .normal)
-                            owner.jobSelectButton.setTitleColor(.systemBlue, for: .normal)
-                            owner.jobSelectButton.layer.borderColor = UIColor.systemBlue.cgColor
-                        } else {
-                            owner.jobSelectButton.setTitle("직업 선택", for: .normal)
-                            owner.jobSelectButton.setTitleColor(.neutral800, for: .normal)
-                            owner.jobSelectButton.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
-                        }
-                        owner.jobDropdown.isHidden = true // 선택 후 닫기
-                    })
-                    .disposed(by: disposeBag)
+                if isEnabled {
+                    // 활성화 상태: 정상 UI
+                    owner.detailJobSelectButton.alpha = 1.0
+                    owner.detailJobSelectButton.layer.borderColor = UIColor.neutral200.cgColor
+                } else {
+                    // 비활성화 상태: 반투명 + 회색 처리
+                    owner.detailJobSelectButton.alpha = 0.5
+                    owner.detailJobSelectButton.layer.borderColor = UIColor.neutral200.cgColor
                     
-                // 4. 세부 직무 선택 상태 업데이트 (버튼 UI)
-                output.currentDetailJobName
-                    .drive(with: self, onNext: { owner, name in
-                        if let name = name {
-                            owner.detailJobSelectButton.setTitle(name, for: .normal)
-                            owner.detailJobSelectButton.setTitleColor(.systemBlue, for: .normal)
-                            owner.detailJobSelectButton.layer.borderColor = UIColor.systemBlue.cgColor
-                        } else {
-                            owner.detailJobSelectButton.setTitle("세부 직무 선택", for: .normal)
-                            owner.detailJobSelectButton.setTitleColor(.neutral800, for: .normal)
-                            owner.detailJobSelectButton.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
-                        }
+                    // 비활성화 시 타이틀 초기화
+                    owner.detailJobSelectButton.setAttributedTitle(
+                        NSAttributedString(
+                            string: "세부 직무 선택",
+                            attributes: [.font: Typography.body1.font, .foregroundColor: UIColor.neutral800]
+                        ),
+                        for: .normal
+                    )
+                    
+                    // 드롭다운이 열려있으면 닫기
+                    if !owner.detailJobDropdown.isHidden {
                         owner.detailJobDropdown.isHidden = true
-                    })
-                    .disposed(by: disposeBag)
-                    
-                // 5. 드롭다운 Show/Hide 토글
-                jobSelectButton.rx.tap
-                    .bind(with: self, onNext: { owner, _ in
-                        owner.jobDropdown.isHidden.toggle()
-                        owner.detailJobDropdown.isHidden = true
-                        owner.view.endEditing(true)
-                    })
-                    .disposed(by: disposeBag)
-                    
-                detailJobSelectButton.rx.tap
-                    .bind(with: self, onNext: { owner, _ in
-                        // 직업 선택 안 되어 있으면 방어
-                        if owner.jobSelectButton.title(for: .normal) == "직업 선택" { return }
-                        
-                        owner.detailJobDropdown.isHidden.toggle()
-                        owner.jobDropdown.isHidden = true
-                        owner.view.endEditing(true)
-                    })
-                    .disposed(by: disposeBag)
+                        owner.updateDropdownState(
+                            button: owner.detailJobSelectButton,
+                            arrow: owner.detailJobArrowImageView,
+                            isOpen: false
+                        )
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 3. 직업 선택 상태 업데이트 (버튼 타이틀만 업데이트)
+        output.currentJobName
+            .drive(with: self, onNext: { owner, name in
+                let title = name ?? "직업 선택"
+                let color: UIColor = name != nil ? .cta : .neutral800
+                
+                owner.jobSelectButton.setAttributedTitle(
+                    NSAttributedString(
+                        string: title,
+                        attributes: [.font: Typography.body1.font, .foregroundColor: color]
+                    ),
+                    for: .normal
+                )
+                
+                // 선택 완료 시 드롭다운 닫기 + UI 원래 상태로 복귀
+                if name != nil {
+                    owner.jobDropdown.isHidden = true
+                    owner.updateDropdownState(
+                        button: owner.jobSelectButton,
+                        arrow: owner.jobArrowImageView,
+                        isOpen: false
+                    )
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 4. 세부 직무 선택 상태 업데이트 (버튼 타이틀만 업데이트)
+        output.currentDetailJobName
+            .drive(with: self, onNext: { owner, name in
+                let title = name ?? "세부 직무 선택"
+                let color: UIColor = name != nil ? .cta : .neutral800
+                
+                owner.detailJobSelectButton.setAttributedTitle(
+                    NSAttributedString(
+                        string: title,
+                        attributes: [.font: Typography.body1.font, .foregroundColor: color]
+                    ),
+                    for: .normal
+                )
+                
+                // 선택 완료 시 드롭다운 닫기 + UI 원래 상태로 복귀
+                if name != nil {
+                    owner.detailJobDropdown.isHidden = true
+                    owner.updateDropdownState(
+                        button: owner.detailJobSelectButton,
+                        arrow: owner.detailJobArrowImageView,
+                        isOpen: false
+                    )
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 5. 직업 버튼 탭 -> 드롭다운 토글
+        jobSelectButton.rx.tap
+            .bind(with: self, onNext: { owner, _ in
+                owner.jobDropdown.isHidden.toggle()
+                owner.detailJobDropdown.isHidden = true // 다른 드롭다운 닫기
+                owner.view.endEditing(true)
+                
+                // 드롭다운 상태에 따라 UI 업데이트
+                let isOpen = !owner.jobDropdown.isHidden
+                owner.updateDropdownState(
+                    button: owner.jobSelectButton,
+                    arrow: owner.jobArrowImageView,
+                    isOpen: isOpen
+                )
+            })
+            .disposed(by: disposeBag)
+        
+        // 6. 세부직무 버튼 탭 -> 드롭다운 토글
+        detailJobSelectButton.rx.tap
+            .bind(with: self, onNext: { owner, _ in
+                // 비활성화 상태면 무시
+                if !owner.detailJobSelectButton.isEnabled { return }
+                
+                // 직업 선택 안 되어 있으면 방어
+                if owner.jobSelectButton.currentAttributedTitle?.string == "직업 선택" { return }
+                
+                owner.detailJobDropdown.isHidden.toggle()
+                owner.jobDropdown.isHidden = true // 다른 드롭다운 닫기
+                owner.view.endEditing(true)
+                
+                // 드롭다운 상태에 따라 UI 업데이트
+                let isOpen = !owner.detailJobDropdown.isHidden
+                owner.updateDropdownState(
+                    button: owner.detailJobSelectButton,
+                    arrow: owner.detailJobArrowImageView,
+                    isOpen: isOpen
+                )
+            })
+            .disposed(by: disposeBag)
+        
+        // 7. 직업 드롭다운이 닫힐 때 원래 상태로 복귀
+        jobDropdown.rx.observe(Bool.self, "isHidden")
+            .compactMap { $0 }
+            .filter { $0 == true } // 닫힐 때만
+            .subscribe(onNext: { [weak self] _ in
+                guard let self = self else { return }
+                self.updateDropdownState(
+                    button: self.jobSelectButton,
+                    arrow: self.jobArrowImageView,
+                    isOpen: false
+                )
+            })
+            .disposed(by: disposeBag)
+        
+        // 8. 세부직무 드롭다운이 닫힐 때 원래 상태로 복귀
+        detailJobDropdown.rx.observe(Bool.self, "isHidden")
+            .compactMap { $0 }
+            .filter { $0 == true } // 닫힐 때만
+            .subscribe(onNext: { [weak self] _ in
+                guard let self = self else { return }
+                self.updateDropdownState(
+                    button: self.detailJobSelectButton,
+                    arrow: self.detailJobArrowImageView,
+                    isOpen: false
+                )
+            })
+            .disposed(by: disposeBag)
         
         // ----------------------------------------
-    
+        
         // 1. 초기 닉네임
         output.initialNickname
-                .drive(nicknameTextField.rx.text)
-                .disposed(by: disposeBag)
+            .drive(nicknameTextField.rx.text)
+            .disposed(by: disposeBag)
         
         // 2. 완료 버튼 활성화 상태
         output.isCompleteEnabled
@@ -489,13 +602,61 @@ final class ProfileEditViewController: UIViewController {
         output.updateSuccess
             .emit(with: self, onNext: { owner, _ in
                 owner.view.endEditing(true)
-                owner.showToast(message: " 닉네임 변경이 완료되었어요")
+                
+                // 변경된 항목에 따라 토스트 메시지 다르게 표시
+                let nicknameChanged = owner.nicknameTextField.text != owner.viewModel.initialNicknameValue
+                let jobChanged = owner.viewModel.selectedJobRelay.value?.id != owner.viewModel.savedData?.job?.id
+                let detailJobChanged = owner.viewModel.selectedDetailJobRelay.value?.id != owner.viewModel.savedData?.jobDetail?.id
+                
+                var message = " 프로필 수정이 완료되었어요"
+                if nicknameChanged && (jobChanged || detailJobChanged) {
+                    message = " 닉네임 및 직업 정보가 변경되었어요"
+                } else if nicknameChanged {
+                    message = " 닉네임 변경이 완료되었어요"
+                } else if jobChanged || detailJobChanged {
+                    message = " 직업 정보가 변경되었어요"
+                }
+                
+                owner.showToast(message: message)
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
                     owner.navigationController?.popViewController(animated: true)
                 }
             })
             .disposed(by: disposeBag)
+    }
+    
+    // MARK: - Helper Methods
+    private func updateDropdownState(button: UIButton, arrow: UIImageView, isOpen: Bool) {
+        let upImage = UIImage(named: "chevron_top")?.withRenderingMode(.alwaysTemplate)
+        let downImage = UIImage(named: "chevron_bottom")?.withRenderingMode(.alwaysTemplate)
+        
+        if isOpen {
+            // 드롭다운 열림: 테두리 파란색, 화살표 위
+            button.layer.borderColor = UIColor.cta.cgColor
+            button.layer.borderWidth = 1
+            arrow.image = upImage
+            arrow.tintColor = .cta
+        } else {
+            // 드롭다운 닫힘: 테두리 회색, 화살표 아래
+            button.layer.borderColor = UIColor.neutral200.cgColor
+            button.layer.borderWidth = 1
+            arrow.image = downImage
+            arrow.tintColor = .neutral800
+        }
+    }
+    
+    @objc private func dismissKeyboard() {
+        // 드롭다운이 열려있으면 닫아주는 로직 추가
+        if !jobDropdown.isHidden {
+            jobDropdown.isHidden = true
+            updateDropdownState(button: jobSelectButton, arrow: jobArrowImageView, isOpen: false)
+        }
+        if !detailJobDropdown.isHidden {
+            detailJobDropdown.isHidden = true
+            updateDropdownState(button: detailJobSelectButton, arrow: detailJobArrowImageView, isOpen: false)
+        }
+        view.endEditing(true)
     }
     
     // MARK: - Logic Methods
@@ -551,17 +712,8 @@ final class ProfileEditViewController: UIViewController {
     private func showWarning(_ text: String) {
         warningLabel.setStyle(Typography.body4, text: text)
         warningLabel.isHidden = false
-//        textFieldBottomLine.backgroundColor = .systemRed
+        //        textFieldBottomLine.backgroundColor = .systemRed
         completeButton.backgroundColor = .neutral200
-    }
-    
-    @objc private func dismissKeyboard() {
-        // 드롭다운이 열려있으면 닫아주는 로직 추가
-        if !jobDropdown.isHidden || !detailJobDropdown.isHidden {
-            jobDropdown.isHidden = true
-            detailJobDropdown.isHidden = true
-        }
-        view.endEditing(true)
     }
     
     private func resetTextField() {
@@ -641,11 +793,11 @@ extension ProfileEditViewController: UIGestureRecognizerDelegate {
         }
     }
     
-//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-//        if touch.view is UIButton {
-//            return false
-//        }
-//        
+    //    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+    //        if touch.view is UIButton {
+    //            return false
+    //        }
+    //
     //        return true
     //    }
     
