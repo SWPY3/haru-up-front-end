@@ -148,7 +148,11 @@ final class TodayMissionSelectView: UIView {
     }
     
     func updateSelectionCount(_ count: Int) {
-        let countText = "\(count)개"
+        let allCount: Int = 5
+        let selectableCount = allCount - count
+        let countText = "\(selectableCount)개"
+        
         countLabel.setStyle(Typography.title3, text: countText)
+        countLabel.textColor = selectableCount == 0 ? .neutral400 : .cta
     }
 }

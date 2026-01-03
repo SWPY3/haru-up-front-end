@@ -39,9 +39,6 @@ final class TodayMissionListViewModel {
     
     private let disposeBag = DisposeBag()
     
-    // TODO: test용
-    private let userId: Int = 4639152463
-    
     init(missionService: MissionServiceProtocol, interestsService: InterestsService) {
         self.missionService = missionService
         self.interestsService = interestsService
