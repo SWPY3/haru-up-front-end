@@ -11,6 +11,14 @@ import RxCocoa
 
 final class ProfileEditViewController: UIViewController {
     // MARK: - UI Components
+    
+    private let buttonBackgroundView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private let customNavBar: UIView = {
         let view = UIView()
         view.backgroundColor = .white
@@ -246,7 +254,7 @@ final class ProfileEditViewController: UIViewController {
         
         [customNavBar, nicknameTitleLabel, textFieldContainer, warningLabel,
          jobTitleLabel, jobSelectButton,
-         detailJobTitleLabel, detailJobSelectButton,
+         detailJobTitleLabel, detailJobSelectButton, buttonBackgroundView,
          completeButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
@@ -275,6 +283,17 @@ final class ProfileEditViewController: UIViewController {
         completeButtonBottomConstraint = completeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10)
         
         NSLayoutConstraint.activate([
+            // 1. 좌우는 화면 꽉 채우기
+            buttonBackgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            buttonBackgroundView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            
+            // 2. 바닥은 화면 끝까지 (Safe Area 무시하고 채움)
+            buttonBackgroundView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            // 3. [핵심] 윗부분은 완료 버튼보다 5만큼 더 위로 올라오게 설정
+            // (완료 버튼이 키보드에 의해 올라가면, 이 뷰도 같이 따라서 늘어납니다)
+            buttonBackgroundView.topAnchor.constraint(equalTo: completeButton.topAnchor, constant: -5),
+            
             customNavBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
