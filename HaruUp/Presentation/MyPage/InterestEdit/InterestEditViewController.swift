@@ -774,8 +774,19 @@ final class InterestEditViewController: UIViewController {
             label.trailingAnchor.constraint(equalTo: toastContainer.trailingAnchor, constant: -20),
         ])
         
+        // 1. 나타나는 애니메이션
         toastContainer.alpha = 0
-        UIView.animate(withDuration: 0.3) { toastContainer.alpha = 1 }
+        UIView.animate(withDuration: 0.3) {
+            toastContainer.alpha = 1
+        } completion: { _ in
+            // 2. 일정 시간 대기 후 사라지는 애니메이션
+            UIView.animate(withDuration: 0.3, delay: 2.0, options: .curveEaseOut, animations: {
+                toastContainer.alpha = 0
+            }) { _ in
+                // 3. 완전히 사라지면 뷰 계층에서 제거
+                toastContainer.removeFromSuperview()
+            }
+        }
     }
 }
 
