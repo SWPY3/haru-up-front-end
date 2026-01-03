@@ -116,20 +116,33 @@ final class HomeSectionHeaderView: UIView {
     
     private func toggleTooltip() {
         if tooltipView.isHidden {
-            tooltipView.isHidden = false
-            tooltipView.transform = CGAffineTransform(translationX: 0, y: 10) // 살짝 아래에서 올라오는 효과
-            
-            UIView.animate(withDuration: 0.2) {
-                self.tooltipView.alpha = 1
-                self.tooltipView.transform = .identity
-            }
+            showTooltip()
         } else {
-            UIView.animate(withDuration: 0.2, animations: {
-                self.tooltipView.alpha = 0
-                self.tooltipView.transform = CGAffineTransform(translationX: 0, y: 10)
-            }) { _ in
-                self.tooltipView.isHidden = true
-            }
+            hideTooltip()
+        }
+    }
+    
+    private func showTooltip() {
+        guard tooltipView.isHidden else { return }
+        
+        tooltipView.isHidden = false
+        tooltipView.transform = CGAffineTransform(translationX: 0, y: 10)
+        
+        UIView.animate(withDuration: 0.2) {
+            self.tooltipView.alpha = 1
+            self.tooltipView.transform = .identity
+        }
+    }
+    
+    func hideTooltip() {
+        // 이미 숨겨져 있다면 실행하지 않음
+        guard !tooltipView.isHidden else { return }
+        
+        UIView.animate(withDuration: 0.2, animations: {
+            self.tooltipView.alpha = 0
+            self.tooltipView.transform = CGAffineTransform(translationX: 0, y: 10)
+        }) { _ in
+            self.tooltipView.isHidden = true
         }
     }
 }

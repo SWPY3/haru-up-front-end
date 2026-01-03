@@ -46,6 +46,8 @@ class HomeViewController: UIViewController {
     
     private let headerView = HomeHeaderView()
     
+    private weak var sectionHeaderView: HomeSectionHeaderView?
+    
     // MARK: - LifeCycle
     init(viewModel: HomeViewModel) {
         self.viewModel = viewModel
@@ -61,6 +63,7 @@ class HomeViewController: UIViewController {
         
         setupView()
         bind()
+        setActions()
         
         viewDidLoadRelay.accept(())
     }
@@ -78,6 +81,7 @@ class HomeViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
+        sectionHeaderView?.hideTooltip()
     }
     
     override func viewDidLayoutSubviews() {
@@ -248,11 +252,44 @@ class HomeViewController: UIViewController {
     func didCompleteMissionSelection() {
         reloadSubject.onNext(())
     }
+    
+    private func setActions() {
+        bindGlobalActions()
+    }
+    
+    private func bindGlobalActions() {
+        // 테이블뷰 스크롤 시작 시 툴팁 닫기
+        tableView.rx.willBeginDragging
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] in
+                self?.sectionHeaderView?.hideTooltip()
+            })
+            .disposed(by: disposeBag)
+        
+        // 셀(Cell)을 탭했을 때 닫기
+        tableView.rx.itemSelected
+            .subscribe(onNext: { [weak self] _ in
+                self?.sectionHeaderView?.hideTooltip()
+            })
+            .disposed(by: disposeBag)
+        
+        // 화면 배경(빈 공간)을 터치했을 때 닫기
+        let tapGesture = UITapGestureRecognizer()
+        tapGesture.cancelsTouchesInView = false // 테이블뷰 셀 선택 이벤트를 막지 않도록 설정
+        view.addGestureRecognizer(tapGesture)
+        
+        tapGesture.rx.event
+            .bind(onNext: { [weak self] _ in
+                self?.sectionHeaderView?.hideTooltip()
+            })
+            .disposed(by: disposeBag)
+    }
 }
 
 extension HomeViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let header = HomeSectionHeaderView()
+        self.sectionHeaderView = header // 참조 저장
         
         return header
     }
