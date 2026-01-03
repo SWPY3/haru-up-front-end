@@ -57,6 +57,7 @@ final class GoalInputBottomSheet: UIViewController {
         let tf = UITextField()
         tf.placeholder = "2~20자로 입력해주세요."
         tf.borderStyle = .none
+        tf.textColor = .black
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf

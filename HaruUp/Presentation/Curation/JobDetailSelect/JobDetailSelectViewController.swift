@@ -38,7 +38,7 @@ class JobDetailSelectViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.title2, text: "세부 직무를 골라주세요.")
+        label.setStyle(Typography.title2, text: "")
         label.textAlignment = .left
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -109,12 +109,12 @@ class JobDetailSelectViewController: UIViewController {
     }()
     
     private let activityIndicator: UIActivityIndicatorView = {
-            let indicator = UIActivityIndicatorView(style: .large)
-            indicator.color = .primaryBlue700
-            indicator.hidesWhenStopped = true
-            indicator.translatesAutoresizingMaskIntoConstraints = false
-            return indicator
-        }()
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .primaryBlue700
+        indicator.hidesWhenStopped = true
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        return indicator
+    }()
     
     // MARK: - Init
     
@@ -227,7 +227,7 @@ class JobDetailSelectViewController: UIViewController {
         )
         
         activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-                activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
         
     }
     
@@ -247,16 +247,22 @@ class JobDetailSelectViewController: UIViewController {
         let output = viewModel.transform(input: input)
         
         output.isLoading
-                    .drive(onNext: { [weak self] isLoading in
-                        if isLoading {
-                            self?.activityIndicator.startAnimating()
-                            self?.scrollView.isHidden = true
-                        } else {
-                            self?.activityIndicator.stopAnimating()
-                            self?.scrollView.isHidden = false
-                        }
-                    })
-                    .disposed(by: disposeBag)
+            .drive(onNext: { [weak self] isLoading in
+                if isLoading {
+                    self?.activityIndicator.startAnimating()
+                    self?.scrollView.isHidden = true
+                } else {
+                    self?.activityIndicator.stopAnimating()
+                    self?.scrollView.isHidden = false
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        output.titleText
+            .drive(with: self, onNext: { owner, text in
+                owner.titleLabel.setStyle(Typography.title2, text: text)
+            })
+            .disposed(by: disposeBag)
         
         // 세부 직무 목록 받아서 버튼 생성
         output.jobDetails
@@ -304,6 +310,10 @@ class JobDetailSelectViewController: UIViewController {
             
             jobDetailButtons.append(button)
             jobDetailButtonsStackView.addArrangedSubview(button)
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.scrollView.flashScrollIndicators()
         }
     }
     

@@ -56,6 +56,7 @@ class ForeignLanguageInputBottomSheet: UIViewController {
         tf.placeholder = "프랑스어"
         tf.borderStyle = .none
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
+        tf.textColor = .black
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
