@@ -119,6 +119,7 @@ class GoalInputSelectViewController: UIViewController {
         let tf = UITextField()
         tf.placeholder = "2~20자로 입력해주세요."
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
+        tf.textColor = .black
         tf.borderStyle = .none
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
