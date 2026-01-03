@@ -106,18 +106,15 @@ enum MemberMission {
     
     struct RetryMissionDTO: Decodable {
         let memberMissionId: Int
-        let missionId: Int
         let content: String
         let directFullPath: [String]
         let difficulty: Int
         let expEarned: Int
         let createdType: String
-        let relatedInterest: String?
         
         enum CodingKeys: String, CodingKey {
             case memberMissionId = "member_mission_id"
-            case missionId = "mission_id"
-            case content, directFullPath, difficulty, expEarned, createdType, relatedInterest
+            case content, directFullPath, difficulty, expEarned, createdType
         }
         
         func toMissionDTO() -> MemberMission.MissionDTO {
