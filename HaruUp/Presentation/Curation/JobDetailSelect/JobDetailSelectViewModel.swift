@@ -20,6 +20,7 @@ final class JobDetailSelectViewModel {
         let jobDetails: Driver<[JobDetail]>
         let selectedJobDetail: Driver<JobDetail?>
         let isLoading: Driver<Bool>
+        let titleText: Driver<String>
     }
     
     private weak var coordinator: JobDetailSelectCoordinator?
@@ -54,6 +55,15 @@ final class JobDetailSelectViewModel {
             .bind(to: currentSelectedJobDetail)
             .disposed(by: disposeBag)
         
+        let titleTextString: String
+        if self.selectedJob.jobName == "직장인" {
+            titleTextString = "세부 직무를 골라주세요."
+        } else {
+            titleTextString = "하고 싶은 세부 직무를 골라주세요."
+        }
+        
+        let titleTextDriver = Driver.just(titleTextString)
+        
         // 다음 버튼 탭 처리
         input.nextButtonTapped
             .withLatestFrom(currentSelectedJobDetail)
@@ -72,7 +82,8 @@ final class JobDetailSelectViewModel {
         return Output(
             jobDetails: jobDetailList.asDriver(),
             selectedJobDetail: currentSelectedJobDetail.asDriver(),
-            isLoading: isLoading.asDriver()
+            isLoading: isLoading.asDriver(),
+            titleText: titleTextDriver
         )
     }
 }

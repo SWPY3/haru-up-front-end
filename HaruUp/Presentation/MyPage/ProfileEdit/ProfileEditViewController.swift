@@ -776,7 +776,7 @@ extension ProfileEditViewController: UIGestureRecognizerDelegate {
         guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
               let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
         
-        completeButtonBottomConstraint?.constant = -(keyboardFrame.height - view.safeAreaInsets.bottom)
+        completeButtonBottomConstraint?.constant = -(keyboardFrame.height - view.safeAreaInsets.bottom + 10)
         
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
