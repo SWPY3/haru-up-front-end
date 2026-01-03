@@ -58,12 +58,15 @@ final class InterestsService: Service {
             let url = NetworkDefine.InterestAPI.getInterestDetail(parentId: parentId).url
             let parameters: [String: Any] = ["parentId": parentId]
             
+            print("📡 세부 관심사 요청 - Parent ID: \(parentId)")
+            
             AF.request(url, method: .get, parameters: parameters, headers: self.commonHeaders)
                 .validate()
                 .responseDecodable(of: InterestAPIResponse.self) { response in
                     switch response.result {
                     case .success(let result):
                         let details = result.interests.map { InterestDetail(from: $0) }
+                        print("📥 받은 세부 관심사 목록: \(result)")
                         observer.onNext(details)
                         observer.onCompleted()
                     case .failure(let error):

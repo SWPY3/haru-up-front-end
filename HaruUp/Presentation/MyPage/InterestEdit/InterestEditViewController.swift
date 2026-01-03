@@ -343,17 +343,17 @@ final class InterestEditViewController: UIViewController {
             interestDropdown.topAnchor.constraint(equalTo: interestSelectButton.bottomAnchor, constant: 4),
             interestDropdown.leadingAnchor.constraint(equalTo: interestSelectButton.leadingAnchor),
             interestDropdown.trailingAnchor.constraint(equalTo: interestSelectButton.trailingAnchor),
-            interestDropdown.heightAnchor.constraint(equalToConstant: 200),
+            interestDropdown.heightAnchor.constraint(equalToConstant: 216),
             
             detailInterestDropdown.topAnchor.constraint(equalTo: detailInterestSelectButton.bottomAnchor, constant: 4),
             detailInterestDropdown.leadingAnchor.constraint(equalTo: detailInterestSelectButton.leadingAnchor),
             detailInterestDropdown.trailingAnchor.constraint(equalTo: detailInterestSelectButton.trailingAnchor),
-            detailInterestDropdown.heightAnchor.constraint(equalToConstant: 200),
+            detailInterestDropdown.heightAnchor.constraint(equalToConstant: 216),
             
             goalDropdown.topAnchor.constraint(equalTo: goalSelectButton.bottomAnchor, constant: 4),
             goalDropdown.leadingAnchor.constraint(equalTo: goalSelectButton.leadingAnchor),
             goalDropdown.trailingAnchor.constraint(equalTo: goalSelectButton.trailingAnchor),
-            goalDropdown.heightAnchor.constraint(equalToConstant: 200),
+            goalDropdown.heightAnchor.constraint(equalToConstant: 216),
             
             completeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             completeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -626,6 +626,26 @@ final class InterestEditViewController: UIViewController {
             .drive(with: self, onNext: { owner, isEnabled in
                 owner.completeButton.isEnabled = isEnabled
                 owner.completeButton.backgroundColor = isEnabled ? .cta : .neutral200
+            })
+            .disposed(by: disposeBag)
+        
+        // 목표 버튼 활성화/비활성화 처리
+        output.isGoalButtonEnabled
+            .drive(with: self, onNext: { owner, isEnabled in
+                owner.goalSelectButton.isEnabled = isEnabled
+                
+                if isEnabled {
+                    // 활성화 스타일 (흰색 배경)
+                    owner.goalSelectButton.backgroundColor = .white
+                    owner.goalSelectButton.layer.borderColor = UIColor.neutral200.cgColor
+                    owner.goalArrowImageView.isHidden = false
+                } else {
+                    // 비활성화 스타일 (회색 배경)
+                    owner.goalSelectButton.backgroundColor = .neutral50
+                    owner.goalSelectButton.layer.borderColor = UIColor.neutral100.cgColor
+                    owner.goalArrowImageView.isHidden = true
+                    
+                }
             })
             .disposed(by: disposeBag)
         

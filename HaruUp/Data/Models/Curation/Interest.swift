@@ -40,7 +40,7 @@ struct Interest {
             return "🌍"
         case "체력관리 및 운동":
             return "🏋🏻‍♀️"
-        case "재테크/투자":
+        case "재테크 및 투자":
             return "💵"
         case "자격증 공부":
             return "🪪"

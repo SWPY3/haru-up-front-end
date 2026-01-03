@@ -48,6 +48,7 @@ final class InterestEditViewModel {
         let goalValidationFailed: Signal<String>        // 유효성 검사 실패 (에러 메시지 표시용)
         let showLockAlert: Signal<Void>                 // 3회 실패 팝업
         let goalLockTimerMessage: Driver<String?>       // 메인 화면 타이머 메시지
+        let isGoalButtonEnabled: Driver<Bool>
     }
     
     private let disposeBag = DisposeBag()
@@ -179,18 +180,21 @@ final class InterestEditViewModel {
             })
             .disposed(by: disposeBag)
         
-        // 5. 목표 버튼 탭 -> Service 호출 (DetailInterest ID 필요)
-        input.goalButtonTapped
-            .withLatestFrom(selectedDetailInterestRelay)
+        selectedDetailInterestRelay
+            .distinctUntilChanged { $0?.id == $1?.id } // 동일한 ID 선택 시 중복 호출 방지
             .flatMapLatest { [weak self] detailInterest -> Observable<[Goal]> in
-                guard let self = self, let detailId = detailInterest?.id else { return .just([]) }
+                guard let self = self, let detailId = detailInterest?.id else {
+                    return .just([]) // 세부 관심사가 없으면 빈 배열
+                }
+                
+                // API 호출
                 return self.interestService.fetchGoals(parentId: detailId)
                     .catch { error in
                         print("❌ 목표 목록 조회 실패: \(error)")
-                        return .just([]) // 에러 처리 추가
+                        return .just([])
                     }
             }
-            .bind(to: goalListRelay)
+            .bind(to: goalListRelay) // 결과를 리스트에 바인딩
             .disposed(by: disposeBag)
         
         // 6. 목표 선택 시
@@ -224,22 +228,28 @@ final class InterestEditViewModel {
         // 1. 0.5초 동안 중복 입력 방지 (연타 방지)
             .throttle(.milliseconds(500), scheduler: MainScheduler.instance)
             .flatMapLatest { [weak self] text -> Observable<(String, Bool)> in
-                guard let self = self else { return .empty() }
                 
-                return self.interestService.validateGoalInput(text: text)
-                    .asObservable()
-                    .map { (text, $0) }
-                    .catch { error in
-                        // 2. 취소된 에러(explicitlyCancelled)는 실패로 간주하지 않고 무시함
-                        if let afError = error.asAFError, afError.isExplicitlyCancelledError {
-                            print("📡 이전 요청이 취소되었습니다. (무시함)")
-                            return .empty()
-                        }
-                        
-                        // 진짜 네트워크 에러나 API 오류만 실패로 처리
-                        print("❌ Validation Error: \(error)")
-                        return .just((text, false))
-                    }
+                // TODO: - API 수정되면 다시 연관성 검사 실행하기
+
+                // 🚧 [임시 수정] API 오류로 인해 무조건 통과(true) 처리
+                // 나중에 API가 고쳐지면 이 부분을 지우고 아래 주석을 푸세요.
+                return .just((text, true))
+//                guard let self = self else { return .empty() }
+                
+//                return self.interestService.validateGoalInput(text: text)
+//                    .asObservable()
+//                    .map { (text, $0) }
+//                    .catch { error in
+//                        // 2. 취소된 에러(explicitlyCancelled)는 실패로 간주하지 않고 무시함
+//                        if let afError = error.asAFError, afError.isExplicitlyCancelledError {
+//                            print("📡 이전 요청이 취소되었습니다. (무시함)")
+//                            return .empty()
+//                        }
+//                        
+//                        // 진짜 네트워크 에러나 API 오류만 실패로 처리
+//                        print("❌ Validation Error: \(error)")
+//                        return .just((text, false))
+//                    }
             }
             .subscribe(onNext: { [weak self] (text, isValid) in
                 // ... (이후 로직은 기존과 동일) ...
@@ -270,10 +280,39 @@ final class InterestEditViewModel {
         let isCompleteEnabled = Observable.combineLatest(
             selectedInterestRelay,
             selectedDetailInterestRelay,
-            selectedGoalRelay
+            selectedGoalRelay,
+            goalListRelay
         )
-            .map { $0 != nil && $1 != nil && $2 != nil }
+            .map { [weak self] (interest, detail, goal, goalList) -> Bool in
+                guard let self = self else { return false }
+                
+                // 1. 관심사와 세부 관심사는 필수
+                guard interest != nil, detail != nil else { return false }
+                // 2. 목표 선택 여부 판단
+                // 목표 리스트가 비어있으면(=목표가 없는 카테고리), 목표 선택 안 해도 됨(true)
+                // 목표 리스트가 있으면, 목표가 선택되어 있어야 함(goal != nil)
+                let isGoalValid = goalList.isEmpty || goal != nil
+                
+                guard isGoalValid else { return false }
+                
+                let saved = self.savedData
+                let interestChanged = interest?.id != saved?.interest?.id
+                let detailChanged = detail?.id != saved?.interestDetail?.id
+                
+                // 목표 변경 체크:
+                // 리스트가 비어있으면: 이전에 목표가 있었는데 지금은 없어진 경우(변경됨) 체크
+                // 리스트가 있으면: 선택된 ID 비교
+                let goalChanged: Bool
+                if goalList.isEmpty {
+                    goalChanged = saved?.goal != nil // 이전에 goal이 있었으면 변경된 것
+                } else {
+                    goalChanged = goal?.id != saved?.goal?.id
+                }
+                
+                return interestChanged || detailChanged || goalChanged
+            }
             .asDriver(onErrorJustReturn: false)
+        
         
         // 8. 완료 버튼 탭 (최종 수정 API 호출)
         input.completeButtonTapped
@@ -305,26 +344,50 @@ final class InterestEditViewModel {
             })
             .disposed(by: disposeBag)
         
-        // 화면 표시용 이름 (커스텀 값 우선)
-//        let currentDetailName = Driver.combineLatest(
-//            selectedDetailInterestRelay.asDriver(),
-//            customDetailInterestNameRelay.asDriver()
-//        ) { detail, custom -> String? in
-//            if let c = custom, !c.isEmpty { return c }
-//            return detail!.name
-//        }
-//        
-//        let currentGoalName = Driver.combineLatest(
-//            selectedGoalRelay.asDriver(),
-//            customGoalNameRelay.asDriver()
-//        ) { goal, custom  -> String? in
-//            if let c = custom, !c.isEmpty { return c }
-//            return goal!.name
-        //        }
-        
         let currentDetailName = Driver.combineLatest(selectedDetailInterestRelay.asDriver(), customDetailInterestNameRelay.asDriver()) { $1?.isEmpty == false ? $1 : $0?.name }
-        let currentGoalName = Driver.combineLatest(selectedGoalRelay.asDriver(), customGoalNameRelay.asDriver()) { $1?.isEmpty == false ? $1 : $0?.name }
+        let currentGoalName = Driver.combineLatest(
+            selectedGoalRelay.asDriver(),
+            customGoalNameRelay.asDriver(),
+            goalListRelay.asDriver(),
+            selectedDetailInterestRelay.asDriver()
+        ) { goal, custom, list, detail -> String? in
+            
+            // 1순위: 세부 관심사가 없으면 -> 무조건 기본값("목표 선택")
+            // (이 코드가 list.isEmpty 체크보다 위에 있어야 합니다!)
+            guard detail != nil else { return nil }
+            
+            // 2순위: 커스텀 입력값이 있으면 -> 커스텀 값
+            if let c = custom, !c.isEmpty { return c }
+            
+            // 3순위: 선택된 목표가 있으면 -> 목표 이름 (로딩 중이어도 표시)
+            if let g = goal { return g.name }
+            
+            // 4순위: 목표도 없고, 리스트도 비어있으면 -> "선택할 목표 없음"
+            if list.isEmpty {
+                return "선택할 목표 없음"
+            }
+            
+            // 5순위: 리스트는 있는데 선택 안 함 -> 기본값
+            return nil
+        }
         
+        // [수정 2] 목표 버튼 활성화 여부 (저장된 목표가 있으면 활성화 유지)
+        let isGoalButtonEnabled = Observable.combineLatest(
+            selectedDetailInterestRelay,
+            goalListRelay,
+            selectedGoalRelay // 목표 상태도 함께 확인
+        )
+            .map { detail, list, goal -> Bool in
+                // 1. 세부 관심사 미선택(초기화) 상태 -> 활성화(흰색)로 보여줌
+                if detail == nil { return true }
+                
+                // 2. 이미 선택된 목표가 있음 -> 리스트 로딩 중이어도 활성화(흰색) 유지
+                if goal != nil { return true }
+                
+                // 3. 그 외 -> 리스트가 있어야 활성화
+                return !list.isEmpty
+            }
+            .asDriver(onErrorJustReturn: false)
         
         return Output(
             isCompleteEnabled: isCompleteEnabled,
@@ -350,7 +413,8 @@ final class InterestEditViewModel {
             goalValidationSuccess: validationSuccessRelay.asSignal(),
             goalValidationFailed: validationFailedRelay.asSignal(),
             showLockAlert: showLockAlertRelay.asSignal(),
-            goalLockTimerMessage: goalLockWarningRelay.asDriver()
+            goalLockTimerMessage: goalLockWarningRelay.asDriver(),
+            isGoalButtonEnabled: isGoalButtonEnabled
         )
     }
     
@@ -403,11 +467,12 @@ final class InterestEditViewModel {
     }
     
     // MARK: - API Request
+    // MARK: - API Request
     private func requestUpdateInterest(interestId: Int?, detailInterestId: Int?, goalId: Int?) -> Observable<Bool> {
         return Observable.create { [weak self] observer in
             guard let self = self else { return Disposables.create() }
             
-            // 1. MemberInterestId
+            // 1. MemberInterestId 가져오기
             var targetMemberInterestId: Int? = UserStorage.shared.selectedMemberInterestId
             if targetMemberInterestId == nil {
                 if let data = TokenStorageService.shared.getCurationData(),
@@ -417,45 +482,66 @@ final class InterestEditViewModel {
                 }
             }
             
-            guard let memberInterestId = targetMemberInterestId,
-                  let finalInterestId = goalId else {
-                print("❌ ID 정보 누락")
+            guard let memberInterestId = targetMemberInterestId else {
+                print("❌ MemberInterestId 없음")
                 observer.onNext(false); observer.onCompleted()
                 return Disposables.create()
             }
             
             // 2. DirectFullPath 생성
             var directFullPath: [String] = []
-            if let i = self.selectedInterestRelay.value { directFullPath.append(i.title) }
+            var finalIdToSend: Int?
             
-            // 세부 관심사 (커스텀 체크)
+            // (1) 관심사
+            if let i = self.selectedInterestRelay.value {
+                directFullPath.append(i.title)
+            }
+            
+            // (2) 세부 관심사
             if let d = self.selectedDetailInterestRelay.value {
-                if let custom = self.customDetailInterestNameRelay.value, !custom.isEmpty {
-                    directFullPath.append(custom)
+                // 커스텀 세부관심사 체크
+                if let customD = self.customDetailInterestNameRelay.value, !customD.isEmpty {
+                    directFullPath.append(customD)
                 } else {
                     directFullPath.append(d.name)
                 }
             }
             
-            // 목표 (커스텀 체크)
-            if let g = self.selectedGoalRelay.value {
-                if let custom = self.customGoalNameRelay.value, !custom.isEmpty {
-                    directFullPath.append(custom)
-                } else {
-                    directFullPath.append(g.name)
+            // (3) 목표 처리
+            if self.goalListRelay.value.isEmpty {
+                // ✅ [수정] 목표가 없는 카테고리
+                print("ℹ️ 목표가 없는 카테고리입니다. (빈 문자열 전송)")
+                finalIdToSend = detailInterestId // 세부 관심사 ID를 최종 ID로 사용
+                
+                // 빈 문자열을 추가하여 배열 길이를 3으로 맞춤
+                directFullPath.append("")
+                
+            } else {
+                // ✅ 목표가 있는 카테고리
+                if let g = self.selectedGoalRelay.value {
+                    finalIdToSend = g.id
+                    
+                    if let customG = self.customGoalNameRelay.value, !customG.isEmpty {
+                        directFullPath.append(customG)
+                    } else {
+                        directFullPath.append(g.name)
+                    }
                 }
             }
             
-            if directFullPath.count != 3 {
-                print("❌ Path 구성 실패")
+            // 유효성 검사: 이제 무조건 3개가 됩니다.
+            guard let finalId = finalIdToSend, directFullPath.count == 3 else {
+                print("❌ 데이터 구성 실패: ID=\(String(describing: finalIdToSend)), Path=\(directFullPath)")
                 observer.onNext(false); observer.onCompleted()
                 return Disposables.create()
             }
             
-            // 3. Service 호출 (Single 구독 수정 완료)
+            // 3. Service 호출
+            print("📡 수정 요청 전송 - ID: \(finalId), Path: \(directFullPath)")
+            
             let disposable = self.interestService.updateMemberInterest(
                 memberInterestId: memberInterestId,
-                interestId: finalInterestId,
+                interestId: finalId,
                 directFullPath: directFullPath
             )
                 .subscribe(
@@ -465,7 +551,7 @@ final class InterestEditViewModel {
                         observer.onCompleted()
                     },
                     onFailure: { error in
-                        print("❌ 수정 실패: \(error)")
+                        print("❌ 수정 실패: \(error.localizedDescription)")
                         observer.onNext(false)
                         observer.onCompleted()
                     }
@@ -473,88 +559,5 @@ final class InterestEditViewModel {
             
             return Disposables.create { disposable.dispose() }
         }
-        
-        //    private func requestUpdateInterest(interestId: Int?, detailInterestId: Int?, goalId: Int?) -> Observable<Bool> {
-        //        return Observable.create { observer in
-        //            var targetMemberInterestId: Int? = UserStorage.shared.selectedMemberInterestId
-        //
-        //            if targetMemberInterestId == nil {
-        //                // UserStorage에 없다면 CurationData에서 찾아봄 (Fallback)
-        //                if let curationData = TokenStorageService.shared.getCurationData(),
-        //                   let ids = curationData.memberInterestIds,
-        //                   let firstId = ids.first {
-        //                    targetMemberInterestId = firstId
-        //                }
-        //            }
-        //
-        //            // ID가 여전히 없으면 에러 처리
-        //            guard let memberInterestId = targetMemberInterestId else {
-        //                print("❌ memberInterestId를 찾을 수 없습니다. (UserStorage 및 CurationData 모두 없음)")
-        //                observer.onNext(false)
-        //                observer.onCompleted()
-        //                return Disposables.create()
-        //            }
-        //
-        //            // 2. 목표 ID가 최종 interestId (필수)
-        //            guard let finalInterestId = goalId else {
-        //                print("❌ 목표(Goal)를 선택해야 합니다")
-        //                observer.onNext(false)
-        //                observer.onCompleted()
-        //                return Disposables.create()
-        //            }
-        //
-        //            // 3. directFullPath 생성
-        //            var directFullPath: [String] = []
-        //
-        //            if let interest = self.selectedInterestRelay.value {
-        //                directFullPath.append(interest.title)
-        //            }
-        //            if let detail = self.selectedDetailInterestRelay.value {
-        //                if let customName = self.customDetailInterestNameRelay.value, !customName.isEmpty {
-        //                    // "기타" 대신 입력값("프랑스어") 추가
-        //                    directFullPath.append(customName)
-        //                } else {
-        //                    directFullPath.append(detail.name)
-        //                }
-        //            }
-        //            if let goal = self.selectedGoalRelay.value {
-        //                directFullPath.append(goal.name)
-        //            }
-        //
-        //            guard directFullPath.count == 3 else {
-        //                print("❌ directFullPath가 완전하지 않음 (관심사, 세부관심사, 목표 모두 필요)")
-        //                observer.onNext(false)
-        //                observer.onCompleted()
-        //                return Disposables.create()
-        //            }
-        //
-        //            let disposable = self.interestService.updateMemberInterest(
-        //                memberInterestId: memberInterestId,
-        //                interestId: finalInterestId,
-        //                directFullPath: directFullPath
-        //            )
-        //                .subscribe(
-        //                    onSuccess: { _ in
-        //                        // 성공 시: Void가 넘어오지만, ViewModel에서는 true를 방출
-        //                        print("✅ 관심사 수정 성공")
-        //                        observer.onNext(true)
-        //                        observer.onCompleted()
-        //                    },
-        //                    onFailure: { error in
-        //                        // 실패 시: false 방출
-        //                        print("❌ 관심사 수정 실패: \(error.localizedDescription)")
-        //                        observer.onNext(false)
-        //                        observer.onCompleted()
-        //                    }
-        //                )
-        //
-        //            // 구독 해제 시 처리
-        //            return Disposables.create {
-        //                disposable.dispose()
-        //            }
-        //
-        //        }
-        //    }
     }
-    
 }
