@@ -21,6 +21,7 @@ class LoadingCompleteViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.setStyle(Typography.title2, text: "맞춤 미션이 준비됐어요!\n확인하러 가볼까요?")
+        label.textColor = .black
         label.textAlignment = .center
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
