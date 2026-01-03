@@ -32,6 +32,9 @@ final class HomeViewModel {
     private let memberService: MemberService
 
     private let selectedMissionsRelay = BehaviorRelay<[Mission]>(value: [])
+    var currentMissionIDs: [Int] {
+        return selectedMissionsRelay.value.map { $0.id }
+    }
 
     // 로딩/에러(나중에 서버 붙일 때 그대로 확장 가능)
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
@@ -111,6 +114,7 @@ final class HomeViewModel {
                             level: data?.levelNumber ?? 1,
                             nickname: data?.nickname ?? "하루",
                             totalExp: data?.totalExp ?? 1000,
+                            maxExp: data?.maxExp ?? 1000,
                             currentExp: data?.currentExp ?? 500,
                             interest: interest ?? ""
                         )

@@ -39,13 +39,21 @@ final class TodayMissionListViewModel {
     
     private let disposeBag = DisposeBag()
     
-    // TODO: test용
-    private let userId: Int = 4639152463
+    // [추가] 변경 불가능한(이미 선택된) 미션 ID들을 저장할 Set
+    private let fixedMissionIDs: Set<Int>
     
-    init(missionService: MissionServiceProtocol, interestsService: InterestsService) {
+    // Init 수정: preSelectedMissionIDs 파라미터 추가
+    init(missionService: MissionServiceProtocol,
+         interestsService: InterestsService,
+         preSelectedMissionIDs: [Int]) {
+        
         self.missionService = missionService
         self.interestsService = interestsService
-        // TODO: 이전 화면에서 사용자의 정보(CoreData or Server)를 가져와서 표시
+        
+        self.fixedMissionIDs = Set(preSelectedMissionIDs)
+        
+        print("😁 fixedMissionIDs : \(fixedMissionIDs)")
+        self.selectedMissionIDRelay.accept(self.fixedMissionIDs)
     }
     
     func transform(input: Input) -> Output {
@@ -97,9 +105,11 @@ final class TodayMissionListViewModel {
                     })
             }
             .subscribe(onNext: { [weak self] missions in
+                guard let self = self else { return }
+                
                 loadingSubject.onNext(false)
-                self?.currentMissionsRelay.accept(missions)
-                self?.selectedMissionIDRelay.accept([])
+                self.currentMissionsRelay.accept(missions)
+                self.selectedMissionIDRelay.accept(self.fixedMissionIDs)
             })
             .disposed(by: disposeBag)
         
@@ -148,14 +158,22 @@ final class TodayMissionListViewModel {
         
         /// Mission 선택
         input.missionSelected
-            .withLatestFrom(selectedMissionIDRelay) { (id, currentSet) -> Set<Int> in
+            .withLatestFrom(selectedMissionIDRelay) { [weak self] (id, currentSet) -> Set<Int> in
+                guard let self = self else { return currentSet }
                 var newSet = currentSet
+                print("😁 id : \(id)")
+                print("😁 currentSet : \(currentSet)")
+                // [핵심 로직] 이미 고정된(Home에서 가져온) 미션이라면 변경 불가 -> 바로 리턴
+                if self.fixedMissionIDs.contains(id) {
+                    return currentSet
+                }
                 
-                // 이미 있으면 선택 해제
+                // 기존 로직: 이미 있으면 선택 해제
                 if newSet.contains(id) {
                     newSet.remove(id)
                 } else {
-                    if newSet.count < 5 { // 5개 미만일 때만 추가
+                    // 5개 미만일 때만 추가
+                    if newSet.count < 5 {
                         newSet.insert(id)
                     }
                 }

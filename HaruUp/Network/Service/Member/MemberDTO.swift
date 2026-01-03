@@ -17,6 +17,7 @@ enum Member {
     struct HomeMemberInfo: Decodable {
         let totalExp: Int
         let currentExp: Int
+        let maxExp: Int
         let levelNumber: Int
         let nickname: String
         let interests: [[String]]

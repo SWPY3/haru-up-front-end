@@ -62,6 +62,7 @@ final class EmptyMissionCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         setupView()
+        setupActions()
     }
     
     required init?(coder: NSCoder) {
@@ -103,5 +104,13 @@ final class EmptyMissionCell: UITableViewCell {
             
             addButton.heightAnchor.constraint(equalToConstant: 45)
         ])
+    }
+    
+    private func setupActions() {
+        addButton.addTarget(self, action: #selector(didTapAddButton), for: .touchUpInside)
+    }
+    
+    @objc private func didTapAddButton() {
+        onTapAdd?()
     }
 }

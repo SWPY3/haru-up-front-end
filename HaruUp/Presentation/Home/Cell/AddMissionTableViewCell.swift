@@ -35,6 +35,7 @@ final class AddMissionTableViewCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         setupView()
+        setupActions()
     }
     
     required init?(coder: NSCoder) {
@@ -58,5 +59,13 @@ final class AddMissionTableViewCell: UITableViewCell {
             addButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             addButton.heightAnchor.constraint(equalToConstant: 56)
         ])
+    }
+    
+    private func setupActions() {
+        addButton.addTarget(self, action: #selector(didTapAddButton), for: .touchUpInside)
+    }
+    
+    @objc private func didTapAddButton() {
+        onTapAdd?()
     }
 }

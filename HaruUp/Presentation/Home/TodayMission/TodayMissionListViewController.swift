@@ -278,8 +278,12 @@ class TodayMissionListViewController: UIViewController {
                         return UITableViewCell()
                     }
                     
+                    print("currentSelectedIDs : \(self.currentSelectedIDs)")
+                    
                     let isSelected = self.currentSelectedIDs.contains(mission.memberMissionId)
                     let data = Mission(id:mission.memberMissionId, title: mission.content, difficulty: difficulty, exp: mission.expEarned, isCompleted: isSelected) // isCompleted를 미션을 선택한 상태여부로 사용. 해당페이지는 미션을 추천하는 페이지이기 때문에 영향이 없다.
+                    
+                    print("isSelected : \(isSelected)")
                     print("data: \(data)")
                     
                     cell.configure(mission: data)
@@ -335,6 +339,7 @@ class TodayMissionListViewController: UIViewController {
         
         output.selectedIDs
             .subscribe(onNext: { [weak self] ids in
+                print("😁 selected Ids : \(ids)")
                 self?.currentSelectedIDs = ids
             })
             .disposed(by: disposeBag)
