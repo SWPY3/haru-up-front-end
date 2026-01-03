@@ -191,6 +191,24 @@ class HomeViewController: UIViewController {
             }
             .disposed(by: disposeBag)
         
+        tableView.rx.modelSelected(TodayMissionRow.self)
+            .subscribe(onNext: { [weak self] rowType in
+                guard let self = self else { return }
+                
+                if let indexPath = self.tableView.indexPathForSelectedRow {
+                    self.tableView.deselectRow(at: indexPath, animated: true)
+                }
+                
+                switch rowType {
+                case .mission(let mission):
+                    self.onShowBottomSheet?(mission)
+                    
+                case .empty, .add:
+                    break
+                }
+            })
+            .disposed(by: disposeBag)
+        
         output.showTodayMissionFlow
             .emit(onNext: { [weak self] in
                 self?.onSelectTodayMission?()
