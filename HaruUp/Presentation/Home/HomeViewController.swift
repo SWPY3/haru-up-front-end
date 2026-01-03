@@ -140,6 +140,17 @@ class HomeViewController: UIViewController {
         
         let output = viewModel.transform(input: input)
         
+        output.userInfo
+            .drive(onNext: { [weak self] info in
+                guard let self = self else { return }
+                
+                if let headerView = self.tableView.tableHeaderView as? HomeHeaderView {
+                    
+                    headerView.configureUserData(userInfo: info)
+                }
+            })
+            .disposed(by: disposeBag)
+        
         output.rows
             .asObservable()
             .bind(to: tableView.rx.items) { [weak self] (tableView: UITableView, row: Int, item: TodayMissionRow) -> UITableViewCell in

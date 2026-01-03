@@ -95,7 +95,7 @@ final class HomeHeaderView: UIView {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
-        imageView.image = .characterWhiteLevel1
+        imageView.image = .characterHaruLevel1
         imageView.isUserInteractionEnabled = true
         
         return imageView
@@ -444,9 +444,24 @@ final class HomeHeaderView: UIView {
     }
     
     // TODO: 레벨, 닉네임, 캐릭터, 경험치 등이 모두 들어와야함. 그때 적용
-    func configureUserData(nickname: String, interest: String) {
-        self.userNickname = nickname
-        self.userInterest = interest
+    func configureUserData(userInfo: HomeMemberInfo) {
+        self.userNickname = userInfo.nickname
+        self.userInterest = userInfo.interest
+        
+        characterLevelLabel.setStyle(Typography.level, text: "Lv. \(userInfo.level)")
+        characterNameLabel.setStyle(Typography.subtitle2, text: userInfo.nickname)
+        
+        let characterName = userInfo.characterId == 0 ? "haru" : "naru"
+        let characterLevel = userInfo.level
+        let characterImage = "character_\(characterName)_level\(characterLevel)"
+        characterImageView.image = UIImage(named: characterImage)
+        
+        let levelMaxExp: [Int] = [1000, 2000, 3000, 4000]
+        let maxExp = levelMaxExp[userInfo.level - 1]
+        
+        expProgressView.progress = userInfo.currentExp == 0 ? 0.0 : CGFloat(userInfo.currentExp / maxExp)
+        currentExpLabel.setStyle(Typography.caption1, text: "\(userInfo.currentExp)")
+        maxExpLabel.setStyle(Typography.caption1, text: "\(maxExp)")
     }
     
     func updateChallengeDay(_ day: Int) {

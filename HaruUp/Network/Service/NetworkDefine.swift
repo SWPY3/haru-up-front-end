@@ -83,6 +83,23 @@ enum NetworkDefine {
         }
     }
     
+    enum MemberAPI {
+        enum Account {
+            case homeMemberInfo
+            
+            var path: String {
+                switch self {
+                case .homeMemberInfo:
+                    return "api/member/account/home/memberInfo"
+                }
+            }
+            
+            var url: String {
+                return APIEnvironment.baseURL + self.path
+            }
+        }
+    }
+    
     enum ProfileAPI {
         case nicknameDuplicateCheck
         case updateProfile

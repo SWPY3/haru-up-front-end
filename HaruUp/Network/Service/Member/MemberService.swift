@@ -1,19 +1,18 @@
 //
-//  InterestsService.swift
+//  MemberService.swift
 //  HaruUp
 //
-//  Created by 조영현 on 12/25/25.
+//  Created by 조영현 on 1/3/26.
 //
 
 import Foundation
 import RxSwift
 import Alamofire
 
-final class InterestsService: Service {
+final class MemberService: Service {
     
-    func fetchInterests() -> Single<Interests.InterestsDTO> {
-        
-        let url: String = NetworkDefine.InterestsAPI.member.url
+    func fetchHomeMemberInfo() -> Single<Member.HomeMemberInfoResponseDTO> {
+        let url: String = NetworkDefine.MemberAPI.Account.homeMemberInfo.url
         
         var headers: HTTPHeaders = ["Accept": "application/json"]
         
@@ -21,6 +20,6 @@ final class InterestsService: Service {
             headers["Authorization"] = "Bearer \(accessToken)"
         }
         
-        return request(url, method: .get, header: headers)
+        return request(url, method: .post, header: headers)
     }
 }

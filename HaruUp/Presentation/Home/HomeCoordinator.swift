@@ -13,13 +13,14 @@ final class HomeCoordinator: Coordinator {
     
     private let missionService: MissionServiceProtocol = MissionService()
     private let interestsService: InterestsService = InterestsService()
+    private let memberService: MemberService = MemberService()
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
     
     func start() {
-        let homeVM = HomeViewModel(missionService: missionService, interestsService: interestsService)
+        let homeVM = HomeViewModel(missionService: missionService, interestsService: interestsService, memberService: memberService)
         let homeVC = HomeViewController(viewModel: homeVM)
         homeVC.onSelectTodayMission = { [weak self] in
             guard let self else { return }

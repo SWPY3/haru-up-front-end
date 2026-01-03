@@ -18,6 +18,7 @@ final class HomeViewModel {
     }
 
     struct Output {
+        let userInfo: Driver<HomeMemberInfo>
         let rows: Driver<[TodayMissionRow]> /// Driver를 사용한 이유 : UI에서 항상 데이터가 필요
         let showTodayMissionFlow: Signal<Void> /// Signal를 사용한 이유 : 상태를 저장하는 게 아닌 화면을 띄워야하는 명령이 1번만 실행되야함
         let isLoading: Driver<Bool>
@@ -28,6 +29,7 @@ final class HomeViewModel {
 
     private let missionService: MissionServiceProtocol
     private let interestsService: InterestsService
+    private let memberService: MemberService
 
     private let selectedMissionsRelay = BehaviorRelay<[Mission]>(value: [])
 
@@ -38,9 +40,10 @@ final class HomeViewModel {
     
     private let disposeBag = DisposeBag()
 
-    init(missionService: MissionServiceProtocol, interestsService: InterestsService) {
+    init(missionService: MissionServiceProtocol, interestsService: InterestsService, memberService: MemberService) {
         self.missionService = missionService
         self.interestsService = interestsService
+        self.memberService = memberService
     }
 
     func transform(input: Input) -> Output {
@@ -92,6 +95,34 @@ final class HomeViewModel {
             }
             .bind(to: challengeDataRelay)
             .disposed(by: disposeBag)
+        
+        let userInfo = loadTrigger
+            .flatMapLatest { [weak self] _ -> Observable<HomeMemberInfo> in
+                guard let self = self else { return .empty() }
+                
+                return self.memberService.fetchHomeMemberInfo()
+                    .map { response -> HomeMemberInfo in
+                        
+                        let data = response.data.first
+                        let interest = data?.interests.first?.first
+                        
+                        return HomeMemberInfo(
+                            characterId: 0,
+                            level: data?.levelNumber ?? 1,
+                            nickname: data?.nickname ?? "하루",
+                            totalExp: data?.totalExp ?? 1000,
+                            currentExp: data?.currentExp ?? 500,
+                            interest: interest ?? ""
+                        )
+                    }
+                    .asObservable()
+                    .catch { error in
+                        print("유저 정보 로드 실패: \(error)")
+                        
+                        return .just(HomeMemberInfo.empty)
+                    }
+            }
+            .asDriver(onErrorJustReturn: HomeMemberInfo.empty)
 
         let rows = selectedMissionsRelay
             .map { selected -> [TodayMissionRow] in
@@ -161,6 +192,7 @@ final class HomeViewModel {
             .asDriver(onErrorJustReturn: [])
 
         return Output(
+            userInfo: userInfo,
             rows: rows,
             showTodayMissionFlow: showTodayMissionFlow,
             isLoading: loadingRelay.asDriver(),
