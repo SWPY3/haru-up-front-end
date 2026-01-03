@@ -10,10 +10,11 @@ struct HomeMemberInfo {
     let level: Int
     let nickname: String
     let totalExp: Int
+    let maxExp: Int
     let currentExp: Int
     let interest: String
     
-    static let empty = Self(characterId: 0, level: 0, nickname: "", totalExp: 0, currentExp: 0, interest: "")
+    static let empty = Self(characterId: 0, level: 0, nickname: "", totalExp: 0, maxExp: 0, currentExp: 0, interest: "")
 }
 
 struct Mission: Hashable {

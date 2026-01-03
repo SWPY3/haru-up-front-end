@@ -256,8 +256,6 @@ final class HomeHeaderView: UIView {
         configureCharacterInfo()
         
         applyBackgroundAspect()
-        
-        expProgressView.progress = 0.0
     }
 
     private func applyBackgroundAspect() {
@@ -456,16 +454,9 @@ final class HomeHeaderView: UIView {
         let characterLevel = userInfo.level
         let characterImage = "character_\(characterName)_level\(characterLevel)"
         characterImageView.image = UIImage(named: characterImage)
-        
-        let levelMaxExp: [Int] = [1000, 2000, 3000, 4000]
-        
-        if userInfo.level <= levelMaxExp.count {
-            let maxExp = levelMaxExp[userInfo.level - 1]
-            
-            expProgressView.progress = userInfo.currentExp == 0 ? 0.0 : CGFloat(userInfo.currentExp / maxExp)
-            currentExpLabel.setStyle(Typography.caption1, text: "\(userInfo.currentExp)")
-            maxExpLabel.setStyle(Typography.caption1, text: "\(maxExp)")
-        }
+        expProgressView.progress = userInfo.currentExp == 0 ? 0.0 : CGFloat(userInfo.currentExp) / CGFloat(userInfo.maxExp)
+        currentExpLabel.setStyle(Typography.caption1, text: "\(userInfo.currentExp)")
+        maxExpLabel.setStyle(Typography.caption1, text: "\(userInfo.maxExp)")
     }
     
     func updateChallengeDay(_ day: Int) {

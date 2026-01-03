@@ -111,6 +111,7 @@ final class HomeViewModel {
                             level: data?.levelNumber ?? 1,
                             nickname: data?.nickname ?? "하루",
                             totalExp: data?.totalExp ?? 1000,
+                            maxExp: data?.maxExp ?? 1000,
                             currentExp: data?.currentExp ?? 500,
                             interest: interest ?? ""
                         )
