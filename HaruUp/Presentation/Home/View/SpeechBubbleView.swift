@@ -94,6 +94,6 @@ final class SpeechBubbleView: UIView {
     }
 
     func setText(_ text: String) {
-        textLabel.setStyle(Typography.body3, text: text)
+        textLabel.setStyle(Typography.body4, text: text)
     }
 }

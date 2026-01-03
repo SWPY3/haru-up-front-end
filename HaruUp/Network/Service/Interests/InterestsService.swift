@@ -18,6 +18,7 @@ final class InterestsService: Service {
         if let refreshToken = TokenStorageService.shared.getRefreshToken() {
             headers["Authorization"] = "Bearer \(refreshToken)"
         }
+        
         return headers
     }
     

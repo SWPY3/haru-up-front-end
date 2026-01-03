@@ -9,7 +9,8 @@ import Foundation
 
 enum NetworkDefine {
     enum APIEnvironment {
-        static let baseURL = "http://223.130.141.179:8080/"
+//        static let baseURL = "http://223.130.141.179:8080/"
+        static let baseURL = "https://haru.jinuk.dev/"
     }
     
     enum AuthAPI {
@@ -41,6 +42,7 @@ enum NetworkDefine {
         case select                /// 오늘의 미션 선택
         case list                  /// 오늘의 미션 목록
         case status                /// 미션 성공 및 실패
+        case challenge             /// 미션 달성 여부
         
         var path: String {
             switch self {
@@ -56,6 +58,8 @@ enum NetworkDefine {
                 return "api/member/mission"
             case .status:
                 return "api/member/mission/status"
+            case .challenge:
+                return "api/member/mission/completion-status"
             }
         }
         
@@ -76,6 +80,23 @@ enum NetworkDefine {
         
         var url: String {
             return APIEnvironment.baseURL + self.path
+        }
+    }
+    
+    enum MemberAPI {
+        enum Account {
+            case homeMemberInfo
+            
+            var path: String {
+                switch self {
+                case .homeMemberInfo:
+                    return "api/member/account/home/memberInfo"
+                }
+            }
+            
+            var url: String {
+                return APIEnvironment.baseURL + self.path
+            }
         }
     }
     

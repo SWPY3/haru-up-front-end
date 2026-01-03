@@ -71,7 +71,7 @@ final class MissionTableViewCell: UITableViewCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     private func setupView() {
         contentView.backgroundColor = .neutral10
         
@@ -137,5 +137,13 @@ final class MissionTableViewCell: UITableViewCell {
         missionLabel.setStyle(Typography.subtitle2, text: mission.title)
         difficultyBadge.configure(difficulty: mission.difficulty)
         expBadge.configure(exp: mission.exp)
+        
+        applyComplete(mission.isCompleted)
+    }
+    
+    private func applyComplete(_ complete: Bool) {
+        self.missionLabel.setStrikethrough(complete)
+        self.missionLabel.textColor = complete ? .neutral300 : .black
+        self.settingButton.isEnabled = !complete
     }
 }

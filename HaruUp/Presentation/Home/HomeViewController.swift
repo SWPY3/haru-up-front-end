@@ -20,6 +20,10 @@ class HomeViewController: UIViewController {
     
     var onSelectTodayMission: (() -> Void)? // Coordinator와의 연결은 단순히 클로저 사용
     var onShowBottomSheet: ((Mission) -> Void)?
+    var onShowChallengeBottomSheet: ((Int, [DailyMissionData]) -> Void)?
+    
+    private var challengeCount: Int = 0
+    private var challengeData: [DailyMissionData] = []
     
     private let tableView: UITableView = {
         let tableView = UITableView()
@@ -90,6 +94,12 @@ class HomeViewController: UIViewController {
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
+        headerView.onTapChallenge = { [weak self] in
+            guard let self = self else { return }
+            
+            self.onShowChallengeBottomSheet?(self.challengeCount, self.challengeData)
+        }
+        
         tableView.tableHeaderView = headerView
         tableView.sectionHeaderTopPadding = 28 // Section Header와 TableView Header의 간격
         
@@ -101,6 +111,8 @@ class HomeViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
+        
+        updateTableHeaderHeight()
     }
     
     private func updateTableHeaderHeight() {
@@ -127,6 +139,17 @@ class HomeViewController: UIViewController {
         )
         
         let output = viewModel.transform(input: input)
+        
+        output.userInfo
+            .drive(onNext: { [weak self] info in
+                guard let self = self else { return }
+                
+                if let headerView = self.tableView.tableHeaderView as? HomeHeaderView {
+                    
+                    headerView.configureUserData(userInfo: info)
+                }
+            })
+            .disposed(by: disposeBag)
         
         output.rows
             .asObservable()
@@ -179,9 +202,23 @@ class HomeViewController: UIViewController {
                 print("Home Error Occurred: \(err)")
             })
             .disposed(by: disposeBag)
+        
+        output.challengeDay
+            .drive(onNext: { [weak self] count in
+                self?.challengeCount = count
+                self?.headerView.updateChallengeDay(count)
+            })
+            .disposed(by: disposeBag)
+
+        // 챌린지 버튼 눌렀을 때 보여줄 데이터 소스 갱신
+        output.challengeList
+            .drive(onNext: { [weak self] listData in
+                self?.challengeData = listData
+            })
+            .disposed(by: disposeBag)
     }
     
-    // Mission 선택 후 Coordinator에서 호출
+    // Mission 선택 후 Coordinator에서 호출, 미션 완료 및 삭제 일때도 가능하게 구현
     func didCompleteMissionSelection() {
         reloadSubject.onNext(())
     }
