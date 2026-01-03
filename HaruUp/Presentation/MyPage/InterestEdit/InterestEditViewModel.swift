@@ -230,26 +230,26 @@ final class InterestEditViewModel {
             .flatMapLatest { [weak self] text -> Observable<(String, Bool)> in
                 
                 // TODO: - API 수정되면 다시 연관성 검사 실행하기
-
+                
                 // 🚧 [임시 수정] API 오류로 인해 무조건 통과(true) 처리
                 // 나중에 API가 고쳐지면 이 부분을 지우고 아래 주석을 푸세요.
                 return .just((text, true))
-//                guard let self = self else { return .empty() }
+                //                guard let self = self else { return .empty() }
                 
-//                return self.interestService.validateGoalInput(text: text)
-//                    .asObservable()
-//                    .map { (text, $0) }
-//                    .catch { error in
-//                        // 2. 취소된 에러(explicitlyCancelled)는 실패로 간주하지 않고 무시함
-//                        if let afError = error.asAFError, afError.isExplicitlyCancelledError {
-//                            print("📡 이전 요청이 취소되었습니다. (무시함)")
-//                            return .empty()
-//                        }
-//                        
-//                        // 진짜 네트워크 에러나 API 오류만 실패로 처리
-//                        print("❌ Validation Error: \(error)")
-//                        return .just((text, false))
-//                    }
+                //                return self.interestService.validateGoalInput(text: text)
+                //                    .asObservable()
+                //                    .map { (text, $0) }
+                //                    .catch { error in
+                //                        // 2. 취소된 에러(explicitlyCancelled)는 실패로 간주하지 않고 무시함
+                //                        if let afError = error.asAFError, afError.isExplicitlyCancelledError {
+                //                            print("📡 이전 요청이 취소되었습니다. (무시함)")
+                //                            return .empty()
+                //                        }
+                //
+                //                        // 진짜 네트워크 에러나 API 오류만 실패로 처리
+                //                        print("❌ Validation Error: \(error)")
+                //                        return .just((text, false))
+                //                    }
             }
             .subscribe(onNext: { [weak self] (text, isValid) in
                 // ... (이후 로직은 기존과 동일) ...
@@ -276,39 +276,63 @@ final class InterestEditViewModel {
             })
             .disposed(by: disposeBag)
         
-        // 7. 완료 버튼 활성화 (하나라도 없으면 비활성)
+        // 7. [수정] 완료 버튼 활성화 로직
         let isCompleteEnabled = Observable.combineLatest(
             selectedInterestRelay,
             selectedDetailInterestRelay,
             selectedGoalRelay,
-            goalListRelay
+            goalListRelay,
+            customGoalNameRelay
         )
-            .map { [weak self] (interest, detail, goal, goalList) -> Bool in
+            .map { [weak self] (interest, detail, goal, goalList, customGoalName) -> Bool in
                 guard let self = self else { return false }
                 
                 // 1. 관심사와 세부 관심사는 필수
                 guard interest != nil, detail != nil else { return false }
+                
                 // 2. 목표 선택 여부 판단
-                // 목표 리스트가 비어있으면(=목표가 없는 카테고리), 목표 선택 안 해도 됨(true)
-                // 목표 리스트가 있으면, 목표가 선택되어 있어야 함(goal != nil)
-                let isGoalValid = goalList.isEmpty || goal != nil
+                // (리스트가 있는데 목표가 nil이면 안됨)
+                let isGoalSelected = goalList.isEmpty || goal != nil
+                guard isGoalSelected else { return false }
                 
-                guard isGoalValid else { return false }
+                // 3. 직접 입력일 경우 텍스트 필수 체크
+                if let goal = goal, goal.name.contains("직접") {
+                    // 직접 입력인데 내용이 없으면 버튼 비활성화
+                    if let text = customGoalName, text.trimmingCharacters(in: .whitespaces).isEmpty {
+                        return false
+                    }
+                }
                 
+                // 4. 변경 사항 체크 (저장된 데이터와 비교)
                 let saved = self.savedData
+                
                 let interestChanged = interest?.id != saved?.interest?.id
                 let detailChanged = detail?.id != saved?.interestDetail?.id
                 
-                // 목표 변경 체크:
-                // 리스트가 비어있으면: 이전에 목표가 있었는데 지금은 없어진 경우(변경됨) 체크
-                // 리스트가 있으면: 선택된 ID 비교
+                // 목표 변경 체크
                 let goalChanged: Bool
                 if goalList.isEmpty {
-                    goalChanged = saved?.goal != nil // 이전에 goal이 있었으면 변경된 것
+                    // 목표 없는 카테고리: 이전에 목표가 있었으면 변경된 것
+                    goalChanged = saved?.goal != nil
                 } else {
-                    goalChanged = goal?.id != saved?.goal?.id
+                    // 목표 있는 카테고리
+                    // 1) ID가 다른가?
+                    let isIdDifferent = goal?.id != saved?.goal?.id
+                    
+                    // 2) 직접 입력 텍스트가 다른가?
+                    let isTextDifferent: Bool
+                    if let goal = goal, goal.name.contains("직접") {
+                        let currentText = customGoalName ?? ""
+                        let savedText = saved?.goal?.name ?? ""
+                        isTextDifferent = currentText != savedText
+                    } else {
+                        isTextDifferent = false
+                    }
+                    
+                    goalChanged = isIdDifferent || isTextDifferent
                 }
                 
+                // 하나라도 변경되었으면 활성화
                 return interestChanged || detailChanged || goalChanged
             }
             .asDriver(onErrorJustReturn: false)
@@ -466,7 +490,6 @@ final class InterestEditViewModel {
         goalLockWarningRelay.accept(msg)
     }
     
-    // MARK: - API Request
     // MARK: - API Request
     private func requestUpdateInterest(interestId: Int?, detailInterestId: Int?, goalId: Int?) -> Observable<Bool> {
         return Observable.create { [weak self] observer in
