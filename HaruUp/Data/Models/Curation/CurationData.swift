@@ -28,7 +28,6 @@ class CurationData: Codable{
         return characterId != nil &&
         nickname != nil &&
         job != nil &&
-        jobDetail != nil &&
         gender != nil &&
         birthDate != nil &&
         interest != nil &&
@@ -103,12 +102,9 @@ extension CurationData {
             return nil
         }
         
-        guard let jobDetailId = jobDetail?.id else {
-            print("❌ jobDetail.id가 없습니다")
-            return nil
-        }
+        let jobDetailId = jobDetail?.id
         
-        // ✅ interestId는 interestDetail의 id
+        // ✅ interestId는 goal의 id
         guard let interestId = goal?.id else {
             print("❌ interestDetail.id가 없습니다")
             return nil

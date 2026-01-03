@@ -157,7 +157,7 @@ class MyPageViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: -5),
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             
             profileImageView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
@@ -238,7 +238,8 @@ class MyPageViewController: UIViewController {
                 self.nicknameLabel.textColor = .black
                 
                 // 2. 직업 상세
-                self.jobLabel.setStyle(Typography.body1, text: data.jobDetail?.jobDetailName ?? "직업 정보 없음")
+                let jobDisplayText = data.jobDetail?.jobDetailName ?? data.job?.jobName ?? "직업 정보 없음"
+                self.jobLabel.setStyle(Typography.body1, text: jobDisplayText)
                 self.jobLabel.textColor = .neutral900
                 
                 // 3. 목표 이름
