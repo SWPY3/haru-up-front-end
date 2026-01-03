@@ -21,6 +21,7 @@ class HomeViewController: UIViewController {
     var onSelectTodayMission: (() -> Void)? // Coordinator와의 연결은 단순히 클로저 사용
     var onShowBottomSheet: ((Mission) -> Void)?
     var onShowChallengeBottomSheet: ((Int, [DailyMissionData]) -> Void)?
+    var onShowAddMission: (([Int]) -> Void)?
     
     private var challengeCount: Int = 0
     private var challengeData: [DailyMissionData] = []
@@ -163,6 +164,7 @@ class HomeViewController: UIViewController {
                     cell.onTapAdd = { [weak self] in
                         // TODO: Mission 추가 생성 기능
                         print("Add Button 동작")
+                        self?.onShowAddMission?([])
                     }
                     
                     return cell
@@ -184,6 +186,12 @@ class HomeViewController: UIViewController {
                     cell.onTapAdd = { [weak self] in
                         // TODO: 미션 추천 화면 이동
                         print("Add Button 동작")
+                        // 1. 현재 선택된 미션 ID 목록 가져오기
+                        let currentIDs = self?.viewModel.currentMissionIDs
+                        
+                        // 2. 외부(Coordinator)로 네비게이션 요청
+                        print("미션 추천 화면 이동 요청: 이미 선택된 ID \(currentIDs)")
+                        self?.onShowAddMission?(currentIDs ?? [])
                     }
                     
                     return cell
