@@ -116,20 +116,39 @@ final class HomeViewModel {
         
         let challengeCount = challengeDataRelay
             .map { data -> Int in
-                // 날짜 최신순(내림차순) 정렬
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                formatter.locale = Locale(identifier: "ko_KR")
+                formatter.timeZone = TimeZone.current
+                let todayString = formatter.string(from: Date())
+                
                 let sortedData = data.sorted { $0.targetDate > $1.targetDate }
                 
-                print("sortedData: \(sortedData)")
-                
                 var streak = 0
+                
                 for day in sortedData {
-                    if day.isCompleted {
-                        streak += 1
-                    } else {
-                        // 연속이 끊기면 즉시 중단 (최신 날짜가 실패면 0)
-                        break
+                    // A. 만약 조회한 데이터가 '오늘'인 경우
+                    if day.targetDate == todayString {
+                        if day.isCompleted {
+                            // 오늘 완료했으면 카운트 증가
+                            streak += 1
+                        } else {
+                            // [핵심] 오늘 아직 안 했으면, 연속 기록이 깨진 게 아니므로
+                            // 카운트는 안 하고 다음(어제)으로 넘어감
+                            continue
+                        }
+                    }
+                    // B. 오늘이 아닌 과거 날짜인 경우
+                    else {
+                        if day.isCompleted {
+                            streak += 1
+                        } else {
+                            // 과거에 안 한 날이 나오면 바로 연속 기록 종료
+                            break
+                        }
                     }
                 }
+                
                 return streak
             }
             .asDriver(onErrorJustReturn: 0)
