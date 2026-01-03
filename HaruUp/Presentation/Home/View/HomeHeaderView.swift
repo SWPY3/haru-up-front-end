@@ -421,6 +421,7 @@ final class HomeHeaderView: UIView {
     // MARK: Actions
     private func setActions() {
         characterImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapCharacter)))
+        bubbleView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapCharacter)))
         achievementStackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapAchievement)))
     }
     
