@@ -168,11 +168,14 @@ class GoalInputSelectViewController: UIViewController {
     }()
     
     private let nextButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
-        button.contentMode = .scaleAspectFit
-        //        button.isEnabled = false
-        return button
+        let btn = UIButton()
+        btn.setTitle("다음", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .neutral200
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
     }()
     
     

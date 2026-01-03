@@ -63,11 +63,14 @@ class CustomAlertViewController: UIViewController {
     }()
     
     private let confirmButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "confirm_btn"), for: .normal)
-        button.contentMode = .scaleAspectFit
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+        let btn = UIButton()
+        btn.setTitle("확인", for: .normal)
+        btn.titleLabel?.font = Typography.body3.font
+        btn.backgroundColor = .cta
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
     }()
     
     
