@@ -257,7 +257,7 @@ final class HomeHeaderView: UIView {
         
         applyBackgroundAspect()
         
-        expProgressView.progress = 0.5
+        expProgressView.progress = 0.0
     }
 
     private func applyBackgroundAspect() {
