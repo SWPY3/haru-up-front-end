@@ -82,12 +82,13 @@ enum NetworkDefine {
     enum ProfileAPI {
         case nicknameDuplicateCheck
         case updateProfile
+        case getProfile
         
         var path: String {
             switch self {
             case .nicknameDuplicateCheck:
                 return "api/member/profile/nickName_duplicate_check"
-            case .updateProfile:
+            case .updateProfile, .getProfile:
                 return "api/member/profile/profile"
             }
         }

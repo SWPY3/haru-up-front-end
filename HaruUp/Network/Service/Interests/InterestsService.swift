@@ -51,8 +51,45 @@ final class InterestsService: Service {
         }
     }
     
+    // 마이페이지용 관심사 조회
+    func fetchMemberInterests() -> Observable<[MemberInterestDTO]> {
+        return Observable.create { observer in
+            // URL 설정 (NetworkDefine에 추가 필요: "/api/interests/member")
+            let url = NetworkDefine.InterestsAPI.member.url
+            
+            guard let token = TokenStorageService.shared.getAccessToken() else {
+                observer.onError(NSError(domain: "Auth", code: 401, userInfo: nil))
+                return Disposables.create()
+            }
+            
+            let headers: HTTPHeaders = [
+                "Authorization": "Bearer \(token)",
+                "Content-Type": "application/json"
+            ]
+            
+            print("📡 마이페이지 관심사 조회 요청: \(url)")
+            
+            let request = AF.request(url, method: .get, headers: headers)
+                .validate()
+                .responseDecodable(of: MemberInterestResponse.self) { response in
+                    switch response.result {
+                    case .success(let data):
+                        print("✅ 관심사 조회 성공: \(data.interests.count)개")
+                        observer.onNext(data.interests)
+                        observer.onCompleted()
+                        
+                    case .failure(let error):
+                        print("❌ 관심사 조회 실패: \(error)")
+                        observer.onError(error)
+                    }
+                }
+            
+            return Disposables.create { request.cancel() }
+        }
+    }
+    
     // MARK: - Fetch Interest Details
-    /// 세부 관심사 목록 가져오기
+    // 세부 관심사 목록 가져오기
     func fetchInterestDetails(parentId: Int) -> Observable<[InterestDetail]> {
         return Observable.create { observer in
             let url = NetworkDefine.InterestAPI.getInterestDetail(parentId: parentId).url
