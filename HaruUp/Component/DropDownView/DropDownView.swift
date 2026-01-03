@@ -58,29 +58,58 @@ final class DropdownView: UIView {
         self.items = items
         self.selectedId = selectedId
         self.tableView.reloadData()
+        
+        // 1. 높이 계산 (셀 높이 55pt 기준)
+        let rowHeight: CGFloat = 55.0
+        let contentHeight = CGFloat(items.count) * rowHeight
+        
+        // 4개까지 보이도록 최대 높이를 220으로 설정 (55 * 4 = 220)
+        let maxHeight: CGFloat = 220.0
+        
+        // 실제 적용할 높이
+        let finalHeight = min(contentHeight, maxHeight)
+        
+        // 2. 높이 제약조건 업데이트
+        if let heightConstraint = self.constraints.first(where: { $0.firstAttribute == .height }) {
+            heightConstraint.constant = finalHeight
+            
+//            UIView.animate(withDuration: 0.3) {
+//                self.superview?.layoutIfNeeded()
+            //            }
+            heightConstraint.constant = finalHeight
+            // 필요하다면 레이아웃 갱신을 즉시 수행 (애니메이션 없이)
+            self.superview?.layoutIfNeeded()
+        }
+        
+        // 3. 내용이 220보다 길면 스크롤 바 깜빡임
+        if contentHeight > maxHeight {
+            DispatchQueue.main.async {
+                self.tableView.flashScrollIndicators()
+            }
+        }
     }
 }
 
-extension DropdownView: UITableViewDelegate, UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return items.count
+    extension DropdownView: UITableViewDelegate, UITableViewDataSource {
+        func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+            return items.count
+        }
+        
+        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "DropdownCell", for: indexPath) as? DropdownCell else { return UITableViewCell() }
+            let item = items[indexPath.row]
+            // ID 비교를 통해 선택 상태 확인
+            let isSelected = item.id == selectedId
+            cell.configure(text: item.displayName, isSelected: isSelected)
+            return cell
+        }
+        
+        func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+            let selectedItem = items[indexPath.row]
+            itemSelected.accept(selectedItem) // 선택된 아이템 방출
+        }
+        
+        func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+            return 48
+        }
     }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "DropdownCell", for: indexPath) as? DropdownCell else { return UITableViewCell() }
-        let item = items[indexPath.row]
-        // ID 비교를 통해 선택 상태 확인
-        let isSelected = item.id == selectedId
-        cell.configure(text: item.displayName, isSelected: isSelected)
-        return cell
-    }
-    
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let selectedItem = items[indexPath.row]
-        itemSelected.accept(selectedItem) // 선택된 아이템 방출
-    }
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 48
-    }
-}

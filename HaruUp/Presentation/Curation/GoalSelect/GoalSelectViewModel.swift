@@ -61,7 +61,7 @@ final class GoalSelectViewModel {
                     return
                 }
                 
-                if selectedGoal.name == "직접 입력하기" {
+                if selectedGoal.name.contains("직접") {
                     self?.coordinator?.showGoalInputFlow(selectedGoal: selectedGoal)
                 } else {
                     self?.coordinator?.showNextFlow(selectedGoal: selectedGoal)

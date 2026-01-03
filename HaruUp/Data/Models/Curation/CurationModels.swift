@@ -15,7 +15,7 @@ struct CurationRequest: Encodable {
     let birthDt: String
     let gender: String
     let jobId: Int
-    let jobDetailId: Int
+    let jobDetailId: Int?
     let interests: [InterestRequest]
     
     struct InterestRequest: Encodable {

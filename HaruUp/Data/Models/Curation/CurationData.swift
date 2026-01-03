@@ -18,6 +18,8 @@ class CurationData: Codable{
     var interestDetail: InterestData?
     var goal: InterestData?
     
+    var memberInterestIds: [Int]?
+    
     init() {}
     
     
@@ -26,7 +28,6 @@ class CurationData: Codable{
         return characterId != nil &&
         nickname != nil &&
         job != nil &&
-        jobDetail != nil &&
         gender != nil &&
         birthDate != nil &&
         interest != nil &&
@@ -34,20 +35,15 @@ class CurationData: Codable{
         goal != nil
     }
     
-    // 백엔드로 보낼 딕셔너리 형태로 변환
-    //    func toDictionary() -> [String: Any] {
-    //        return [
-    //            "characterId": characterId ?? 999,
-    //            "nickname": nickname ?? "",
-    //            "job": job ?? "",
-    //            "jobDetail": jobDetail ?? "",
-    //            "gender": gender ?? "",
-    //            "birthDate": birthDate ?? "",
-    //            "interest": interest ?? "",
-    //            "interestDetail": interestDetail ?? "",
-    //            "goal": goal ?? ""
-    //        ]
-    //    }
+    enum CodingKeys: String, CodingKey {
+        case nickname
+        case job
+        case jobDetail
+        case interest
+        case interestDetail
+        case goal
+        case memberInterestIds
+    }
 }
 
 extension CurationData {
@@ -106,12 +102,9 @@ extension CurationData {
             return nil
         }
         
-        guard let jobDetailId = jobDetail?.id else {
-            print("❌ jobDetail.id가 없습니다")
-            return nil
-        }
+        let jobDetailId = jobDetail?.id
         
-        // ✅ interestId는 interestDetail의 id
+        // ✅ interestId는 goal의 id
         guard let interestId = goal?.id else {
             print("❌ interestDetail.id가 없습니다")
             return nil
@@ -152,5 +145,12 @@ extension CurationData {
         
         print("✅ CurationRequest 생성 완료!")
         return request
+    }
+}
+
+
+extension CurationData {
+    var primaryMemberInterestId: Int? {
+        return memberInterestIds?.first
     }
 }

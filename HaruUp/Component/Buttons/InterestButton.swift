@@ -55,8 +55,8 @@ class InterestButton: UIButton {
             // 아이콘: 왼쪽에서 20pt, 세로 중앙
             iconTextLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             iconTextLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            iconTextLabel.widthAnchor.constraint(equalToConstant: 16),
-            iconTextLabel.heightAnchor.constraint(equalToConstant: 16),
+            iconTextLabel.widthAnchor.constraint(equalToConstant: 24),
+            iconTextLabel.heightAnchor.constraint(equalToConstant: 24),
             
             // 텍스트: 아이콘 오른쪽, 세로 중앙
             interestTitleLabel.leadingAnchor.constraint(equalTo: iconTextLabel.trailingAnchor, constant: 16),

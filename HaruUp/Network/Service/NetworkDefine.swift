@@ -86,12 +86,13 @@ enum NetworkDefine {
     enum ProfileAPI {
         case nicknameDuplicateCheck
         case updateProfile
+        case getProfile
         
         var path: String {
             switch self {
             case .nicknameDuplicateCheck:
                 return "api/member/profile/nickName_duplicate_check"
-            case .updateProfile:
+            case .updateProfile, .getProfile:
                 return "api/member/profile/profile"
             }
         }
@@ -123,9 +124,15 @@ enum NetworkDefine {
         case getInterestList
         case getInterestDetail(parentId: Int)
         case getGoalList(parentId: Int)
+        case validation
         
         var path: String {
-            return "api/interests/data"
+            switch self {
+            case .getInterestList, .getInterestDetail, .getGoalList:
+                return "api/interests/data"
+            case .validation:
+                return "api/interests/interest/validation" 
+            }
         }
         
         var url: String {
