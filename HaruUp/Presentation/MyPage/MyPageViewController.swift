@@ -420,6 +420,9 @@ class MyPageViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] in
                 // 탈퇴 성공 Alert 표시
                 self?.showWithdrawSuccessAlert()
+                // 탈퇴할 때, 사용자의 미션 선택 여부가 초기화 - UserDefaults로 미션 선택 여부를 저장중이라, 탈퇴할 때 그 정보를 지워야함.
+                // TODO: UserDefaults 초기화하는 것 별도로 만들 필요성이 있음 - 조영현
+                UserDefaults.standard.removeObject(forKey: UserDefaultsKey.todayMissionSelectedDate)
             }, onFailure: { [weak self] error in
                 self?.showErrorAlert(message: error.localizedDescription)
             })
