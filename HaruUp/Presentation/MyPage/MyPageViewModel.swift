@@ -64,7 +64,7 @@ final class MyPageViewModel {
             }
             .asDriver(onErrorJustReturn: CurationData())
         
-        let version = Driver.just("버전.v.16.2")
+        let version = Driver.just("버전.v.1.0.0")
         
         // 로그아웃 Alert 표시
         let showLogoutAlert = input.logoutTapped
