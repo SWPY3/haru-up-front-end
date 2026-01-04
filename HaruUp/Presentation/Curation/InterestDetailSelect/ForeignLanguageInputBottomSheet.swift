@@ -54,6 +54,7 @@ class ForeignLanguageInputBottomSheet: UIViewController {
     private let textField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "프랑스어"
+        tf.setPlaceholder(color: .neutral300)
         tf.borderStyle = .none
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.textColor = .black
@@ -95,11 +96,14 @@ class ForeignLanguageInputBottomSheet: UIViewController {
     }()
     
     private let nextButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.contentMode = .scaleAspectFit
-        return button
+        let btn = UIButton()
+        btn.setTitle("다음", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .neutral200
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
     }()
     
     private let maxHeight: CGFloat = 300
@@ -392,8 +396,8 @@ class ForeignLanguageInputBottomSheet: UIViewController {
         // 5. 실시간 글자 수 체크 (2~10자)
         output.isLengthValid
             .drive(onNext: { [weak self] isValid in
-                let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: imageName), for: .normal)
+                self?.nextButton.backgroundColor = isValid ? .cta : .neutral200
+                self?.nextButton.isEnabled = isValid
             })
             .disposed(by: disposeBag)
         
@@ -420,22 +424,22 @@ class ForeignLanguageInputBottomSheet: UIViewController {
                     }
                     
                 case .empty:
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.nextButton.backgroundColor = .neutral200
                     
                 case .tooShort, .tooLong:
                     self.warningLabel.setStyle(Typography.body4, text: "*2~15자로 입력해주세요.")
                     self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.nextButton.backgroundColor = .neutral200
                     
                 case .invalidCharacters:
                     self.warningLabel.setStyle(Typography.body4, text: "*한글만 입력해주세요.")
                     self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.nextButton.backgroundColor = .neutral200
                     
                 case .incompleteKorean:
                     self.warningLabel.setStyle(Typography.body4, text: "*올바른 형태로 입력해주세요.")
                     self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.nextButton.backgroundColor = .neutral200
                 }
             })
             .disposed(by: disposeBag)

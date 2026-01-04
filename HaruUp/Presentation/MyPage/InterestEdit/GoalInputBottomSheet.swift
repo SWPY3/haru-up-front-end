@@ -58,9 +58,10 @@ final class GoalInputBottomSheet: UIViewController {
     
     private let textField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "2~20자로 입력해주세요."
         tf.borderStyle = .none
         tf.textColor = .black
+        tf.placeholder = "2~20자로 입력해 주세요."
+        tf.setPlaceholder(color: .neutral300)
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
@@ -103,10 +104,14 @@ final class GoalInputBottomSheet: UIViewController {
     }()
     
     private let nextButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+        let btn = UIButton()
+        btn.setTitle("완료", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .neutral200
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
     }()
     
     private var inputBottomSheetBottomConstraint: NSLayoutConstraint?
@@ -262,8 +267,8 @@ final class GoalInputBottomSheet: UIViewController {
             .map { $0.trimmingCharacters(in: .whitespaces).count }
             .map { $0 >= 2 && $0 <= 20 }
             .drive(onNext: { [weak self] isValid in
-                let img = isValid ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: img), for: .normal)
+                self?.nextButton.backgroundColor = isValid ? .cta : .neutral200
+                self?.nextButton.isEnabled = isValid
                 
                 // 유효한 길이면 경고 숨김
                 if isValid {
@@ -301,7 +306,7 @@ final class GoalInputBottomSheet: UIViewController {
                 if trimmed.count < 2 {
                     self.warningLabel.setStyle(Typography.body4, text: "*2자 이상으로 입력해주세요.")
                     self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.nextButton.backgroundColor = .neutral200
                     return
                 }
                 
@@ -321,7 +326,7 @@ final class GoalInputBottomSheet: UIViewController {
             .bind(with: self) { owner, msg in
                 owner.warningLabel.setStyle(Typography.body4, text: msg)
                 owner.warningLabel.isHidden = false
-                owner.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                owner.nextButton.backgroundColor = .neutral200
             }
             .disposed(by: disposeBag)
     }

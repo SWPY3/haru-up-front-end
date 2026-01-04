@@ -118,6 +118,7 @@ class GoalInputSelectViewController: UIViewController {
     private let textField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "2~20자로 입력해주세요."
+        tf.setPlaceholder(color: .neutral300)
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.textColor = .black
         tf.borderStyle = .none
@@ -610,7 +611,7 @@ class GoalInputSelectViewController: UIViewController {
         remainingSeconds = 30 * 60
         
         nextButton.isEnabled = false
-        nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+        nextButton.backgroundColor = .neutral200
         textField.isEnabled = false
         
         updateWarningLabelWithTimer()
