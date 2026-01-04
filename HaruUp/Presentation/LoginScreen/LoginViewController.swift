@@ -18,7 +18,7 @@ class LoginViewController: UIViewController {
     
     var onFinish: ((SocialLoginResult) -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
     
-    /// background Image의 사이즈를 비율에 따라 맞춰서 정하기 위해 구현
+    // background Image의 사이즈를 비율에 따라 맞춰서 정하기 위해 구현
     private var backgroundAspectConstraint: NSLayoutConstraint?
     
     private let logoImageView: UIImageView = {
@@ -38,7 +38,7 @@ class LoginViewController: UIViewController {
     }()
     
     private let kakaoLoginButton = KakaoLoginButton()
-    private let naverLoginButton = NaverLoginButton()
+//    private let naverLoginButton = NaverLoginButton()
     private let appleLoginButton: UIControl = {
         let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
         button.cornerRadius = 16
@@ -102,7 +102,7 @@ class LoginViewController: UIViewController {
         view.addSubview(buttonStackView)
         buttonStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        [kakaoLoginButton, naverLoginButton, appleLoginButton].forEach {
+        [kakaoLoginButton, /*naverLoginButton,*/ appleLoginButton].forEach {
             buttonStackView.addArrangedSubview($0)
         }
         
@@ -113,7 +113,7 @@ class LoginViewController: UIViewController {
             buttonStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
             kakaoLoginButton.heightAnchor.constraint(equalToConstant: 54),
-            naverLoginButton.heightAnchor.constraint(equalToConstant: 54),
+//            naverLoginButton.heightAnchor.constraint(equalToConstant: 54),
             appleLoginButton.heightAnchor.constraint(equalToConstant: 54),
         ])
     }
@@ -123,7 +123,7 @@ class LoginViewController: UIViewController {
         let input = LoginViewModel.Input(
             kakaoLoginTapped: kakaoLoginButton.rx.tap.asObservable(),
             appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable(),
-            naverLoginTapped: naverLoginButton.rx.tap.asObservable()
+//            naverLoginTapped: naverLoginButton.rx.tap.asObservable()
         )
         
         let output = viewModel.transform(input)
