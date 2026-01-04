@@ -39,7 +39,7 @@ final class TodayMissionListViewModel {
     
     private let disposeBag = DisposeBag()
     
-    // [추가] 변경 불가능한(이미 선택된) 미션 ID들을 저장할 Set
+    // 변경 불가능한(이미 선택된) 미션 ID들을 저장할 Set
     private let fixedMissionIDs: Set<Int>
     
     // Init 수정: preSelectedMissionIDs 파라미터 추가
@@ -108,7 +108,10 @@ final class TodayMissionListViewModel {
                 guard let self = self else { return }
                 
                 loadingSubject.onNext(false)
-                self.currentMissionsRelay.accept(missions)
+                
+                let filteredMissions = missions.filter { !self.fixedMissionIDs.contains($0.memberMissionId) }
+                self.currentMissionsRelay.accept(filteredMissions)
+                
                 self.selectedMissionIDRelay.accept(self.fixedMissionIDs)
             })
             .disposed(by: disposeBag)
@@ -120,7 +123,6 @@ final class TodayMissionListViewModel {
                 loadingSubject.onNext(true)
                 
                 let selectedMissions = currentMissions.filter { selectedIDs.contains($0.memberMissionId) }
-                
                 let selectedMissionsIds = selectedMissions.map { $0.memberMissionId }
                 
                 return self.resolveMemberInterestId()
