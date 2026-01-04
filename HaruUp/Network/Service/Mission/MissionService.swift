@@ -57,7 +57,7 @@ final class MissionService: Service, MissionServiceProtocol {
             headers["Authorization"] = "Bearer \(accessToken)"
         }
         
-        let body = MemberMission.RecommendMultipleRequestDTO(memberInterestId: memberInterestIds)
+        let body = MemberMission.RecommendMultipleRequestDTO(memberInterestIds: memberInterestIds)
 
         return request(url, method: .post, header: headers, body: body)
     }

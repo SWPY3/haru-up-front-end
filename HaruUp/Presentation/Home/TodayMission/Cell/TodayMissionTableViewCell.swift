@@ -145,7 +145,30 @@ final class TodayMissionTableViewCell: UITableViewCell {
         missionLabel.setStyle(Typography.subtitle2, text: mission.title)
         difficultyBadge.configure(difficulty: mission.difficulty)
         expBadge.configure(exp: mission.exp)
-        setSelected(mission.isCompleted, animated: false)
+//        setSelected(mission.isCompleted, animated: false)
+    }
+    
+    func updateSelectionState(isSelected: Bool, isDisabled: Bool) {
+        applySelection(isSelected, animated: false)
+        
+        if isSelected {
+            // [선택됨]
+            missionLabel.textColor = .black
+            self.contentView.alpha = 1.0
+            self.isUserInteractionEnabled = true
+            
+        } else if isDisabled {
+            // [비활성화] - 5개 꽉 참 & 선택 안됨
+            missionLabel.textColor = .neutral700
+            self.contentView.alpha = 0.7
+            self.isUserInteractionEnabled = false // 터치 막기
+            
+        } else {
+            // [기본] - 선택 가능
+            missionLabel.textColor = .black
+            self.contentView.alpha = 1.0
+            self.isUserInteractionEnabled = true
+        }
     }
     
     private func applySelection(_ selected: Bool, animated: Bool) {

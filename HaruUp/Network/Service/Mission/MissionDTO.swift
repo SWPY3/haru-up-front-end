@@ -32,42 +32,45 @@ enum MemberMission {
         let difficulty: Int
         let expEarned: Int
         let targetDate: String
+        
+        static let empty = Self(memberMissionId: 0, missionStatus: "", content: "", directFullPath: [], difficulty: 0, expEarned: 0, targetDate: "")
     }
     
     /// 여러 관심사를 입력했을 대 얻을 수 있는 미션 추천
     struct RecommendMultipleRequestDTO: Encodable {
-        let memberInterestId: [Int]
+        let memberInterestIds: [Int]
     }
 
     struct RecommendMultipleResponseDTO: Decodable {
         let success: Bool
-        let data: MultipleMissionsDTO
+        let data: MultipleDataDTO
         let errorMessage: String?
     }
     
-    struct MultipleMissionsDTO: Decodable {
-        let missions: [MultipleMissionDTO]
+    struct MultipleDataDTO: Decodable {
+        let missions: [MultipleMissionsDTO]
         let totalCount: Int
         let retryCount: Int
     }
 
+    struct MultipleMissionsDTO: Decodable {
+        let memberInterestId: Int
+        let data: [MultipleMissionDTO]
+    }
+    
     struct MultipleMissionDTO: Decodable {
         let memberMissionId: Int
-        let missionId: Int
         let content: String
         let directFullPath: [String]
         let difficulty: Int
         let expEarned: Int
         let createdType: String
-        let relatedInterest: String
         
         enum CodingKeys: String, CodingKey {
             case memberMissionId = "member_mission_id"
-            case missionId = "mission_id"
-            case content, directFullPath, difficulty, expEarned, createdType, relatedInterest
+            case content, directFullPath, difficulty, expEarned, createdType
         }
         
-        // MultipleMissionDTO를 호출하는 경우가 있어서, 기존 호출 방식인 MissionDTO로 변경이 불가피하다
         func toMissionDTO() -> MemberMission.MissionDTO {
             return MemberMission.MissionDTO(
                 memberMissionId: self.memberMissionId,

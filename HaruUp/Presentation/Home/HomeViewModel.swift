@@ -110,7 +110,7 @@ final class HomeViewModel {
                         let interest = data?.interests.first?.first
                         
                         return HomeMemberInfo(
-                            characterId: 0,
+                            characterId: data?.characterId ?? 1,
                             level: data?.levelNumber ?? 1,
                             nickname: data?.nickname ?? "하루",
                             totalExp: data?.totalExp ?? 1000,
