@@ -195,7 +195,13 @@ final class TodayMissionListViewModel {
         
         let missionCompleted = input.completeTap
             .withLatestFrom(selectedMissionIDRelay)
-            .map { Array($0) }
+            .map { [weak self] allSelectedIDs -> [Int] in
+                guard let self = self else { return [] }
+                
+                let newSelectedIDs = allSelectedIDs.subtracting(self.fixedMissionIDs)
+                
+                return Array(newSelectedIDs)
+            }
             .flatMapLatest { [weak self] ids -> Observable<Void> in
                 guard let self = self else { return .empty() }
                 
