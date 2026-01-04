@@ -16,6 +16,9 @@ final class GoalInputBottomSheet: UIViewController {
     // ViewModel로 입력값 전달
     var onNextTapped: ((String) -> Void)?
     
+    // 초기 텍스트를 받을 변수
+    var initialText: String?
+    
     // 외부(ViewModel)에서 제어할 Subjects
     let validationSuccess = PublishRelay<Void>()
     let validationFailed = PublishRelay<String>()
@@ -117,6 +120,10 @@ final class GoalInputBottomSheet: UIViewController {
         setupKeyboardObservers()
         setupTapGestures()
         bind()
+        
+        if let text = initialText, !text.isEmpty {
+            textField.text = text
+        }
         
         // 20자 제한을 위한 델리게이트 설정
         textField.delegate = self

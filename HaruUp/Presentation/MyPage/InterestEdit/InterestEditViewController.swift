@@ -578,8 +578,8 @@ final class InterestEditViewController: UIViewController {
             .disposed(by: disposeBag)
         
         output.showGoalInputBottomSheet
-            .emit(with: self) { owner, _ in
-                owner.showGoalInputSheet()
+            .emit(with: self) { owner, text in
+                owner.showGoalInputSheet(initialText: text)
             }
             .disposed(by: disposeBag)
         
@@ -746,9 +746,11 @@ final class InterestEditViewController: UIViewController {
         self.present(bottomSheetVC, animated: true)
     }
     
-    private func showGoalInputSheet() {
+    private func showGoalInputSheet(initialText: String? = nil) {
         let vc = GoalInputBottomSheet()
         vc.modalPresentationStyle = .overFullScreen
+        
+        vc.initialText = initialText
         
         // 입력 완료 시 VM으로 전달
         vc.onNextTapped = { [weak self] text in
