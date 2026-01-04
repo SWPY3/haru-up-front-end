@@ -89,8 +89,10 @@ final class TodayMissionListViewModel {
                                     return self.missionService.requestRecommendedMultipleMissions(memberInterestIds: [id])
                                         .map { multipleResponse in
                                             self.retryCountRelay.accept(multipleResponse.data.retryCount)
-                                            // MultipleMissionDTO 배열을 MissionDTO 배열로 변환
-                                            return multipleResponse.data.missions.map { $0.toMissionDTO() }
+                                            // MultipleMissionDTO 배열을 MissionDTO 배열로 변환 - 현재 관심사가 하나이므로 first로 구현
+                                            return multipleResponse.data.missions.first?.data.map { mission in
+                                                mission.toMissionDTO()
+                                            } ?? []
                                         }
                                 }
                             }
