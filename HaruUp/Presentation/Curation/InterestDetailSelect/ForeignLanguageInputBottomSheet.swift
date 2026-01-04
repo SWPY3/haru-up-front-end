@@ -10,9 +10,21 @@ import RxSwift
 import RxCocoa
 
 class ForeignLanguageInputBottomSheet: UIViewController {
+    enum SheetType {
+        case curation   // 큐레이션 (처음 설정)
+        case edit       // 수정 (마이페이지)
+        
+        var buttonTitle: String {
+            switch self {
+            case .curation: return "다음"
+            case .edit: return "완료"
+            }
+        }
+    }
+    
+    private let sheetType: SheetType
     private let viewModel: ForeignLanguageInputBottomSheetViewModel
     private let disposeBag = DisposeBag()
-    
     
     // 완료 콜백
     var onFinish: ((String) -> Void)?
@@ -97,7 +109,6 @@ class ForeignLanguageInputBottomSheet: UIViewController {
     
     private let nextButton: UIButton = {
         let btn = UIButton()
-        btn.setTitle("다음", for: .normal)
         btn.titleLabel?.font = Typography.subtitle2.font
         btn.backgroundColor = .neutral200
         btn.layer.cornerRadius = 16
@@ -112,8 +123,9 @@ class ForeignLanguageInputBottomSheet: UIViewController {
     private var keyboardBackgroundHeightConstraint: NSLayoutConstraint?
     
     
-    init(viewModel: ForeignLanguageInputBottomSheetViewModel) {
+    init(viewModel: ForeignLanguageInputBottomSheetViewModel, type: SheetType) {
         self.viewModel = viewModel
+        self.sheetType = type
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -123,6 +135,8 @@ class ForeignLanguageInputBottomSheet: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        nextButton.setTitle(sheetType.buttonTitle, for: .normal)
         
         setupUI()
         bindViewModel()
@@ -270,8 +284,8 @@ class ForeignLanguageInputBottomSheet: UIViewController {
             left: containerView.leftAnchor,
             right: containerView.rightAnchor,
             paddingTop: 50,
-            paddingLeft: 24,
-            paddingRight: 24
+            paddingLeft: 20,
+            paddingRight: 20
         )
         
         textFieldContainer.anchor(
@@ -279,8 +293,8 @@ class ForeignLanguageInputBottomSheet: UIViewController {
             left: containerView.leftAnchor,
             right: containerView.rightAnchor,
             paddingTop: 24,
-            paddingLeft: 24,
-            paddingRight: 24,
+            paddingLeft: 20,
+            paddingRight: 20,
             height: 50
         )
         
@@ -308,9 +322,8 @@ class ForeignLanguageInputBottomSheet: UIViewController {
         
         warningLabel.anchor(
             top: textFieldContainer.bottomAnchor,
-            left: view.leftAnchor,
-            paddingTop: 8,
-            paddingLeft: 20
+            left: textFieldContainer.leftAnchor,
+            paddingTop: 8
         )
         
         nextButtonBottomConstraint = nextButton.bottomAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.bottomAnchor,
@@ -323,8 +336,8 @@ class ForeignLanguageInputBottomSheet: UIViewController {
         nextButton.anchor(
             left: containerView.leftAnchor,
             right: containerView.rightAnchor,
-            paddingLeft: 24,
-            paddingRight: 24,
+            paddingLeft: 20,
+            paddingRight: 20,
             height: 56
         )
     }

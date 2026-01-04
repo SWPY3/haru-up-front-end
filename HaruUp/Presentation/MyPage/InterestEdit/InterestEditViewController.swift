@@ -729,7 +729,10 @@ final class InterestEditViewController: UIViewController {
     
     private func showForeignLanguageInputBottomSheet() {
         let bottomSheetViewModel = ForeignLanguageInputBottomSheetViewModel()
-        let bottomSheetVC = ForeignLanguageInputBottomSheet(viewModel: bottomSheetViewModel)
+        let bottomSheetVC = ForeignLanguageInputBottomSheet(
+            viewModel: bottomSheetViewModel,
+            type: .edit
+        )
         
         bottomSheetVC.modalPresentationStyle = .overFullScreen
         bottomSheetVC.modalTransitionStyle = .crossDissolve

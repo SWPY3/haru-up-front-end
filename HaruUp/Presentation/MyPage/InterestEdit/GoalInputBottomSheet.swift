@@ -67,7 +67,7 @@ final class GoalInputBottomSheet: UIViewController {
         return tf
     }()
     
-    // ✅ [추가] 클리어 버튼
+    // 클리어 버튼
     private let clearButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "icon_x.png"), for: .normal)
@@ -83,7 +83,7 @@ final class GoalInputBottomSheet: UIViewController {
         return view
     }()
     
-    // ✅ [추가] 글자 수 카운트 라벨
+    // 글자 수 카운트 라벨
     private let textCountLabel: UILabel = {
         let label = UILabel()
         label.setStyle(Typography.caption3, text: "0/20")
@@ -170,11 +170,11 @@ final class GoalInputBottomSheet: UIViewController {
             containerView.heightAnchor.constraint(equalToConstant: 330), // 높이 약간 증가
             
             titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 40),
-            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
             
             textFieldContainer.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
-            textFieldContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
-            textFieldContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
+            textFieldContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            textFieldContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
             textFieldContainer.heightAnchor.constraint(equalToConstant: 50),
             
             // 텍스트필드 배치 (오른쪽에 클리어버튼 자리 확보)
@@ -200,12 +200,12 @@ final class GoalInputBottomSheet: UIViewController {
             
             // 경고 메시지 (왼쪽 아래)
             warningLabel.topAnchor.constraint(equalTo: textFieldContainer.bottomAnchor, constant: 8),
-            warningLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
+            warningLabel.leadingAnchor.constraint(equalTo: textFieldContainer.leadingAnchor),
             warningLabel.trailingAnchor.constraint(lessThanOrEqualTo: textCountLabel.leadingAnchor, constant: -10),
             
             nextButton.bottomAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.bottomAnchor, constant: -10),
-            nextButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
-            nextButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
+            nextButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            nextButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
             nextButton.heightAnchor.constraint(equalToConstant: 56)
         ])
         
