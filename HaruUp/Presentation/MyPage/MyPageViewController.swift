@@ -23,6 +23,19 @@ class MyPageViewController: UIViewController {
     var onWithdraw: (() -> Void)?
     
     // MARK: - UI Components
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsVerticalScrollIndicator = false // 스크롤 바 숨김 (선택사항)
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        return scrollView
+    }()
+    
+    private let contentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.setStyle(Typography.title3, text: "마이페이지")
@@ -130,6 +143,14 @@ class MyPageViewController: UIViewController {
     
     required init?(coder: NSCoder) { fatalError() }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        // 화면이 나타날 때 네비게이션 바를 숨깁니다.
+        // 이렇게 해야 Safe Area가 화면 최상단(Status Bar 바로 아래)부터 시작됩니다.
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -138,9 +159,12 @@ class MyPageViewController: UIViewController {
     
     private func setupUI() {
         view.backgroundColor = .neutral10
+
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
         
         [titleLabel, profileImageView, nicknameLabel, editProfileButton, jobLabel, goalCardView, menuStackView, versionLabel].forEach {
-            view.addSubview($0)
+            contentView.addSubview($0)
         }
         
         [goalBadgeContainer, goalNameLabel, interestTag, detailTag].forEach {
@@ -157,11 +181,22 @@ class MyPageViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                        scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                        scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                        scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            contentView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+                        contentView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+                        contentView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+                        contentView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
+            
+            titleLabel.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 10),
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             
             profileImageView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
-            profileImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            profileImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             profileImageView.widthAnchor.constraint(equalToConstant: 80),
             profileImageView.heightAnchor.constraint(equalToConstant: 80),
             
@@ -170,7 +205,7 @@ class MyPageViewController: UIViewController {
             nicknameLabel.trailingAnchor.constraint(lessThanOrEqualTo: editProfileButton.leadingAnchor, constant: -8),
             
             editProfileButton.topAnchor.constraint(equalTo: nicknameLabel.topAnchor, constant: 10),
-            editProfileButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
+            editProfileButton.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
             editProfileButton.widthAnchor.constraint(equalToConstant: 36),
             editProfileButton.heightAnchor.constraint(equalToConstant: 36),
             
@@ -178,8 +213,8 @@ class MyPageViewController: UIViewController {
             jobLabel.leadingAnchor.constraint(equalTo: nicknameLabel.leadingAnchor),
             
             goalCardView.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 36),
-            goalCardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            goalCardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            goalCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            goalCardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             //            goalCardView.heightAnchor.constraint(equalToConstant: 130),
             
             goalBadgeContainer.topAnchor.constraint(equalTo: goalCardView.topAnchor, constant: 15),
@@ -202,11 +237,12 @@ class MyPageViewController: UIViewController {
             detailTag.leadingAnchor.constraint(equalTo: interestTag.trailingAnchor, constant: 8),
             
             menuStackView.topAnchor.constraint(equalTo: goalCardView.bottomAnchor, constant: 24),
-            menuStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            menuStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            menuStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            menuStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
             versionLabel.topAnchor.constraint(equalTo: menuStackView.bottomAnchor, constant: 10),
-            versionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40)
+            versionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
+            versionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -40)
         ])
     }
     

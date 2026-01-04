@@ -178,7 +178,15 @@ final class InterestsService: Service {
                         single(.success(()))
                         print("📥 관심사 수정 응답: \(value)")
                     case .failure(let error):
-                        print("❌ 요청 실패: \(error.localizedDescription)")
+                        print("❌ 요청 실패 (Code: \(response.response?.statusCode ?? 0))")
+                        
+                        // 서버가 보낸 에러 메시지 출력 (이걸 봐야 원인을 알 수 있습니다!)
+                        if let data = response.data, let serverMessage = String(data: data, encoding: .utf8) {
+                            print("📝 [서버 에러 사유]: \(serverMessage)")
+                        } else {
+                            print("📝 서버 에러 메시지 없음")
+                        }
+                        
                         single(.failure(error))
                     }
                 }

@@ -43,7 +43,7 @@ final class InterestEditViewModel {
         let showLanguageInputBottomSheet: Signal<Void>
         
         // Goal 관련 Output
-        let showGoalInputBottomSheet: Signal<Void>      // 목표 입력 바텀시트 열기
+        let showGoalInputBottomSheet: Signal<String?>      // 목표 입력 바텀시트 열기
         let goalValidationSuccess: Signal<Void>         // 유효성 검사 성공 (바텀시트 닫기용)
         let goalValidationFailed: Signal<String>        // 유효성 검사 실패 (에러 메시지 표시용)
         let showLockAlert: Signal<Void>                 // 3회 실패 팝업
@@ -108,7 +108,7 @@ final class InterestEditViewModel {
         let showBottomSheetRelay = PublishRelay<Void>()
         let errorMessageRelay = PublishRelay<String>()
         
-        let showGoalBottomSheetRelay = PublishRelay<Void>()
+        let showGoalBottomSheetRelay = PublishRelay<String?>()
         let validationSuccessRelay = PublishRelay<Void>()
         let validationFailedRelay = PublishRelay<String>()
         let showLockAlertRelay = PublishRelay<Void>()
@@ -214,8 +214,7 @@ final class InterestEditViewModel {
                         return
                     }
                     // 바텀시트 열기 전 기존 커스텀 값 초기화 (재입력 유도)
-                    self.customGoalNameRelay.accept(nil)
-                    showGoalBottomSheetRelay.accept(())
+                    showGoalBottomSheetRelay.accept(self.customGoalNameRelay.value)
                 } else {
                     // 일반 항목 선택 시 커스텀 값 제거
                     self.customGoalNameRelay.accept(nil)
@@ -256,12 +255,12 @@ final class InterestEditViewModel {
                 guard let self = self else { return }
                 
                 if isValid {
-                    // ✅ 성공
+                    // 성공
                     self.invalidGoalAttemptCount = 0
                     self.customGoalNameRelay.accept(text)
                     validationSuccessRelay.accept(())
                 } else {
-                    // ❌ 실패 (진짜 실패인 경우만 여기로 옴)
+                    // 실패 (진짜 실패인 경우만 여기로 옴)
                     self.invalidGoalAttemptCount += 1
                     
                     if self.invalidGoalAttemptCount >= 3 {
@@ -356,12 +355,12 @@ final class InterestEditViewModel {
                 self.isLoadingRelay.accept(false) // 로딩 종료
                 
                 if success {
-                    // ✅ API가 성공(true)했을 때만 로컬 데이터 업데이트
+                    // API가 성공(true)했을 때만 로컬 데이터 업데이트
                     print("💾 API 성공: 로컬 데이터 업데이트 실행")
                     self.updateLocalData()
                     updateSuccessRelay.accept(())
                 } else {
-                    // ❌ API 실패(false) 시 에러 메시지
+                    // API 실패(false) 시 에러 메시지
                     print("💾 API 실패: 로컬 데이터 업데이트 안함")
                     errorMessageRelay.accept("관심사 수정에 실패했어요. 다시 시도해주세요.")
                 }

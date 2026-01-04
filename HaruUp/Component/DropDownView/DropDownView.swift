@@ -16,6 +16,9 @@ final class DropdownView: UIView {
     private var items: [DropdownDisplayable] = []
     private var selectedId: Int?
     
+    // 셀 높이 상수 정의 (55pt로 통일)
+    private let rowHeight: CGFloat = 55.0
+    
     private let tableView: UITableView = {
         let tv = UITableView()
         tv.register(DropdownCell.self, forCellReuseIdentifier: "DropdownCell")
@@ -59,12 +62,14 @@ final class DropdownView: UIView {
         self.selectedId = selectedId
         self.tableView.reloadData()
         
+        // 스크롤 가능 여부 설정 (4개 초과일 때만 스크롤)
+        self.tableView.isScrollEnabled = items.count > 4
+        
         // 1. 높이 계산 (셀 높이 55pt 기준)
-        let rowHeight: CGFloat = 55.0
         let contentHeight = CGFloat(items.count) * rowHeight
         
         // 4개까지 보이도록 최대 높이를 220으로 설정 (55 * 4 = 220)
-        let maxHeight: CGFloat = 220.0
+        let maxHeight: CGFloat = rowHeight * 4
         
         // 실제 적용할 높이
         let finalHeight = min(contentHeight, maxHeight)
@@ -72,13 +77,7 @@ final class DropdownView: UIView {
         // 2. 높이 제약조건 업데이트
         if let heightConstraint = self.constraints.first(where: { $0.firstAttribute == .height }) {
             heightConstraint.constant = finalHeight
-            
-//            UIView.animate(withDuration: 0.3) {
-//                self.superview?.layoutIfNeeded()
-            //            }
-            heightConstraint.constant = finalHeight
-            // 필요하다면 레이아웃 갱신을 즉시 수행 (애니메이션 없이)
-            self.superview?.layoutIfNeeded()
+            self.superview?.layoutIfNeeded() // 즉시 반영
         }
         
         // 3. 내용이 220보다 길면 스크롤 바 깜빡임
@@ -87,6 +86,11 @@ final class DropdownView: UIView {
                 self.tableView.flashScrollIndicators()
             }
         }
+//        if items.count > 4 {
+//            DispatchQueue.main.async {
+//                self.tableView.flashScrollIndicators()
+//            }
+//        }
     }
 }
 
@@ -110,6 +114,6 @@ final class DropdownView: UIView {
         }
         
         func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-            return 48
+            return rowHeight
         }
     }
