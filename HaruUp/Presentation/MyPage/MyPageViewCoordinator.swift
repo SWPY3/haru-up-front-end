@@ -51,7 +51,13 @@ final class MyPageViewCoordinator: Coordinator {
     
     func showProfileEdit() {
         // 1. 현재 닉네임 가져오기 (CurationData 혹은 저장된 UserInfo에서)
-        let currentNickname = TokenStorageService.shared.getCurationData()?.nickname ?? "Anonymous"
+        var currentNickname = "Anonymous"
+        
+        if let savedNickname = TokenStorageService.shared.getProfile().nickname {
+            currentNickname = savedNickname
+        } else if let curationNickname = TokenStorageService.shared.getCurationData()?.nickname {
+            currentNickname = curationNickname
+        }
         
         print("=== 프로필 수정 진입 ===")
         print("전달할 닉네임: \(currentNickname)")

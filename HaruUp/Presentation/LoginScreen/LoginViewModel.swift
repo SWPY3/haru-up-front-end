@@ -39,6 +39,50 @@ final class LoginViewModel {
         self.authService = authService
     }
     
+    // 공통 로그인 처리 로직
+    // 로그인 시도 -> 성공 시 CurationData 확인 -> 없으면 데이터 복구(프로필/관심사) -> 최종 결과 반환
+    private func handleLogin(_ loginSingle: Single<SocialLoginResult>) -> Observable<SocialLoginResult> {
+        return loginSingle
+            .asObservable()
+            .flatMap { [weak self] loginResult -> Observable<SocialLoginResult> in
+                guard let self = self, loginResult.success else {
+                    // 로그인 자체가 실패하면 그대로 반환
+                    return .just(loginResult)
+                }
+                
+                print("🔄 로그인 성공 -> 서버 데이터(프로필/관심사) 확인 시도")
+                
+                // 서버 데이터 조회 (프로필 + 관심사)
+                return self.authService.fetchProfileAndInterests()
+                    .asObservable()
+                    .map { _ in
+                        // 성공: 서버에 데이터가 있음 (기존 회원)
+                        print("✅ 기존 회원 확인: 온보딩 건너뛰기 설정")
+                        
+                        // 1. 로컬에 온보딩 완료 상태 저장
+                        TokenStorageService.shared.saveOnboardingCompleted(true)
+                        
+                        // 2. 결과 객체의 onboardingCompleted를 true로 변경하여 반환
+                        return SocialLoginResult(success: true, onboardingCompleted: true)
+                    }
+                    .catch { error in
+                        // 실패: 서버에 데이터가 없음 (신규 회원) or 네트워크 오류
+                        // (보통 404나 데이터 없음 에러가 뜸)
+                        print("⚠️ 신규 회원 또는 데이터 없음 (\(error)) -> 온보딩 진행 필요")
+                        
+                        // 1. 로컬 온보딩 미완료 상태 확실하게 저장
+                        TokenStorageService.shared.saveOnboardingCompleted(false)
+                        
+                        // 2. 결과 객체의 onboardingCompleted를 false로 반환 -> 온보딩 화면으로 이동
+                        return .just(SocialLoginResult(success: true, onboardingCompleted: false))
+                    }
+            }
+            .do(onNext: { [weak self] _ in
+                self?.isLoadingRelay.accept(false)
+            }, onError: { [weak self] _ in
+                self?.isLoadingRelay.accept(false)
+            })
+    }
     func transform(_ input: Input) -> Output {
         let errorRelay = PublishRelay<String>()
         let loginSuccessRelay = PublishRelay<SocialLoginResult>()
@@ -50,20 +94,14 @@ final class LoginViewModel {
                 
                 self.isLoadingRelay.accept(true)
                 
-                return self.authService.loginWithKakao()
-                    .asObservable()
-                    .do(onNext: { [weak self] _ in
-                            self?.isLoadingRelay.accept(false)
-                    }, onError: { [weak self] error in
-                        self?.isLoadingRelay.accept(false)
-                        errorRelay.accept(error.localizedDescription)
-                    })
+                return self.handleLogin(self.authService.loginWithKakao())
                     .catch { error in
-                        return .just(SocialLoginResult(success: false, onboardingCompleted: false))
+                        errorRelay.accept(error.localizedDescription)
+                        return .empty()
                     }
             }
-            .filter { $0.success }              // true인 경우(성공)만 통과
-            .bind(to: loginSuccessRelay) // 성공 시에만 loginSuccess = true
+            .filter { $0.success }
+            .bind(to: loginSuccessRelay)
             .disposed(by: disposeBag)
         
         // Apple
@@ -73,45 +111,33 @@ final class LoginViewModel {
                 
                 self.isLoadingRelay.accept(true)
                 
-                return self.authService.loginWithApple()
-                    .asObservable()
-                    .do(onNext: { [weak self] _ in
-                        self?.isLoadingRelay.accept(false)
-                    }, onError: { [weak self] error in
-                        self?.isLoadingRelay.accept(false)
-                        errorRelay.accept(error.localizedDescription)
-                    })
+                return self.handleLogin(self.authService.loginWithApple())
                     .catch { error in
-                        return .just(SocialLoginResult(success: false, onboardingCompleted: false))
+                        errorRelay.accept(error.localizedDescription)
+                        return .empty()
                     }
             }
-            .filter { $0.success }              // true인 경우(성공)만 통과
-            .bind(to: loginSuccessRelay) // 성공 시에만 loginSuccess = true
+            .filter { $0.success }
+            .bind(to: loginSuccessRelay)
             .disposed(by: disposeBag)
         
         // Naver
         input.naverLoginTapped
-                    .flatMapLatest { [weak self] _ -> Observable<SocialLoginResult> in
-                        guard let self = self else { return .empty() }
-                        
-                        self.isLoadingRelay.accept(true)
-                        
-                        return self.authService.loginWithNaver()
-                            .asObservable()
-                            .do(onNext: { [weak self] _ in
-                                self?.isLoadingRelay.accept(false)
-                            }, onError: { [weak self] error in
-                                self?.isLoadingRelay.accept(false)
-                                errorRelay.accept(error.localizedDescription)
-                            })
-                            .catch { error in
-                                return .just(SocialLoginResult(success: false, onboardingCompleted: false))
-                            }
+            .flatMapLatest { [weak self] _ -> Observable<SocialLoginResult> in
+                guard let self = self else { return .empty() }
+                
+                self.isLoadingRelay.accept(true)
+                
+                return self.handleLogin(self.authService.loginWithNaver())
+                    .catch { error in
+                        errorRelay.accept(error.localizedDescription)
+                        return .empty()
                     }
-                    .filter { $0.success } // false는 성공으로 보지 않도록 필터링
-                    .bind(to: loginSuccessRelay)
-                    .disposed(by: disposeBag)
-
+            }
+            .filter { $0.success }
+            .bind(to: loginSuccessRelay)
+            .disposed(by: disposeBag)
+        
         return Output(
             isLoading: isLoadingRelay.asDriver(),
             errorMessage: errorRelay.asSignal(),

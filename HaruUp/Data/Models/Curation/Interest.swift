@@ -58,7 +58,7 @@ struct MemberInterestResponse: Decodable {
 }
 
 // 리스트 내부 아이템
-struct MemberInterestDTO: Decodable {
+struct MemberInterestDTO: Codable {
     let memberInterestId: Int
     let memberId: Int
     let interestId: Int // 이게 '목표'의 ID입니다.

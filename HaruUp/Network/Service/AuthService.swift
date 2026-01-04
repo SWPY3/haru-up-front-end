@@ -14,6 +14,7 @@ import AuthenticationServices
 import CryptoKit
 
 import NidThirdPartyLogin
+import Alamofire
 
 final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     
@@ -22,17 +23,17 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
     
     
     init(authAPI: AuthAPIProtocol = AuthAPI(), tokenStorage: TokenStorageService = .shared) {
-            self.authAPI = authAPI
-            self.tokenStorage = tokenStorage
-            super.init()
-        }
+        self.authAPI = authAPI
+        self.tokenStorage = tokenStorage
+        super.init()
+    }
     
     // for Apple Login
     private var currentNonce: String?
     private var appleLoginObserver: ((SingleEvent<SocialLoginResult>) -> Void)?
     private let disposeBag = DisposeBag()
     
-
+    
     
     // MARK: Kakao Login
     
@@ -109,7 +110,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             guard let user = user else {
                 completion(.failure(LoginError.invalidProfile)); return
             }
-                  
+            
             
             let userInfo = KakaoUserInfo(
                 accessToken: accessToken,
@@ -176,7 +177,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             print("애플 로그인 credential 캐스팅 실패")
             appleLoginObserver?(.success(SocialLoginResult(success: false, onboardingCompleted: false)))
             appleLoginObserver = nil
-
+            
             return
         }
         
@@ -187,7 +188,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         // 2) 이름, 이메일 (처음 로그인 할 때만 올 수 있고, Hide my email 하면 nil 일 수 있음)
         let fullName = credential.fullName
         let email = credential.email
-    
+        
         
         let name = [fullName?.givenName, fullName?.familyName]
             .compactMap { $0 }
@@ -239,7 +240,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         print("🍎 authorizationCode: \(authorizationCodeString.prefix(20))...")
         print("🍎 nonce: \(nonce)")
         
-
+        
         sendSocialLoginToServer(request: request)
             .subscribe(onSuccess: { [weak self] result in
                 self?.appleLoginObserver?(.success(result))
@@ -274,20 +275,20 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
         var result = ""
         var remainingLength = length
-
+        
         while remainingLength > 0 {
             var random: UInt8 = 0
             let errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
             if errorCode != errSecSuccess {
                 fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
             }
-
+            
             if random < charset.count {
                 result.append(charset[Int(random)])
                 remainingLength -= 1
             }
         }
-
+        
         return result
     }
     
@@ -344,7 +345,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
     }
     
     
-
+    
     
     // 2) 프로필 조회
     func fetchProfile(accessToken: String) -> Single<NaverUserProfile> {
@@ -370,7 +371,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         return login()
             .flatMap { [weak self] loginResult -> Single<NaverUserProfileWithToken> in
                 guard let self = self else { return .never() }
-
+                
                 let accessToken = loginResult.accessToken.tokenString
                 return self.fetchProfile(accessToken: accessToken)
                     .map { profile in
@@ -433,4 +434,122 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             }
     }
     
+    // MARK: Profile & Interests Recovery
+    func fetchProfileAndInterests() -> Single<Bool> {
+        // Single.zip을 사용하여 두 API를 동시에 호출 (병렬 처리)
+        return Single.zip(fetchProfile(), fetchMemberInterests())
+            .map { profileData, interests in
+                
+                // 1. 프로필 정보 저장 (저장 로직 추가됨)
+                TokenStorageService.shared.saveProfile(
+                    nickname: profileData.nickname,
+                    imgId: profileData.imgId
+                )
+                
+                // 2. 관심사 정보 저장
+                TokenStorageService.shared.saveMemberInterests(interests)
+                
+                print("🚀 [데이터 복구 완료]")
+                print(" - 닉네임: \(profileData.nickname)")
+                print(" - 관심사: \(interests.count)개")
+                
+                return true
+            }
+            .do(onError: { error in
+                print("❌ 프로필/관심사 데이터 복구 실패: \(error)")
+            })
+    }
+    
+    // [수정] 백엔드 프로필 조회 (public으로 변경 및 자동 저장 추가)
+    func fetchProfile() -> Single<ProfileData> {
+        return Single.create { [weak self] single in
+            guard let token = self?.tokenStorage.getAccessToken() else {
+                single(.failure(NSError(domain: "AuthService", code: 401, userInfo: [NSLocalizedDescriptionKey: "토큰이 없습니다"])))
+                return Disposables.create()
+            }
+            
+            let headers: HTTPHeaders = [
+                "Authorization": "Bearer \(token)",
+                "Content-Type": "application/json"
+            ]
+            
+            AF.request(
+                NetworkDefine.ProfileAPI.getProfile.url,
+                method: .get,
+                headers: headers
+            )
+            .validate()
+            .responseDecodable(of: ProfileResponse.self) { response in
+                switch response.result {
+                case .success(let profileResponse):
+                    if let profileData = profileResponse.data {
+                        print("✅ 프로필 조회 성공: \(profileData.nickname)")
+                        single(.success(profileData))
+                    } else {
+                        let error = NSError(
+                            domain: "AuthService",
+                            code: 500,
+                            userInfo: [NSLocalizedDescriptionKey: profileResponse.errorMessage ?? "프로필 조회 실패"]
+                        )
+                        single(.failure(error))
+                    }
+                    
+                case .failure(let error):
+                    print("❌ 프로필 조회 API 실패: \(error)")
+                    single(.failure(error))
+                }
+            }
+            
+            return Disposables.create()
+        }
+        .do(onSuccess: { [weak self] profileData in
+            // 💾 [추가] 조회 성공 시 자동으로 로컬 스토리지에 저장
+            self?.tokenStorage.saveProfile(
+                nickname: profileData.nickname,
+                imgId: profileData.imgId
+            )
+            print("💾 [AuthService] 프로필 정보 로컬 최신화 완료")
+        })
+    }
+    
+    // [수정] 멤버 관심사 조회 (public으로 변경 및 자동 저장 추가)
+    func fetchMemberInterests() -> Single<[MemberInterestDTO]> {
+        return Single.create { [weak self] single in
+            guard let token = self?.tokenStorage.getAccessToken() else {
+                single(.failure(NSError(domain: "AuthService", code: 401, userInfo: [NSLocalizedDescriptionKey: "토큰이 없습니다"])))
+                return Disposables.create()
+            }
+            
+            let headers: HTTPHeaders = [
+                "Authorization": "Bearer \(token)",
+                "Content-Type": "application/json"
+            ]
+            
+            AF.request(
+                NetworkDefine.InterestsAPI.member.url,
+                method: .get,
+                headers: headers
+            )
+            .validate()
+            .responseDecodable(of: MemberInterestResponse.self) { response in
+                switch response.result {
+                case .success(let interestResponse):
+                    print("✅ 관심사 조회 성공: \(interestResponse.totalCount)개")
+                    single(.success(interestResponse.interests))
+                    
+                case .failure(let error):
+                    print("❌ 관심사 조회 API 실패: \(error)")
+                    single(.failure(error))
+                }
+            }
+            
+            return Disposables.create()
+        }
+        .do(onSuccess: { [weak self] interests in
+            // 💾 [추가] 조회 성공 시 자동으로 로컬 스토리지에 저장
+            self?.tokenStorage.saveMemberInterests(interests)
+            print("💾 [AuthService] 관심사 정보 로컬 최신화 완료")
+        })
+    }
 }
+

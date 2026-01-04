@@ -17,6 +17,11 @@ final class TokenStorageService {
     private let onboardingCompletedMemberIdKey = "HaruUp_OnboardingCompletedMemberId"
     private let memberIdKey = "HaruUp_MemberId"
     private let curationDataKey = "HaruUp_CurationData"
+    
+    private let memberInterestsKey = "HaruUp_MemberInterests"
+    private let userNicknameKey = "HaruUp_UserNickname"
+    private let userProfileImgIdKey = "HaruUp_UserProfileImgId"
+    
     // Apple 로그인 관련 키들
     private let appleUserIdKey = "HaruUp_AppleUserId"
     private let appleEmailKey = "HaruUp_AppleEmail"
@@ -128,14 +133,14 @@ final class TokenStorageService {
     }
     
     func getCurationData() -> CurationData? {
-            guard let data = UserDefaults.standard.data(forKey: curationDataKey) else { return nil }
-            do {
-                return try JSONDecoder().decode(CurationData.self, from: data)
-            } catch {
-                print("❌ 큐레이션 데이터 디코딩 실패: \(error)")
-                return nil
-            }
+        guard let data = UserDefaults.standard.data(forKey: curationDataKey) else { return nil }
+        do {
+            return try JSONDecoder().decode(CurationData.self, from: data)
+        } catch {
+            print("❌ 큐레이션 데이터 디코딩 실패: \(error)")
+            return nil
         }
+    }
     
     // 온보딩 상태 완전 초기화
     func clearOnboardingState() {
@@ -144,21 +149,63 @@ final class TokenStorageService {
         print("🗑️ 온보딩 상태 완전 초기화")
     }
     
-    func clearForLogout() {
-            clearTokens()
-            clearAppleLoginInfo()
-            print("🔓 로그아웃 완료 - 토큰만 삭제 (사용자 기록 유지)")
-            print("   → 유지된 데이터: MemberId, CurationData")
+    func saveProfile(nickname: String, imgId: Int?) {
+        UserDefaults.standard.set(nickname, forKey: userNicknameKey)
+        if let imgId = imgId {
+            UserDefaults.standard.set(imgId, forKey: userProfileImgIdKey)
         }
+        print("✅ 프로필 정보(닉네임/이미지ID) 로컬 저장 완료")
+    }
+    
+    func getProfile() -> (nickname: String?, imgId: Int) {
+        let nickname = UserDefaults.standard.string(forKey: userNicknameKey)
+        let imgId = UserDefaults.standard.integer(forKey: userProfileImgIdKey)
+        return (nickname, imgId)
+    }
+    
+    func saveMemberInterests(_ interests: [MemberInterestDTO]) {
+        do {
+            let encoded = try JSONEncoder().encode(interests)
+            UserDefaults.standard.set(encoded, forKey: memberInterestsKey)
+            print("✅ 멤버 관심사 데이터 로컬 저장 완료")
+        } catch {
+            print("❌ 멤버 관심사 데이터 저장 실패: \(error)")
+        }
+    }
+    
+    func getMemberInterests() -> [MemberInterestDTO]? {
+        guard let data = UserDefaults.standard.data(forKey: memberInterestsKey) else { return nil }
+        do {
+            return try JSONDecoder().decode([MemberInterestDTO].self, from: data)
+        } catch {
+            print("❌ 멤버 관심사 데이터 디코딩 실패: \(error)")
+            return nil
+        }
+    }
+    
+    func clearMemberInterests() {
+        UserDefaults.standard.removeObject(forKey: memberInterestsKey)
+        print("🗑️ 멤버 관심사 데이터 삭제")
+    }
+    
+    func clearForLogout() {
+        clearTokens()
+        clearAppleLoginInfo()
+        print("🔓 로그아웃 완료 - 토큰만 삭제 (사용자 기록 유지)")
+        print("   → 유지된 데이터: MemberId, CurationData")
+    }
     
     func clearForWithdraw() {
-           clearTokens()
-           clearOnboardingState()
-           clearAppleLoginInfo()
-           UserDefaults.standard.removeObject(forKey: memberIdKey)
-           UserDefaults.standard.removeObject(forKey: curationDataKey)
-           print("🗑️ 탈퇴 완료 - 모든 저장 데이터 초기화")
-       }
+        clearTokens()
+        clearOnboardingState()
+        clearAppleLoginInfo()
+        clearMemberInterests()
+        UserDefaults.standard.removeObject(forKey: memberIdKey)
+        UserDefaults.standard.removeObject(forKey: curationDataKey)
+        UserDefaults.standard.removeObject(forKey: userNicknameKey)
+        UserDefaults.standard.removeObject(forKey: userProfileImgIdKey)
+        print("🗑️ 탈퇴 완료 - 모든 저장 데이터 초기화")
+    }
     
     
     func printCurrentStatus() {
