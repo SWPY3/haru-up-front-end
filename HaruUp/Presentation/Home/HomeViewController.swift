@@ -213,7 +213,9 @@ class HomeViewController: UIViewController {
                 
                 switch rowType {
                 case .mission(let mission):
-                    self.onShowBottomSheet?(mission)
+                    if !mission.isCompleted {
+                        self.onShowBottomSheet?(mission)
+                    }
                     
                 case .empty, .add:
                     break
