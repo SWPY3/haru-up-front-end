@@ -37,7 +37,7 @@ final class JobSelectCoordinator: Coordinator {
         curationData.job = selectedJob
         print("📦 저장된 데이터 - 직업: \(selectedJob.jobName), ID: \(selectedJob.id)")
         
-        if selectedJob.id == 2 {
+        if selectedJob.jobName == "자영업" {
             showGenderSelectFlow()
             return 
         }
