@@ -165,6 +165,16 @@ final class ProfileEditViewController: UIViewController {
         return btn
     }()
     
+    private let detailJobWarningLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .secondaryRed200
+        label.textAlignment = .left
+        label.font = Typography.body4.font // 또는 원하시는 폰트
+        label.isHidden = true // 기본적으로 숨김
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private let completeButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("완료", for: .normal)
@@ -254,7 +264,9 @@ final class ProfileEditViewController: UIViewController {
         
         [customNavBar, nicknameTitleLabel, textFieldContainer, warningLabel,
          jobTitleLabel, jobSelectButton,
-         detailJobTitleLabel, detailJobSelectButton, buttonBackgroundView,
+         detailJobTitleLabel, detailJobSelectButton,
+         detailJobWarningLabel,
+         buttonBackgroundView,
          completeButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
@@ -349,6 +361,10 @@ final class ProfileEditViewController: UIViewController {
             detailJobSelectButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             detailJobSelectButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             detailJobSelectButton.heightAnchor.constraint(equalToConstant: 55),
+            
+            detailJobWarningLabel.topAnchor.constraint(equalTo: detailJobSelectButton.bottomAnchor, constant: 6),
+            detailJobWarningLabel.leadingAnchor.constraint(equalTo: detailJobSelectButton.leadingAnchor),
+            detailJobWarningLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
             // Dropdowns (Button 바로 아래 위치)
             jobDropdown.topAnchor.constraint(equalTo: jobSelectButton.bottomAnchor, constant: 4),
@@ -666,6 +682,26 @@ final class ProfileEditViewController: UIViewController {
 //                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
 //                    owner.navigationController?.popViewController(animated: true)
 //                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 5. 직업 선택 경고 메시지 바인딩
+        output.jobWarning
+            .drive(with: self, onNext: { owner, warningMessage in
+                if let message = warningMessage {
+                    // 경고 메시지가 있으면(직업은 골랐는데 세부직무가 없으면) 텍스트 설정 및 보이기
+                    owner.detailJobWarningLabel.text = message
+                    owner.detailJobWarningLabel.isHidden = false
+                    owner.detailJobWarningLabel.font = Typography.body4.font
+                    
+                    // (선택사항) 경고가 떴을 때 버튼 테두리를 빨간색으로 바꾸고 싶다면:
+                    // owner.detailJobSelectButton.layer.borderColor = UIColor.secondaryRed200.cgColor
+                } else {
+                    // nil이면(정상 상태면) 숨기기
+                    owner.detailJobWarningLabel.isHidden = true
+                    
+                    // (선택사항) 테두리 색상 원복 (활성화/비활성화 로직이 따로 있어서 생략 가능)
+                }
             })
             .disposed(by: disposeBag)
     }

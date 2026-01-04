@@ -38,6 +38,8 @@ final class ProfileEditViewModel {
         let selectedJobId: Driver<Int?>                     // 드롭다운 하이라이트용
         let selectedDetailJobId: Driver<Int?>               // 드롭다운 하이라이트용
         let isDetailJobEnabled: Driver<Bool>
+        
+        let jobWarning: Driver<String?>                     // 직업 선택 관련 경고 메시지
     }
     
     private let disposeBag = DisposeBag()
@@ -53,6 +55,8 @@ final class ProfileEditViewModel {
     let selectedDetailJobRelay = BehaviorRelay<JobDetail?>(value: TokenStorageService.shared.getCurationData()?.jobDetail)
     private let jobListRelay = BehaviorRelay<[Job]>(value: [])
     private let detailJobListRelay = BehaviorRelay<[JobDetail]>(value: [])
+    
+    private let jobWarningRelay = PublishRelay<String?>()
     
     // 외부 의존성
     private let nicknameServiceVM: NicknameSelectViewModel
@@ -95,19 +99,10 @@ final class ProfileEditViewModel {
                 
                 let trimmed = nickname.trimmingCharacters(in: .whitespaces)
                 
-                // 닉네임이 비어있으면 무조건 비활성화
-                if trimmed.isEmpty { return false }
-                
-                // 닉네임 변경 여부
                 let nicknameChanged = trimmed != self.initialNicknameValue
-                
-                // 직업 변경 여부
                 let jobChanged = job?.id != self.savedData?.job?.id
-                
-                // 세부직업 변경 여부
                 let jobDetailChanged = jobDetail?.id != self.savedData?.jobDetail?.id
                 
-                // 하나라도 변경되었으면 활성화
                 return nicknameChanged || jobChanged || jobDetailChanged
             }
             .asDriver(onErrorJustReturn: false)
@@ -149,67 +144,94 @@ final class ProfileEditViewModel {
         input.detailJobSelected
             .map { $0 as? JobDetail }
             .compactMap { $0 }
+            .do(onNext: { [weak self] _ in
+                self?.jobWarningRelay.accept(nil) // 경고 숨김
+            })
             .bind(to: selectedDetailJobRelay)
             .disposed(by: disposeBag)
         
         // 완료 버튼 탭 로직
-        input.completeButtonTapped
-            .withLatestFrom(Observable.combineLatest(
-                nicknameRelay,
-                selectedJobRelay,
-                selectedDetailJobRelay
-            ))
-            .flatMapLatest { [weak self] (nickname, job, jobDetail) -> Observable<NicknameValidationResult> in
-                guard let self = self else { return .just(.empty) }
-                
-                // 닉네임 변경 여부 확인
-                let nicknameChanged = nickname.trimmingCharacters(in: .whitespaces) != self.initialNicknameValue
-                
-                // 닉네임이 변경되지 않았으면 중복 체크 건너뛰기
-                if !nicknameChanged {
-                    return .just(.success)
-                }
-                
-                // [Step 1] 기본 유효성 검사 (길이, 한글 등)
-                let basicValidation = self.validateNickname(nickname)
-                guard case .success = basicValidation else {
-                    return .just(basicValidation) // 실패 시 즉시 반환
-                }
-                
-                // [Step 2] 닉네임 중복 체크 API 호출 (기존 VM 활용)
-                return self.nicknameServiceVM.checkNicknameDuplicate(nickname)
-            }
-            .flatMapLatest { [weak self] result -> Observable<Bool> in
-                guard let self = self else { return .just(false) }
-                
-                // 결과 UI에 전달 (경고 메시지 표시 등)
-                validationResultRelay.accept(result)
-                
-                if result == .success {
-                    // [Step 3] 중복 체크 통과 시 -> 프로필 수정 API 호출
-                    return self.requestUpdateProfile(
-                        nickname: self.nicknameRelay.value,
-                        jobId: self.selectedJobRelay.value?.id,
-                        jobDetailId: self.selectedDetailJobRelay.value?.id
-                    )
-                } else {
-                    // 중복이거나 기타 오류면 중단
-                    return .just(false)
-                }
-            }
-            .subscribe(onNext: { [weak self] success in
-                if success {
-                    if let self = self {
-                        var currentData = TokenStorageService.shared.getCurationData() ?? CurationData()
-                        currentData.nickname = self.nicknameRelay.value
-                        currentData.job = self.selectedJobRelay.value
-                        currentData.jobDetail = self.selectedDetailJobRelay.value
-                        TokenStorageService.shared.saveCurationData(currentData)
+                // 순서: 1. 직무 검사 -> 2. 닉네임 검사 -> 3. API 호출
+                input.completeButtonTapped
+                    .withLatestFrom(Observable.combineLatest(
+                        nicknameRelay,
+                        selectedJobRelay,
+                        selectedDetailJobRelay
+                    ))
+                    .flatMapLatest { [weak self] (nickname, job, jobDetail) -> Observable<Bool> in
+                        guard let self = self else { return .just(false) }
+                        
+                        // 1. 직업 유효성 검사
+                        if let currentJob = job {
+                            let requiredJobs = ["학생", "직장인", "취준생"]
+                            // 해당 직업군인데 세부 직무가 없으면?
+                            if requiredJobs.contains(currentJob.jobName) && jobDetail == nil {
+                                // 경고 메시지 띄우고
+                                self.jobWarningRelay.accept("*하고 싶은 세부 직무를 선택해주세요.")
+                                // 여기서 흐름 종료 (API 호출 안 함)
+                                return .just(false)
+                            }
+                        }
+                        
+                        // 통과했다면 경고 메시지 지움
+                        self.jobWarningRelay.accept(nil)
+                        
+                        // 2.닉네임 변경 여부 확인 (기존 로직 유지)
+                        
+                        let nicknameChanged = nickname.trimmingCharacters(in: .whitespaces) != self.initialNicknameValue
+                        
+                        // 닉네임이 안 바뀌었으면? -> 중복 체크 없이 바로 저장 API 호출
+                        // (직업만 바꿨을 수도 있으니까요)
+                        if !nicknameChanged {
+                            return self.requestUpdateProfile(
+                                nickname: nickname,
+                                jobId: job?.id,
+                                jobDetailId: jobDetail?.id
+                            )
+                        }
+                        
+                        // 3. 닉네임 기본 유효성 검사 (기존 로직 유지)
+                        let basicValidation = self.validateNickname(nickname)
+                        
+                        // 검사 실패 시
+                        guard case .success = basicValidation else {
+                            validationResultRelay.accept(basicValidation) // 에러 메시지 띄우기
+                            return .just(false) // 흐름 종료
+                        }
+                        
+                        // 4. [EXISTING] 닉네임 중복 체크 API (기존 로직 유지)
+                        return self.nicknameServiceVM.checkNicknameDuplicate(nickname)
+                            .flatMap { result -> Observable<Bool> in
+                                validationResultRelay.accept(result) // 결과 UI 전달
+                                
+                                if result == .success {
+                                    // 중복 체크 통과 -> 최종 저장 API 호출
+                                    return self.requestUpdateProfile(
+                                        nickname: nickname,
+                                        jobId: job?.id,
+                                        jobDetailId: jobDetail?.id
+                                    )
+                                } else {
+                                    // 중복됨 -> 중단
+                                    return .just(false)
+                                }
+                            }
                     }
-                    updateSuccessRelay.accept(())
-                }
-            })
-            .disposed(by: disposeBag)
+                    .subscribe(onNext: { [weak self] success in
+                        
+                        // 5.성공 후 처리
+                        if success {
+                            if let self = self {
+                                var currentData = TokenStorageService.shared.getCurationData() ?? CurationData()
+                                currentData.nickname = self.nicknameRelay.value
+                                currentData.job = self.selectedJobRelay.value
+                                currentData.jobDetail = self.selectedDetailJobRelay.value
+                                TokenStorageService.shared.saveCurationData(currentData)
+                            }
+                            updateSuccessRelay.accept(())
+                        }
+                    })
+                    .disposed(by: disposeBag)
         
         let isDetailJobEnabled = selectedJobRelay
             .map { job -> Bool in
@@ -217,6 +239,22 @@ final class ProfileEditViewModel {
                 return jobName != "자영업"  // 자영업이 아니면 활성화
             }
             .asDriver(onErrorJustReturn: false)
+        
+        // 세부 직무 미선택 경고 로직
+        // "학생", "직장인", "취준생"을 골랐는데 세부직무가 없으면 경고 메시지 리턴
+//        let jobWarning = Observable.combineLatest(selectedJobRelay, selectedDetailJobRelay)
+//            .map { job, detail -> String? in
+//                guard let currentJob = job else { return nil }
+//                
+//                let requiredJobs = ["학생", "직장인", "취준생"]
+//                if requiredJobs.contains(currentJob.jobName) && detail == nil {
+//                    return "*세부 직무를 선택해주세요."
+//                }
+//                return nil
+//            }
+//            .asDriver(onErrorJustReturn: nil)
+        
+        let jobWarning = jobWarningRelay.asDriver(onErrorJustReturn: nil)
         
         return Output(
             initialNickname: initialNicknameDriver,
@@ -231,7 +269,9 @@ final class ProfileEditViewModel {
             currentDetailJobName: selectedDetailJobRelay.map { $0?.jobDetailName }.asDriver(onErrorJustReturn: nil),
             selectedJobId: selectedJobRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
             selectedDetailJobId: selectedDetailJobRelay.map { $0?.id }.asDriver(onErrorJustReturn: nil),
-            isDetailJobEnabled: isDetailJobEnabled
+            isDetailJobEnabled: isDetailJobEnabled,
+            
+            jobWarning: jobWarning
         )
     }
     
