@@ -118,6 +118,7 @@ class GoalInputSelectViewController: UIViewController {
     private let textField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "2~20자로 입력해주세요."
+        tf.setPlaceholder(color: .neutral300)
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.textColor = .black
         tf.borderStyle = .none
@@ -508,10 +509,11 @@ class GoalInputSelectViewController: UIViewController {
                 guard let self = self else { return }
                 // 타이머가 작동 중이면 버튼은 항상 비활성화
                 if self.remainingSeconds > 0 {
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.nextButton.backgroundColor = .neutral200
+                                        self.nextButton.isEnabled = false
                 } else {
-                    let imageName = isValid ? "next_btn_blue" : "next_btn_gray"
-                    self.nextButton.setImage(UIImage(named: imageName), for: .normal)
+                    self.nextButton.backgroundColor = isValid ? .cta : .neutral200
+                                        self.nextButton.isEnabled = isValid
                 }
             })
             .disposed(by: disposeBag)
@@ -528,7 +530,7 @@ class GoalInputSelectViewController: UIViewController {
             }
             .distinctUntilChanged()
             .subscribe(onNext: { [weak self] hasText in
-                self?.nextButton.isEnabled = hasText
+                
             })
             .disposed(by: disposeBag)
         
@@ -544,12 +546,12 @@ class GoalInputSelectViewController: UIViewController {
                     self.invalidAttemptCount = 0 // 성공 시 카운트 초기화
                     
                 case .empty:
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.nextButton.backgroundColor = .neutral200
                     
                 case .tooShort:
                     self.warningLabel.setStyle(Typography.body4, text: "*2자 이상으로 입력해주세요.")
                     self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.nextButton.backgroundColor = .neutral200
                     
 //                case .tooLong:
 //                    self.warningLabel.setStyle(Typography.body4, text: "*20자 이내로 입력해주세요.")
@@ -566,7 +568,7 @@ class GoalInputSelectViewController: UIViewController {
                     } else {
                         self.warningLabel.setStyle(Typography.body4, text: "*세부 관심사와 맞지 않는 목표예요.")
                         self.warningLabel.isHidden = false
-                        self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                        self.nextButton.backgroundColor = .neutral200
                     }
                 }
             })
@@ -609,7 +611,7 @@ class GoalInputSelectViewController: UIViewController {
         remainingSeconds = 30 * 60
         
         nextButton.isEnabled = false
-        nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+        nextButton.backgroundColor = .neutral200
         textField.isEnabled = false
         
         updateWarningLabelWithTimer()

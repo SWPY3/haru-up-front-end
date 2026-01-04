@@ -42,7 +42,12 @@ final class InterestDetailSelectCoordinator: Coordinator {
     func showForeignLanguageInput() {
         print("🔵 외국어 입력 모달 표시")
         
-        let bottomSheet = ForeignLanguageInputBottomSheet(viewModel: ForeignLanguageInputBottomSheetViewModel())
+        let vm = ForeignLanguageInputBottomSheetViewModel()
+        
+        let bottomSheet = ForeignLanguageInputBottomSheet(
+            viewModel: vm,
+            type: .curation
+        )
         bottomSheet.modalPresentationStyle = .overFullScreen
         bottomSheet.modalTransitionStyle = .crossDissolve
         

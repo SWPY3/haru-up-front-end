@@ -165,6 +165,16 @@ final class ProfileEditViewController: UIViewController {
         return btn
     }()
     
+    private let detailJobWarningLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .secondaryRed200
+        label.textAlignment = .left
+        label.font = Typography.body4.font // 또는 원하시는 폰트
+        label.isHidden = true // 기본적으로 숨김
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private let completeButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("완료", for: .normal)
@@ -254,7 +264,9 @@ final class ProfileEditViewController: UIViewController {
         
         [customNavBar, nicknameTitleLabel, textFieldContainer, warningLabel,
          jobTitleLabel, jobSelectButton,
-         detailJobTitleLabel, detailJobSelectButton, buttonBackgroundView,
+         detailJobTitleLabel, detailJobSelectButton,
+         detailJobWarningLabel,
+         buttonBackgroundView,
          completeButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
@@ -350,6 +362,10 @@ final class ProfileEditViewController: UIViewController {
             detailJobSelectButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             detailJobSelectButton.heightAnchor.constraint(equalToConstant: 55),
             
+            detailJobWarningLabel.topAnchor.constraint(equalTo: detailJobSelectButton.bottomAnchor, constant: 6),
+            detailJobWarningLabel.leadingAnchor.constraint(equalTo: detailJobSelectButton.leadingAnchor),
+            detailJobWarningLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
             // Dropdowns (Button 바로 아래 위치)
             jobDropdown.topAnchor.constraint(equalTo: jobSelectButton.bottomAnchor, constant: 4),
             jobDropdown.leadingAnchor.constraint(equalTo: jobSelectButton.leadingAnchor),
@@ -370,9 +386,34 @@ final class ProfileEditViewController: UIViewController {
     
     private func bind() {
         // 1. Back Button Action
+        // "현재 화면의 값"과 "저장된 값"을 실시간으로 비교하여 처리
         backButton.rx.tap
             .subscribe(with: self, onNext: { owner, _ in
-                owner.showCancelAlert()
+                // 1. 현재 저장되어 있는 최신 데이터 가져오기
+                // (완료 버튼을 눌렀다면 이 데이터가 갱신되어 있을 것이고, 안 눌렀다면 예전 데이터일 것입니다)
+                let saved = TokenStorageService.shared.getCurationData()
+                
+                // 2. 현재 화면에 입력/선택된 값 가져오기
+                let currentNickname = owner.nicknameTextField.text?.trimmingCharacters(in: .whitespaces) ?? ""
+                let currentJobId = owner.viewModel.selectedJobRelay.value?.id
+                let currentDetailId = owner.viewModel.selectedDetailJobRelay.value?.id
+                
+                // 3. 비교하기 (저장된 값 vs 현재 값)
+                // 닉네임이 다른가? (저장된 닉네임이 없으면 빈 문자열과 비교)
+                let isNicknameChanged = currentNickname != (saved?.nickname ?? "")
+                
+                // 직업이 다른가?
+                let isJobChanged = currentJobId != saved?.job?.id
+                
+                // 세부 직무가 다른가?
+                let isDetailChanged = currentDetailId != saved?.jobDetail?.id
+                
+                // 4. 하나라도 다르면(수정 중이면) Alert, 아니면 바로 Pop
+                if isNicknameChanged || isJobChanged || isDetailChanged {
+                    owner.showCancelAlert()
+                } else {
+                    owner.navigationController?.popViewController(animated: true)
+                }
             })
             .disposed(by: disposeBag)
         
@@ -501,21 +542,41 @@ final class ProfileEditViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 4. 세부 직무 선택 상태 업데이트 (버튼 타이틀만 업데이트)
+        // 4. 세부 직무 선택 상태 업데이트 (버튼 타이틀 변경 로직)
         output.currentDetailJobName
             .drive(with: self, onNext: { owner, name in
-                let title = name ?? "세부 직무 선택"
-                let color: UIColor = name != nil ? .cta : .neutral800
                 
+                var titleText = ""
+                var titleColor: UIColor = .neutral800
+                
+                // 1. 세부 직무가 선택되어 있는지 확인
+                if let selectedName = name {
+                    // [선택됨] -> 해당 직무 이름 표시 & 색상 강조
+                    titleText = selectedName
+                    titleColor = .cta
+                } else {
+                    // [선택 안 됨] -> Placeholder 표시 (직업에 따라 문구 분기)
+                    // 현재 선택된 직업이 무엇인지 확인
+                    let currentJobName = owner.viewModel.selectedJobRelay.value?.jobName
+                    
+                    if ["학생", "취준생"].contains(currentJobName) {
+                        titleText = "하고 싶은 세부 직무 선택"
+                    } else {
+                        titleText = "세부 직무 선택"
+                    }
+                    titleColor = .neutral800
+                }
+                
+                // 2. 버튼 UI 업데이트
                 owner.detailJobSelectButton.setAttributedTitle(
                     NSAttributedString(
-                        string: title,
-                        attributes: [.font: Typography.body1.font, .foregroundColor: color]
+                        string: titleText,
+                        attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]
                     ),
                     for: .normal
                 )
                 
-                // 선택 완료 시 드롭다운 닫기 + UI 원래 상태로 복귀
+                // 3. 선택 완료 시 드롭다운 닫기 + 화살표 원복 (기존 로직 유지)
                 if name != nil {
                     owner.detailJobDropdown.isHidden = true
                     owner.updateDropdownState(
@@ -637,9 +698,29 @@ final class ProfileEditViewController: UIViewController {
                 }
                 
                 owner.showToast(message: message)
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                    owner.navigationController?.popViewController(animated: true)
+//                아래의 화면 이동(pop) 코드를 삭제하여 화면에 머물게 함
+//                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+//                    owner.navigationController?.popViewController(animated: true)
+//                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 5. 직업 선택 경고 메시지 바인딩
+        output.jobWarning
+            .drive(with: self, onNext: { owner, warningMessage in
+                if let message = warningMessage {
+                    // 경고 메시지가 있으면(직업은 골랐는데 세부직무가 없으면) 텍스트 설정 및 보이기
+                    owner.detailJobWarningLabel.text = message
+                    owner.detailJobWarningLabel.isHidden = false
+                    owner.detailJobWarningLabel.font = Typography.body4.font
+                    
+                    // (선택사항) 경고가 떴을 때 버튼 테두리를 빨간색으로 바꾸고 싶다면:
+                    // owner.detailJobSelectButton.layer.borderColor = UIColor.secondaryRed200.cgColor
+                } else {
+                    // nil이면(정상 상태면) 숨기기
+                    owner.detailJobWarningLabel.isHidden = true
+                    
+                    // (선택사항) 테두리 색상 원복 (활성화/비활성화 로직이 따로 있어서 생략 가능)
                 }
             })
             .disposed(by: disposeBag)
@@ -779,7 +860,19 @@ final class ProfileEditViewController: UIViewController {
         ])
         
         toastContainer.alpha = 0
-        UIView.animate(withDuration: 0.3) { toastContainer.alpha = 1 }
+        //        UIView.animate(withDuration: 0.3) { toastContainer.alpha = 1 }
+        // 1. 페이드 인 (0.3초)
+        UIView.animate(withDuration: 0.3, animations: {
+            toastContainer.alpha = 1
+        }) { _ in
+            // 2. 2초 대기 후 페이드 아웃
+            UIView.animate(withDuration: 0.3, delay: 2.0, options: .curveEaseOut, animations: {
+                toastContainer.alpha = 0
+            }) { _ in
+                // 3. 뷰 계층에서 제거
+                toastContainer.removeFromSuperview()
+            }
+        }
     }
 }
 
@@ -811,14 +904,6 @@ extension ProfileEditViewController: UIGestureRecognizerDelegate {
             self.view.layoutIfNeeded()
         }
     }
-    
-    //    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-    //        if touch.view is UIButton {
-    //            return false
-    //        }
-    //
-    //        return true
-    //    }
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         // 버튼이나 테이블뷰 셀 터치 시 제스처 무시 (드롭다운 터치 문제 방지)

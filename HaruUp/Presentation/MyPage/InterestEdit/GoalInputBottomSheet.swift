@@ -16,6 +16,9 @@ final class GoalInputBottomSheet: UIViewController {
     // ViewModel로 입력값 전달
     var onNextTapped: ((String) -> Void)?
     
+    // 초기 텍스트를 받을 변수
+    var initialText: String?
+    
     // 외부(ViewModel)에서 제어할 Subjects
     let validationSuccess = PublishRelay<Void>()
     let validationFailed = PublishRelay<String>()
@@ -55,15 +58,16 @@ final class GoalInputBottomSheet: UIViewController {
     
     private let textField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "2~20자로 입력해주세요."
         tf.borderStyle = .none
         tf.textColor = .black
+        tf.placeholder = "2~20자로 입력해 주세요."
+        tf.setPlaceholder(color: .neutral300)
         tf.font = UIFont.pretendard(size: 16, weight: .medium)
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
     
-    // ✅ [추가] 클리어 버튼
+    // 클리어 버튼
     private let clearButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "icon_x.png"), for: .normal)
@@ -79,7 +83,7 @@ final class GoalInputBottomSheet: UIViewController {
         return view
     }()
     
-    // ✅ [추가] 글자 수 카운트 라벨
+    // 글자 수 카운트 라벨
     private let textCountLabel: UILabel = {
         let label = UILabel()
         label.setStyle(Typography.caption3, text: "0/20")
@@ -100,10 +104,14 @@ final class GoalInputBottomSheet: UIViewController {
     }()
     
     private let nextButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "next_btn_gray.png"), for: .normal)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+        let btn = UIButton()
+        btn.setTitle("완료", for: .normal)
+        btn.titleLabel?.font = Typography.subtitle2.font
+        btn.backgroundColor = .neutral200
+        btn.layer.cornerRadius = 16
+        btn.clipsToBounds = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
     }()
     
     private var inputBottomSheetBottomConstraint: NSLayoutConstraint?
@@ -117,6 +125,10 @@ final class GoalInputBottomSheet: UIViewController {
         setupKeyboardObservers()
         setupTapGestures()
         bind()
+        
+        if let text = initialText, !text.isEmpty {
+            textField.text = text
+        }
         
         // 20자 제한을 위한 델리게이트 설정
         textField.delegate = self
@@ -158,11 +170,11 @@ final class GoalInputBottomSheet: UIViewController {
             containerView.heightAnchor.constraint(equalToConstant: 330), // 높이 약간 증가
             
             titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 40),
-            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
             
             textFieldContainer.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
-            textFieldContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
-            textFieldContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
+            textFieldContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            textFieldContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
             textFieldContainer.heightAnchor.constraint(equalToConstant: 50),
             
             // 텍스트필드 배치 (오른쪽에 클리어버튼 자리 확보)
@@ -188,12 +200,12 @@ final class GoalInputBottomSheet: UIViewController {
             
             // 경고 메시지 (왼쪽 아래)
             warningLabel.topAnchor.constraint(equalTo: textFieldContainer.bottomAnchor, constant: 8),
-            warningLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
+            warningLabel.leadingAnchor.constraint(equalTo: textFieldContainer.leadingAnchor),
             warningLabel.trailingAnchor.constraint(lessThanOrEqualTo: textCountLabel.leadingAnchor, constant: -10),
             
             nextButton.bottomAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.bottomAnchor, constant: -10),
-            nextButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
-            nextButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
+            nextButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            nextButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
             nextButton.heightAnchor.constraint(equalToConstant: 56)
         ])
         
@@ -255,8 +267,8 @@ final class GoalInputBottomSheet: UIViewController {
             .map { $0.trimmingCharacters(in: .whitespaces).count }
             .map { $0 >= 2 && $0 <= 20 }
             .drive(onNext: { [weak self] isValid in
-                let img = isValid ? "next_btn_blue" : "next_btn_gray"
-                self?.nextButton.setImage(UIImage(named: img), for: .normal)
+                self?.nextButton.backgroundColor = isValid ? .cta : .neutral200
+                self?.nextButton.isEnabled = isValid
                 
                 // 유효한 길이면 경고 숨김
                 if isValid {
@@ -294,7 +306,7 @@ final class GoalInputBottomSheet: UIViewController {
                 if trimmed.count < 2 {
                     self.warningLabel.setStyle(Typography.body4, text: "*2자 이상으로 입력해주세요.")
                     self.warningLabel.isHidden = false
-                    self.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                    self.nextButton.backgroundColor = .neutral200
                     return
                 }
                 
@@ -314,7 +326,7 @@ final class GoalInputBottomSheet: UIViewController {
             .bind(with: self) { owner, msg in
                 owner.warningLabel.setStyle(Typography.body4, text: msg)
                 owner.warningLabel.isHidden = false
-                owner.nextButton.setImage(UIImage(named: "next_btn_gray"), for: .normal)
+                owner.nextButton.backgroundColor = .neutral200
             }
             .disposed(by: disposeBag)
     }

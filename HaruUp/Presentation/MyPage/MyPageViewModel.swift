@@ -57,26 +57,16 @@ final class MyPageViewModel {
     }
     
     func transform(input: Input) -> Output {
-        //        let curationDataDriver = input.viewDidLoad
-        //            .map { [weak self] _ in
-        //                // 앱을 껐다 켜도 여기서 다시 불러오기 때문에 데이터가 보입니다.
-        //                return self?.tokenStorage.getCurationData() ?? CurationData()
-        //            }
-        //            .asDriver(onErrorJustReturn: CurationData())
-        
-        //        let loadData = Observable.merge(input.viewDidLoad, input.viewWillAppear)
-        //
-        //        let curationDataDriver = loadData
-        //            .map { [weak self] _ in
-        //                // TokenStorageService에서 최신 데이터를 가져옴 (수정된 닉네임이 저장되어 있어야 함)
-        //                return self?.tokenStorage.getCurationData() ?? CurationData()
-        //            }
-        //            .asDriver(onErrorJustReturn: CurationData())
-        
         // 1. 화면 진입 시 서버 데이터 요청 (viewDidLoad, viewWillAppear 둘 다)
         Observable.merge(input.viewDidLoad, input.viewWillAppear)
             .subscribe(onNext: { [weak self] in
-                self?.fetchServerData()
+                guard let self = self else { return }
+                
+                if let localData = self.tokenStorage.getCurationData() {
+                    self.curationDataRelay.accept(localData)
+                }
+                
+                self.fetchServerData()
             })
             .disposed(by: disposeBag)
         
