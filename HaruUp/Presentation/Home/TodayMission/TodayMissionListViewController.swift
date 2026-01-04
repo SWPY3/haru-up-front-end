@@ -249,8 +249,8 @@ class TodayMissionListViewController: UIViewController {
                 return keptRows + skeletonRows
             }
         
-        let missionItems = output.missions
-            .map { missions -> [RecommendMissionRow] in
+        let missionItems = Observable.combineLatest(output.missions, output.selectedIDs)
+            .map { missions, selectedIDs -> [RecommendMissionRow] in
                 let sortedMissions = missions.sorted { $0.difficulty > $1.difficulty }
                 
                 return sortedMissions.map { .mission($0) }
@@ -278,15 +278,15 @@ class TodayMissionListViewController: UIViewController {
                         return UITableViewCell()
                     }
                     
-                    print("currentSelectedIDs : \(self.currentSelectedIDs)")
-                    
                     let isSelected = self.currentSelectedIDs.contains(mission.memberMissionId)
-                    let data = Mission(id:mission.memberMissionId, title: mission.content, difficulty: difficulty, exp: mission.expEarned, isCompleted: isSelected) // isCompleted를 미션을 선택한 상태여부로 사용. 해당페이지는 미션을 추천하는 페이지이기 때문에 영향이 없다.
+                    let isLimitReached = self.currentSelectedIDs.count >= 5
+                    let shouldDisable = isLimitReached && !isSelected // 꽉 찼는데 선택 안 된 애들
                     
-                    print("isSelected : \(isSelected)")
-                    print("data: \(data)")
+                    let missionData = Mission(id:mission.memberMissionId, title: mission.content, difficulty: difficulty, exp: mission.expEarned, isCompleted: isSelected) // isCompleted를 미션을 선택한 상태여부로 사용. 해당페이지는 미션을 추천하는 페이지이기 때문에 영향이 없다.
                     
-                    cell.configure(mission: data)
+                    cell.configure(mission: missionData)
+                    
+                    cell.updateSelectionState(isSelected: isSelected, isDisabled: shouldDisable)
                     
                     if isSelected {
                         // 애니메이션 없이, 스크롤 이동 없이 선택 상태로 만듦

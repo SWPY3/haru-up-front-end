@@ -154,31 +154,33 @@ final class TodayMissionListViewModel {
                     .do(onDispose: { loadingSubject.onNext(false) })
             }
             .subscribe(onNext: { [weak self] combinedMissions in
+                guard let self else { return }
+                
                 loadingSubject.onNext(false)
                 // 화면 갱신
-                self?.currentMissionsRelay.accept(combinedMissions)
+                self.currentMissionsRelay.accept(combinedMissions)
+                self.selectedMissionIDRelay.accept(self.fixedMissionIDs)
             })
             .disposed(by: disposeBag)
         
         /// Mission 선택
         input.missionSelected
-            .withLatestFrom(selectedMissionIDRelay) { [weak self] (id, currentSet) -> Set<Int> in
+            .withLatestFrom(selectedMissionIDRelay) { [weak self] (clickedID, currentSet) -> Set<Int> in
                 guard let self = self else { return currentSet }
-                var newSet = currentSet
-                print("😁 id : \(id)")
-                print("😁 currentSet : \(currentSet)")
-                // [핵심 로직] 이미 고정된(Home에서 가져온) 미션이라면 변경 불가 -> 바로 리턴
-                if self.fixedMissionIDs.contains(id) {
+                
+                if self.fixedMissionIDs.contains(clickedID) {
                     return currentSet
                 }
                 
-                // 기존 로직: 이미 있으면 선택 해제
-                if newSet.contains(id) {
-                    newSet.remove(id)
+                var newSet = currentSet
+                
+                newSet.formUnion(self.fixedMissionIDs)
+                
+                if newSet.contains(clickedID) {
+                    newSet.remove(clickedID)
                 } else {
-                    // 5개 미만일 때만 추가
                     if newSet.count < 5 {
-                        newSet.insert(id)
+                        newSet.insert(clickedID)
                     }
                 }
                 
