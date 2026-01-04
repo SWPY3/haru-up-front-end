@@ -370,9 +370,34 @@ final class ProfileEditViewController: UIViewController {
     
     private func bind() {
         // 1. Back Button Action
+        // "현재 화면의 값"과 "저장된 값"을 실시간으로 비교하여 처리
         backButton.rx.tap
             .subscribe(with: self, onNext: { owner, _ in
-                owner.showCancelAlert()
+                // 1. 현재 저장되어 있는 최신 데이터 가져오기
+                // (완료 버튼을 눌렀다면 이 데이터가 갱신되어 있을 것이고, 안 눌렀다면 예전 데이터일 것입니다)
+                let saved = TokenStorageService.shared.getCurationData()
+                
+                // 2. 현재 화면에 입력/선택된 값 가져오기
+                let currentNickname = owner.nicknameTextField.text?.trimmingCharacters(in: .whitespaces) ?? ""
+                let currentJobId = owner.viewModel.selectedJobRelay.value?.id
+                let currentDetailId = owner.viewModel.selectedDetailJobRelay.value?.id
+                
+                // 3. 비교하기 (저장된 값 vs 현재 값)
+                // 닉네임이 다른가? (저장된 닉네임이 없으면 빈 문자열과 비교)
+                let isNicknameChanged = currentNickname != (saved?.nickname ?? "")
+                
+                // 직업이 다른가?
+                let isJobChanged = currentJobId != saved?.job?.id
+                
+                // 세부 직무가 다른가?
+                let isDetailChanged = currentDetailId != saved?.jobDetail?.id
+                
+                // 4. 하나라도 다르면(수정 중이면) Alert, 아니면 바로 Pop
+                if isNicknameChanged || isJobChanged || isDetailChanged {
+                    owner.showCancelAlert()
+                } else {
+                    owner.navigationController?.popViewController(animated: true)
+                }
             })
             .disposed(by: disposeBag)
         
