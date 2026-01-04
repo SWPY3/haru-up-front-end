@@ -18,7 +18,7 @@ class LoginViewController: UIViewController {
     
     var onFinish: ((SocialLoginResult) -> Void)? // Login 완료 후 Onboarding으로 이동 콜백
     
-    /// background Image의 사이즈를 비율에 따라 맞춰서 정하기 위해 구현
+    // background Image의 사이즈를 비율에 따라 맞춰서 정하기 위해 구현
     private var backgroundAspectConstraint: NSLayoutConstraint?
     
     private let logoImageView: UIImageView = {

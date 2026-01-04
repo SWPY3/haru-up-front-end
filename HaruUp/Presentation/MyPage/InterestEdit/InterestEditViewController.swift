@@ -366,7 +366,30 @@ final class InterestEditViewController: UIViewController {
         // Back Button
         backButton.rx.tap
             .subscribe(with: self, onNext: { owner, _ in
-                owner.showCancelAlert()
+                // 1. 현재 저장되어 있는 최신 데이터 가져오기
+                let saved = TokenStorageService.shared.getCurationData()
+                
+                // 2. 현재 화면에 선택된 값 가져오기
+                let currentInterestId = owner.viewModel.selectedInterestRelay.value?.id
+                let currentDetailId = owner.viewModel.selectedDetailInterestRelay.value?.id
+                let currentGoalId = owner.viewModel.selectedGoalRelay.value?.id
+                
+                // 3. 비교하기 (저장된 값 vs 현재 값)
+                // 관심사가 다른가?
+                let isInterestChanged = currentInterestId != saved?.interest?.id
+                
+                // 세부 관심사가 다른가?
+                let isDetailChanged = currentDetailId != saved?.interestDetail?.id
+                
+                // 목표가 다른가?
+                let isGoalChanged = currentGoalId != saved?.goal?.id
+                
+                // 4. 하나라도 다르면(수정 중이면) Alert, 아니면 바로 Pop
+                if isInterestChanged || isDetailChanged || isGoalChanged {
+                    owner.showCancelAlert()
+                } else {
+                    owner.navigationController?.popViewController(animated: true)
+                }
             })
             .disposed(by: disposeBag)
         
@@ -653,11 +676,33 @@ final class InterestEditViewController: UIViewController {
         output.updateSuccess
             .emit(with: self, onNext: { owner, _ in
                 owner.view.endEditing(true)
-                owner.showToast(message: " 관심사 수정이 완료되었어요")
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                    owner.navigationController?.popViewController(animated: true)
+                // 1. 무엇이 변경되었는지 확인 (메시지 분기 처리)
+                let saved = TokenStorageService.shared.getCurationData()
+                let currentInterestId = owner.viewModel.selectedInterestRelay.value?.id
+                let currentDetailId = owner.viewModel.selectedDetailInterestRelay.value?.id
+                let currentGoalId = owner.viewModel.selectedGoalRelay.value?.id
+                
+                let isInterestChanged = (currentInterestId != saved?.interest?.id) || (currentDetailId != saved?.interestDetail?.id)
+                let isGoalChanged = currentGoalId != saved?.goal?.id
+                
+                var message = " 관심사 수정이 완료되었어요"
+                
+                if isInterestChanged && isGoalChanged {
+                    message = " 관심사 및 목표가 변경되었어요"
+                } else if isInterestChanged {
+                    message = " 관심사 변경이 완료되었어요"
+                } else if isGoalChanged {
+                    message = " 목표 변경이 완료되었어요"
                 }
+                
+                // 2. 토스트 띄우기
+                owner.showToast(message: message)
+                
+                // 3. 1.2초 뒤에 Pop (토스트가 떠있는 동안 잠시 대기)
+//                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+//                    owner.navigationController?.popViewController(animated: true)
+//                }
             })
             .disposed(by: disposeBag)
         
