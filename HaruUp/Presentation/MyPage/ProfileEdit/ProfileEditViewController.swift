@@ -637,10 +637,10 @@ final class ProfileEditViewController: UIViewController {
                 }
                 
                 owner.showToast(message: message)
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                    owner.navigationController?.popViewController(animated: true)
-                }
+//                아래의 화면 이동(pop) 코드를 삭제하여 화면에 머물게 함
+//                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+//                    owner.navigationController?.popViewController(animated: true)
+//                }
             })
             .disposed(by: disposeBag)
     }
@@ -779,7 +779,19 @@ final class ProfileEditViewController: UIViewController {
         ])
         
         toastContainer.alpha = 0
-        UIView.animate(withDuration: 0.3) { toastContainer.alpha = 1 }
+        //        UIView.animate(withDuration: 0.3) { toastContainer.alpha = 1 }
+        // 1. 페이드 인 (0.3초)
+        UIView.animate(withDuration: 0.3, animations: {
+            toastContainer.alpha = 1
+        }) { _ in
+            // 2. 2초 대기 후 페이드 아웃
+            UIView.animate(withDuration: 0.3, delay: 2.0, options: .curveEaseOut, animations: {
+                toastContainer.alpha = 0
+            }) { _ in
+                // 3. 뷰 계층에서 제거
+                toastContainer.removeFromSuperview()
+            }
+        }
     }
 }
 
@@ -811,14 +823,6 @@ extension ProfileEditViewController: UIGestureRecognizerDelegate {
             self.view.layoutIfNeeded()
         }
     }
-    
-    //    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-    //        if touch.view is UIButton {
-    //            return false
-    //        }
-    //
-    //        return true
-    //    }
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         // 버튼이나 테이블뷰 셀 터치 시 제스처 무시 (드롭다운 터치 문제 방지)
