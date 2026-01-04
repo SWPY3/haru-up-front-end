@@ -167,7 +167,7 @@ final class ProfileEditViewModel {
                             // 해당 직업군인데 세부 직무가 없으면?
                             if requiredJobs.contains(currentJob.jobName) && jobDetail == nil {
                                 // 경고 메시지 띄우고
-                                self.jobWarningRelay.accept("*하고 싶은 세부 직무를 선택해주세요.")
+                                self.jobWarningRelay.accept("*세부 직무를 선택해주세요.")
                                 // 여기서 흐름 종료 (API 호출 안 함)
                                 return .just(false)
                             }

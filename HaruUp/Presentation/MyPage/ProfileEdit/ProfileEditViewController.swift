@@ -542,21 +542,41 @@ final class ProfileEditViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // 4. 세부 직무 선택 상태 업데이트 (버튼 타이틀만 업데이트)
+        // 4. 세부 직무 선택 상태 업데이트 (버튼 타이틀 변경 로직)
         output.currentDetailJobName
             .drive(with: self, onNext: { owner, name in
-                let title = name ?? "세부 직무 선택"
-                let color: UIColor = name != nil ? .cta : .neutral800
                 
+                var titleText = ""
+                var titleColor: UIColor = .neutral800
+                
+                // 1. 세부 직무가 선택되어 있는지 확인
+                if let selectedName = name {
+                    // [선택됨] -> 해당 직무 이름 표시 & 색상 강조
+                    titleText = selectedName
+                    titleColor = .cta
+                } else {
+                    // [선택 안 됨] -> Placeholder 표시 (직업에 따라 문구 분기)
+                    // 현재 선택된 직업이 무엇인지 확인
+                    let currentJobName = owner.viewModel.selectedJobRelay.value?.jobName
+                    
+                    if ["학생", "취준생"].contains(currentJobName) {
+                        titleText = "하고 싶은 세부 직무 선택"
+                    } else {
+                        titleText = "세부 직무 선택"
+                    }
+                    titleColor = .neutral800
+                }
+                
+                // 2. 버튼 UI 업데이트
                 owner.detailJobSelectButton.setAttributedTitle(
                     NSAttributedString(
-                        string: title,
-                        attributes: [.font: Typography.body1.font, .foregroundColor: color]
+                        string: titleText,
+                        attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]
                     ),
                     for: .normal
                 )
                 
-                // 선택 완료 시 드롭다운 닫기 + UI 원래 상태로 복귀
+                // 3. 선택 완료 시 드롭다운 닫기 + 화살표 원복 (기존 로직 유지)
                 if name != nil {
                     owner.detailJobDropdown.isHidden = true
                     owner.updateDropdownState(
