@@ -53,18 +53,12 @@ final class InterestEditViewModel {
     
     private let disposeBag = DisposeBag()
     
-    let savedData = TokenStorageService.shared.getCurationData()
+    var savedState: (interestId: Int?, fullPath: [String])
     
     // Interest 상태관리
-    let selectedInterestRelay = BehaviorRelay<Interest?>(
-        value: TokenStorageService.shared.getCurationData()?.interest.map { Interest(from: $0) }
-    )
-    let selectedDetailInterestRelay = BehaviorRelay<InterestDetail?>(
-        value: TokenStorageService.shared.getCurationData()?.interestDetail.map { InterestDetail(from: $0) }
-    )
-    let selectedGoalRelay = BehaviorRelay<Goal?>(
-        value: TokenStorageService.shared.getCurationData()?.goal.map { Goal(from: $0) }
-    )
+    let selectedInterestRelay = BehaviorRelay<Interest?>(value: nil)
+    let selectedDetailInterestRelay = BehaviorRelay<InterestDetail?>(value: nil)
+    let selectedGoalRelay = BehaviorRelay<Goal?>(value: nil)
     
     private let interestListRelay = BehaviorRelay<[Interest]>(value: [])
     private let detailInterestListRelay = BehaviorRelay<[InterestDetail]>(value: [])
@@ -88,19 +82,127 @@ final class InterestEditViewModel {
     init(interestService: InterestsService = .shared) {
         self.interestService = interestService
         
-        if let data = TokenStorageService.shared.getCurationData() {
-            if let i = data.interest {
-                selectedInterestRelay.accept(Interest(from: i))
+        if let interests = TokenStorageService.shared.getMemberInterests(),
+           let first = interests.first {
+            
+            // 1. 초기 상태 스냅샷 저장 (변경사항 체크용)
+            self.savedState = (interestId: first.interestId, fullPath: first.directFullPath)
+            
+            let path = first.directFullPath
+            
+            // 2. UI 우선 표시 (ID는 모르므로 0으로 설정하여 이름만 보여줌)
+            if path.indices.contains(0) {
+                let dummyData = InterestData(id: 0, name: path[0])
+                selectedInterestRelay.accept(Interest(from: dummyData))
             }
-            if let d = data.interestDetail {
-                selectedDetailInterestRelay.accept(InterestDetail(from: d))
-                // 저장된 이름이 기본 이름과 다르면 커스텀(외국어 등)일 수 있으므로 처리 가능하나,
-                // 여기서는 기본 객체 매핑만 수행합니다.
+            if path.indices.contains(1) {
+                let dummyData = InterestData(id: 0, name: path[1])
+                selectedDetailInterestRelay.accept(InterestDetail(from: dummyData))
             }
-            if let g = data.goal {
-                selectedGoalRelay.accept(Goal(from: g))
+            if path.indices.contains(2) {
+                let dummyData = InterestData(id: 0, name: path[2])
+                selectedGoalRelay.accept(Goal(from: dummyData))
             }
+            
+            // 3. [핵심] 진짜 ID 찾기 (백그라운드 복구)
+            // 화면엔 이름이 떠있고, 이 함수가 돌면서 ID를 0 -> 실제ID로 바꿔줍니다.
+            self.restoreHierarchy(path: path)
+            
+        } else {
+            self.savedState = (nil, [])
         }
+    }
+    
+    // MARK: - ID Restoration Logic (이름으로 ID 찾기)
+    private func restoreHierarchy(path: [String]) {
+        guard !path.isEmpty else { return }
+        let interestName = path[0]
+        
+        // 1. 전체 관심사 목록 조회
+        interestService.fetchInterest()
+            .take(1)
+            .subscribe(onNext: { [weak self] interests in
+                guard let self = self else { return }
+                
+                // 이름 일치하는 관심사 찾기
+                if let matchedInterest = interests.first(where: { $0.title == interestName }) {
+                    // ID가 포함된 진짜 객체로 업데이트
+                    self.selectedInterestRelay.accept(matchedInterest)
+                    
+                    // 2. 찾은 ID로 세부 관심사 조회
+                    if path.indices.contains(1) {
+                        let detailName = path[1]
+                        self.restoreDetailInterest(parentId: matchedInterest.id, detailName: detailName, path: path)
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func restoreDetailInterest(parentId: Int, detailName: String, path: [String]) {
+        interestService.fetchInterestDetails(parentId: parentId)
+            .take(1)
+            .subscribe(onNext: { [weak self] details in
+                guard let self = self else { return }
+                
+                // 이름 일치하는 세부 관심사 찾기
+                if let matchedDetail = details.first(where: { $0.name == detailName }) {
+                    self.selectedDetailInterestRelay.accept(matchedDetail)
+                    
+                    // 3. 찾은 ID로 목표 조회 (목표가 있는 경우만)
+                    if path.indices.contains(2) {
+                        let goalName = path[2]
+                        self.restoreGoal(parentId: matchedDetail.id, goalName: goalName)
+                    }
+                }
+                // 2. 일치하는게 없다면? -> '기타(직접입력)' 항목인 경우임
+                else {
+                    // (1) 텍스트는 커스텀 값으로 복구
+                    self.customDetailInterestNameRelay.accept(detailName)
+                    
+                    // (2) 🔥 [핵심 수정] ID를 찾기 위해 목록에서 '기타' 또는 '직접'이 들어간 항목을 찾음
+                    // 서버 데이터에 따라 "기타", "직접 입력", "직접" 등으로 다를 수 있으니 포함 여부로 체크
+                    if let otherDetail = details.first(where: { $0.name.contains("기타") || $0.name.contains("직접") }) {
+                        
+                        // 그 '기타' 항목을 선택된 상태로 만듦 (그래야 ID가 생기고 목표 목록을 불러옴)
+                        self.selectedDetailInterestRelay.accept(otherDetail)
+                        
+                        // (3) 찾은 기타 항목의 ID로 목표 복구 시도
+                        if path.indices.contains(2) {
+                            let goalName = path[2]
+                            self.restoreGoal(parentId: otherDetail.id, goalName: goalName)
+                        }
+                    } else {
+                        // 만약 '기타' 항목조차 없다면... (예외 케이스)
+                        print("⚠️ 복구 실패: 이름도 안 맞고 '기타' 항목도 없음")
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func restoreGoal(parentId: Int, goalName: String) {
+        interestService.fetchGoals(parentId: parentId)
+            .take(1)
+            .subscribe(onNext: { [weak self] goals in
+                guard let self = self else { return }
+                
+                // 1. 이름이 정확히 일치하는 목표가 있는 경우 (일반적인 경우)
+                if let matchedGoal = goals.first(where: { $0.name == goalName }) {
+                    self.selectedGoalRelay.accept(matchedGoal)
+                }
+                // 2. 일치하는 게 없는 경우 -> '직접 입력'한 목표임
+                else {
+                    // (1) 텍스트 복구 ("스페인")
+                    self.customGoalNameRelay.accept(goalName)
+                    
+                    // (2) 🔥 [추가] '직접 입력할게요'라는 항목 객체를 찾아서 선택된 상태로 만듦
+                    if let directInputGoal = goals.first(where: { $0.name.contains("직접") }) {
+                        self.selectedGoalRelay.accept(directInputGoal)
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
     }
     
     func transform(input: Input) -> Output {
@@ -139,6 +241,9 @@ final class InterestEditViewModel {
                 self?.selectedGoalRelay.accept(nil)
                 self?.detailInterestListRelay.accept([])
                 self?.goalListRelay.accept([])
+                
+                self?.customDetailInterestNameRelay.accept(nil)
+                self?.customGoalNameRelay.accept(nil)
             })
             .disposed(by: disposeBag)
         
@@ -167,6 +272,7 @@ final class InterestEditViewModel {
                 self?.selectedGoalRelay.accept(nil)
                 self?.goalListRelay.accept([])
                 self?.customDetailInterestNameRelay.accept(nil)
+                self?.customGoalNameRelay.accept(nil)
                 
                 if detail.name.contains("기타") {
                     showBottomSheetRelay.accept(())
@@ -180,6 +286,7 @@ final class InterestEditViewModel {
             })
             .disposed(by: disposeBag)
         
+        // 5. 세부 관심사 변경 시 목표 목록 조회
         selectedDetailInterestRelay
             .distinctUntilChanged { $0?.id == $1?.id } // 동일한 ID 선택 시 중복 호출 방지
             .flatMapLatest { [weak self] detailInterest -> Observable<[Goal]> in
@@ -275,7 +382,7 @@ final class InterestEditViewModel {
             })
             .disposed(by: disposeBag)
         
-        // 7. [수정] 완료 버튼 활성화 로직
+        // 7. 완료 버튼 활성화 로직
         let isCompleteEnabled = Observable.combineLatest(
             selectedInterestRelay,
             selectedDetailInterestRelay,
@@ -303,36 +410,23 @@ final class InterestEditViewModel {
                 }
                 
                 // 4. 변경 사항 체크 (저장된 데이터와 비교)
-                let saved = self.savedData
-                
-                let interestChanged = interest?.id != saved?.interest?.id
-                let detailChanged = detail?.id != saved?.interestDetail?.id
-                
-                // 목표 변경 체크
-                let goalChanged: Bool
-                if goalList.isEmpty {
-                    // 목표 없는 카테고리: 이전에 목표가 있었으면 변경된 것
-                    goalChanged = saved?.goal != nil
-                } else {
-                    // 목표 있는 카테고리
-                    // 1) ID가 다른가?
-                    let isIdDifferent = goal?.id != saved?.goal?.id
-                    
-                    // 2) 직접 입력 텍스트가 다른가?
-                    let isTextDifferent: Bool
-                    if let goal = goal, goal.name.contains("직접") {
-                        let currentText = customGoalName ?? ""
-                        let savedText = saved?.goal?.name ?? ""
-                        isTextDifferent = currentText != savedText
-                    } else {
-                        isTextDifferent = false
-                    }
-                    
-                    goalChanged = isIdDifferent || isTextDifferent
+                var currentPath: [String] = []
+                if let i = interest { currentPath.append(i.title) }
+                if let d = detail {
+                    // 커스텀 이름 우선
+                    currentPath.append(self.customDetailInterestNameRelay.value ?? d.name)
+                }
+                if let g = goal {
+                    currentPath.append(self.customGoalNameRelay.value ?? g.name)
                 }
                 
-                // 하나라도 변경되었으면 활성화
-                return interestChanged || detailChanged || goalChanged
+                // 저장된 Path와 비교
+                let isPathChanged = currentPath != self.savedState.fullPath
+                
+                // Path가 같더라도 실제 ID(Leaf Node)가 다를 수 있음 (예: 같은 이름 다른 ID - 희박하지만 방어)
+                // 하지만 보통 Path가 같으면 같은 것으로 간주 가능. 여기서는 Path 변경 여부로 충분.
+                
+                return isPathChanged
             }
             .asDriver(onErrorJustReturn: false)
         
@@ -394,7 +488,7 @@ final class InterestEditViewModel {
             return nil
         }
         
-        // [수정 2] 목표 버튼 활성화 여부 (저장된 목표가 있으면 활성화 유지)
+        // 목표 버튼 활성화 여부 (저장된 목표가 있으면 활성화 유지)
         let isGoalButtonEnabled = Observable.combineLatest(
             selectedDetailInterestRelay,
             goalListRelay,
@@ -411,6 +505,41 @@ final class InterestEditViewModel {
                 return !list.isEmpty
             }
             .asDriver(onErrorJustReturn: false)
+        
+        let selectedGoalId = Observable.combineLatest(
+            selectedGoalRelay,       // 현재 선택된 목표 객체
+            customGoalNameRelay,     // 직접 입력한 텍스트 ("스페인")
+            goalListRelay            // 드롭다운 리스트 데이터
+        )
+            .map { selectedGoal, customText, list -> Int? in
+                
+                // 1. 직접 입력한 텍스트("스페인")가 있다면?
+                // -> 드롭다운 리스트에서 "직접"이라는 단어가 포함된 항목(직접 입력할게요)을 찾아 그 ID를 반환
+                if let text = customText, !text.isEmpty {
+                    if let directItem = list.first(where: { $0.name.contains("직접") }) {
+                        return directItem.id
+                    }
+                }
+                
+                // 2. 선택된 목표 객체가 있다면?
+                if let goal = selectedGoal {
+                    // 리스트에 그 ID가 존재하면 그대로 반환 (일반적인 경우)
+                    if list.contains(where: { $0.id == goal.id }) {
+                        return goal.id
+                    }
+                    
+//                    // 선택은 되어있는데 리스트에 없다? (혹시 모를 예외)
+//                    // 이름이 "직접"을 포함하면 직접 입력 ID 반환
+//                    if goal.name.contains("직접"), let directItem = list.first(where: { $0.name.contains("직접") }) {
+//                        return directItem.id
+//                    }
+                    
+                    return goal.id
+                }
+                
+                return nil
+            }
+            .asDriver(onErrorJustReturn: nil)
         
         return Output(
             isCompleteEnabled: isCompleteEnabled,
@@ -442,24 +571,72 @@ final class InterestEditViewModel {
     }
     
     private func updateLocalData() {
-        var currentData = TokenStorageService.shared.getCurationData() ?? CurationData()
+        var fullPath: [String] = []
+        var finalId: Int = 0
         
-        if let interest = self.selectedInterestRelay.value {
-            currentData.interest = InterestData(id: interest.id, name: interest.title)
-        }
-        if let detail = self.selectedDetailInterestRelay.value {
-            // 커스텀 이름이 있으면 그걸로 저장
-            let name = self.customDetailInterestNameRelay.value ?? detail.name
-            currentData.interestDetail = InterestData(id: detail.id, name: name)
-        }
-        if let goal = self.selectedGoalRelay.value {
-            // 커스텀 이름이 있으면 그걸로 저장
-            let name = self.customGoalNameRelay.value ?? goal.name
-            currentData.goal = InterestData(id: goal.id, name: name)
+        if let i = selectedInterestRelay.value {
+            fullPath.append(i.title)
         }
         
-        TokenStorageService.shared.saveCurationData(currentData)
+        if let d = selectedDetailInterestRelay.value {
+            let name = customDetailInterestNameRelay.value ?? d.name
+            fullPath.append(name)
+//            finalId = d.id // 일단 상세 ID로 설정
+        }
+        
+        if let g = selectedGoalRelay.value {
+            let name = customGoalNameRelay.value ?? g.name
+            fullPath.append(name)
+            finalId = g.id // 목표가 있다면 목표 ID가 최종 ID
+        }
+        
+        var memberId = 0
+        var memberInterestId = 0
+        if let old = TokenStorageService.shared.getMemberInterests()?.first {
+            memberId = old.memberId
+            memberInterestId = old.memberInterestId
+        }
+        
+        let newInterest = MemberInterestDTO(
+            memberInterestId: memberInterestId,
+            memberId: memberId,
+            interestId: finalId,
+            directFullPath: fullPath
+        )
+        
+        // 기존 리스트 덮어쓰기 (단일 관심사 가정, 다중이면 로직 추가 필요)
+        TokenStorageService.shared.saveMemberInterests([newInterest])
+        self.savedState = (interestId: finalId, fullPath: fullPath)
     }
+    
+    // 현재 선택된 값이 초기 저장된 값과 다른지 확인
+    func isModified() -> Bool {
+        // 1. 현재 선택된 값들을 경로(Path) 배열로 생성
+        var currentPath: [String] = []
+        
+        // (1) 관심사
+        if let i = selectedInterestRelay.value {
+            currentPath.append(i.title)
+        }
+        
+        // (2) 세부 관심사
+        if let d = selectedDetailInterestRelay.value {
+            // 커스텀 입력값이 있으면 그것을 사용, 없으면 선택된 객체의 이름
+            let name = customDetailInterestNameRelay.value ?? d.name
+            currentPath.append(name)
+        }
+        
+        // (3) 목표
+        if let g = selectedGoalRelay.value {
+            let name = customGoalNameRelay.value ?? g.name
+            currentPath.append(name)
+        }
+        
+        // 2. 저장되어 있던 savedState.fullPath와 비교
+        // 배열의 요소가 하나라도 다르거나 순서가 다르면 true (변경됨)
+        return currentPath != self.savedState.fullPath
+    }
+    
     
     // MARK: - Timer Logic
     private func startLockTimer() {

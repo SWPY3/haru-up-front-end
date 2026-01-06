@@ -344,9 +344,6 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         }
     }
     
-    
-    
-    
     // 2) 프로필 조회
     func fetchProfile(accessToken: String) -> Single<NaverUserProfile> {
         return Single.create { single in
@@ -443,7 +440,10 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                 // 1. 프로필 정보 저장 (저장 로직 추가됨)
                 TokenStorageService.shared.saveProfile(
                     nickname: profileData.nickname,
-                    imgId: profileData.imgId
+                    jobId: profileData.jobId,
+                    jobName: nil,
+                    jobDetailId: profileData.jobDetailId,
+                    jobDetailName: nil
                 )
                 
                 // 2. 관심사 정보 저장
@@ -460,7 +460,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             })
     }
     
-    // [수정] 백엔드 프로필 조회 (public으로 변경 및 자동 저장 추가)
+    // 백엔드 프로필 조회
     func fetchProfile() -> Single<ProfileData> {
         return Single.create { [weak self] single in
             guard let token = self?.tokenStorage.getAccessToken() else {
@@ -506,13 +506,16 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             // 💾 [추가] 조회 성공 시 자동으로 로컬 스토리지에 저장
             self?.tokenStorage.saveProfile(
                 nickname: profileData.nickname,
-                imgId: profileData.imgId
+                jobId: profileData.jobId,
+                jobName: nil,
+                jobDetailId: profileData.jobDetailId,
+                jobDetailName: nil
             )
             print("💾 [AuthService] 프로필 정보 로컬 최신화 완료")
         })
     }
     
-    // [수정] 멤버 관심사 조회 (public으로 변경 및 자동 저장 추가)
+    // 멤버 관심사 조회
     func fetchMemberInterests() -> Single<[MemberInterestDTO]> {
         return Single.create { [weak self] single in
             guard let token = self?.tokenStorage.getAccessToken() else {

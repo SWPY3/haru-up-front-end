@@ -19,8 +19,13 @@ final class TokenStorageService {
     private let curationDataKey = "HaruUp_CurationData"
     
     private let memberInterestsKey = "HaruUp_MemberInterests"
+    
     private let userNicknameKey = "HaruUp_UserNickname"
-    private let userProfileImgIdKey = "HaruUp_UserProfileImgId"
+    private let userJobIdKey = "HaruUp_UserJobId"
+    private let userJobDetailIdKey = "HaruUp_UserJobDetailId"
+    // 화면 표시를 위해 이름도 저장
+    private let userJobNameKey = "HaruUp_UserJobName"
+    private let userJobDetailNameKey = "HaruUp_UserJobDetailName"
     
     // Apple 로그인 관련 키들
     private let appleUserIdKey = "HaruUp_AppleUserId"
@@ -149,18 +154,35 @@ final class TokenStorageService {
         print("🗑️ 온보딩 상태 완전 초기화")
     }
     
-    func saveProfile(nickname: String, imgId: Int?) {
+    // MARK: - Profile Management
+    func saveProfile(nickname: String, jobId: Int?, jobName: String?, jobDetailId: Int?, jobDetailName: String?) {
         UserDefaults.standard.set(nickname, forKey: userNicknameKey)
-        if let imgId = imgId {
-            UserDefaults.standard.set(imgId, forKey: userProfileImgIdKey)
-        }
-        print("✅ 프로필 정보(닉네임/이미지ID) 로컬 저장 완료")
+        
+        if let jobId = jobId { UserDefaults.standard.set(jobId, forKey: userJobIdKey) }
+        if let jobName = jobName { UserDefaults.standard.set(jobName, forKey: userJobNameKey) }
+        
+        if let jobDetailId = jobDetailId { UserDefaults.standard.set(jobDetailId, forKey: userJobDetailIdKey) }
+        if let jobDetailName = jobDetailName { UserDefaults.standard.set(jobDetailName, forKey: userJobDetailNameKey) }
+        
+        print("✅ 프로필 정보(닉네임/직업/세부직업) 로컬 저장 완료")
     }
     
-    func getProfile() -> (nickname: String?, imgId: Int) {
+    func getProfile() -> (nickname: String?, jobId: Int, jobName: String?, jobDetailId: Int, jobDetailName: String?) {
         let nickname = UserDefaults.standard.string(forKey: userNicknameKey)
-        let imgId = UserDefaults.standard.integer(forKey: userProfileImgIdKey)
-        return (nickname, imgId)
+        let jobId = UserDefaults.standard.integer(forKey: userJobIdKey)
+        let jobName = UserDefaults.standard.string(forKey: userJobNameKey)
+        let jobDetailId = UserDefaults.standard.integer(forKey: userJobDetailIdKey)
+        let jobDetailName = UserDefaults.standard.string(forKey: userJobDetailNameKey)
+        
+        return (nickname, jobId, jobName, jobDetailId, jobDetailName)
+    }
+    
+    func clearProfile() {
+        UserDefaults.standard.removeObject(forKey: userNicknameKey)
+        UserDefaults.standard.removeObject(forKey: userJobIdKey)
+        UserDefaults.standard.removeObject(forKey: userJobNameKey)
+        UserDefaults.standard.removeObject(forKey: userJobDetailIdKey)
+        UserDefaults.standard.removeObject(forKey: userJobDetailNameKey)
     }
     
     func saveMemberInterests(_ interests: [MemberInterestDTO]) {
@@ -200,10 +222,7 @@ final class TokenStorageService {
         clearOnboardingState()
         clearAppleLoginInfo()
         clearMemberInterests()
-        UserDefaults.standard.removeObject(forKey: memberIdKey)
-        UserDefaults.standard.removeObject(forKey: curationDataKey)
-        UserDefaults.standard.removeObject(forKey: userNicknameKey)
-        UserDefaults.standard.removeObject(forKey: userProfileImgIdKey)
+        clearProfile()
         print("🗑️ 탈퇴 완료 - 모든 저장 데이터 초기화")
     }
     

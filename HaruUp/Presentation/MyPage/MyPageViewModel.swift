@@ -36,6 +36,7 @@ final class MyPageViewModel {
     
     private let authAPI: AuthAPIProtocol
     private let authService: AuthService
+    private let jobService: JobService
     private let tokenStorage: TokenStorageService
     private let disposeBag = DisposeBag()
     private let interestsService: InterestsService
@@ -44,22 +45,17 @@ final class MyPageViewModel {
         curationData: CurationData,
         authAPI: AuthAPIProtocol = AuthAPI(),
         authService: AuthService = AuthService(),
+        jobService: JobService = .shared,
         tokenStorage: TokenStorageService = .shared,
         interestsService: InterestsService = .shared
     ) {
-        if let localData = tokenStorage.getCurationData() {
-            self.curationDataRelay.accept(localData)
-        } else {
-            self.curationDataRelay.accept(curationData)
-        }
-        
         self.authAPI = authAPI
         self.authService = authService
+        self.jobService = jobService
         self.tokenStorage = tokenStorage
         self.interestsService = interestsService
         
-        let initialData = Self.loadCombinedData(fallback: curationData, storage: tokenStorage)
-        self.curationDataRelay.accept(initialData)
+        self.updateUIFromLocalStorage()
     }
     
     func transform(input: Input) -> Output {
@@ -67,15 +63,9 @@ final class MyPageViewModel {
         Observable.merge(input.viewDidLoad, input.viewWillAppear)
             .subscribe(onNext: { [weak self] in
                 guard let self = self else { return }
-                
-                if let localData = self.tokenStorage.getCurationData() {
-                    self.curationDataRelay.accept(localData)
-                }
-                
-                self.fetchServerData()
+                self.fetchAndSaveServerData()
             })
             .disposed(by: disposeBag)
-        
         
         let version = Driver.just("버전.v.1.0.0")
         
@@ -108,134 +98,109 @@ final class MyPageViewModel {
         )
     }
     
-    // MARK: - API Fetching (서버 데이터 가져오기)
-    //    private func fetchServerData() {
-    //        // 1. 관심사 데이터 가져오기
-    ////        interestsService.fetchMemberInterests()
-    ////            .subscribe(onNext: { [weak self] interests in
-    ////                guard let self = self else { return }
-    ////
-    ////                // 현재 데이터 복사 (닉네임 등 다른 정보 유지를 위해)
-    ////                var currentData = self.curationDataRelay.value
-    ////
-    ////                // 가장 최근(첫 번째) 관심사 데이터 사용
-    ////                if let latest = interests.first {
-    ////                    let path = latest.directFullPath
-    ////                    // path 예시: ["체력관리 및 운동", "헬스", "근력 키우기"]
-    ////
-    ////                    // [0] 1단계: 관심사
-    ////                    if path.indices.contains(0) {
-    ////                        // ID는 모르므로 0, 이름은 path[0] 사용 (아이콘 매핑용)
-    ////                        currentData.interest = InterestData(id: 0, name: path[0])
-    ////                    }
-    ////
-    ////                    // [1] 2단계: 세부 관심사
-    ////                    if path.indices.contains(1) {
-    ////                        currentData.interestDetail = InterestData(id: 0, name: path[1])
-    ////                    }
-    ////
-    ////                    // [2] 3단계: 목표
-    ////                    if path.indices.contains(2) {
-    ////                        // API가 주는 interestId는 '목표'의 ID입니다.
-    ////                        currentData.goal = InterestData(id: latest.interestId, name: path[2])
-    ////                    }
-    ////
-    ////                    // (선택사항) 최신 데이터를 로컬에도 업데이트해두면 다음 앱 실행 시 더 빠름
-    ////                    // self.tokenStorage.saveCurationData(currentData)
-    ////                }
-    ////
-    ////                // UI 업데이트 트리거
-    ////                self.curationDataRelay.accept(currentData)
-    ////
-    ////            }, onError: { error in
-    ////                print("⚠️ 마이페이지 관심사 로드 실패: \(error)")
-    ////                // 에러 발생 시 기존 로컬 데이터가 유지됨
-    ////            })
-    ////            .disposed(by: disposeBag)
-    //
-    //        interestsService.fetchMemberInterests()
-    //            .subscribe(onNext: { [weak self] interests in
-    //                guard let self = self else { return }
-    //
-    //                var currentData = self.curationDataRelay.value
-    //
-    //                if let latest = interests.first {
-    //                    let path = latest.directFullPath
-    //                    // [대분류, 중분류, 목표] 매핑
-    //                    if path.indices.contains(0) { currentData.interest = InterestData(id: 0, name: path[0]) }
-    //                    if path.indices.contains(1) { currentData.interestDetail = InterestData(id: 0, name: path[1]) }
-    //                    if path.indices.contains(2) { currentData.goal = InterestData(id: latest.interestId, name: path[2]) }
-    //
-    //                    // 최신 상태 UI 반영
-    //                    self.curationDataRelay.accept(currentData)
-    //                }
-    //            })
-    //            .disposed(by: disposeBag)
-    //
-    //        // 2. (추후 구현) 프로필 정보(닉네임, 직업)도 여기서 fetchProfile()을 호출하여 currentData를 업데이트해야 함
-    //    }
+    // MARK: - 로직 1: 로컬 스토리지 -> UI 반영
+    private func updateUIFromLocalStorage() {
+        var data = CurationData() // 빈 객체 시작
+        
+        // [프로필] 로컬에서 가져오기
+        let profile = tokenStorage.getProfile()
+        data.nickname = profile.nickname
+        if profile.jobId != 0 {
+            data.job = Job(id: profile.jobId, jobName: profile.jobName ?? "")
+        }
+        if profile.jobDetailId != 0 {
+            data.jobDetail = JobDetail(id: profile.jobDetailId, jobDetailName: profile.jobDetailName ?? "")
+        }
+        
+        // [관심사] 로컬에서 가져오기
+        if let interests = tokenStorage.getMemberInterests(), let first = interests.first {
+            let path = first.directFullPath // ["운동", "헬스", "다이어트"]
+            
+            // 이름만 가지고 UI용 객체 생성 (ID는 없어도 표시엔 문제 없음)
+            if path.indices.contains(0) { data.interest = InterestData(id: 0, name: path[0]) }
+            if path.indices.contains(1) { data.interestDetail = InterestData(id: 0, name: path[1]) }
+            if path.indices.contains(2) { data.goal = InterestData(id: first.interestId, name: path[2]) }
+        }
+        
+        // UI 갱신
+        curationDataRelay.accept(data)
+    }
     
-    private func fetchServerData() {
-        // AuthService가 내부적으로 TokenStorage에 저장을 수행하므로,
-        // 여기서는 zip으로 묶어서 호출하고 완료 시점만 잡으면 됩니다.
+    // MARK: - Logic: API -> Local Storage
+    private func fetchAndSaveServerData() {
+        // 1. 프로필 & 관심사 API 호출
         Single.zip(
-            authService.fetchProfile(),        // 프로필 갱신 (저장됨)
-            authService.fetchMemberInterests() // 관심사 갱신 (저장됨)
+            authService.fetchProfile(),
+            authService.fetchMemberInterests()
         )
-        .subscribe(onSuccess: { [weak self] _ in
-            // 성공 시: 로컬 스토리지에 최신 데이터가 있으므로 다시 불러와서 UI 업데이트
-            print("🔄 [MyPageVM] 서버 데이터 동기화 완료 -> UI 갱신")
-            self?.refreshLocalData()
+        .flatMap { [weak self] (profile, interests) -> Single<(String?, String?, ProfileData, [MemberInterestDTO])> in
+            guard let self = self else { return .just((nil, nil, profile, interests)) }
+            
+            // 직업 이름 조회 (ID -> Name)
+            guard let jobId = profile.jobId, jobId != 0 else {
+                return .just((nil, nil, profile, interests))
+            }
+            let jobDetailId = profile.jobDetailId ?? 0
+            
+            // 직업 이름을 가져오는 API 호출
+            return self.fetchJobNames(jobId: jobId, jobDetailId: jobDetailId)
+                .map { (jobName, detailName) in
+                    return (jobName, detailName, profile, interests)
+                }
+        }
+        .subscribe(onSuccess: { [weak self] (jobName, jobDetailName, profile, interests) in
+            guard let self = self else { return }
+            
+            // 2. 프로필 정보 로컬 저장 (이름 포함)
+            self.tokenStorage.saveProfile(
+                nickname: profile.nickname ?? "",
+                jobId: profile.jobId,
+                jobName: jobName,           // 찾아온 직업 이름 저장
+                jobDetailId: profile.jobDetailId,
+                jobDetailName: jobDetailName // 찾아온 상세 직업 이름 저장
+            )
+            
+            // 3. 관심사 정보 로컬 저장
+            self.tokenStorage.saveMemberInterests(interests)
+            
+            // 3. 저장된 최신 데이터로 화면 갱신
+            self.updateUIFromLocalStorage()
+            
+            print("✅ [MyPageVM] 서버 데이터 동기화 및 로컬 저장 완료")
             
         }, onFailure: { error in
             print("⚠️ [MyPageVM] 데이터 동기화 실패: \(error)")
-            // 실패해도 기존 로컬 데이터가 보여지므로 치명적이지 않음
         })
         .disposed(by: disposeBag)
     }
     
-    // 로컬 스토리지의 최신 데이터를 가져와 Relay 업데이트
-    private func refreshLocalData() {
-        let currentData = curationDataRelay.value
-        let updatedData = Self.loadCombinedData(fallback: currentData, storage: tokenStorage)
-        curationDataRelay.accept(updatedData)
-    }
-    
-    // [중요] 흩어진 데이터(프로필, 관심사, CurationData)를 하나로 합치는 정적 헬퍼 함수
-    private static func loadCombinedData(fallback: CurationData, storage: TokenStorageService) -> CurationData {
-        // 복사본 생성
-        var data = fallback
-        
-        // 1. 기존 CurationData가 있다면 덮어쓰기
-        if let localCuration = storage.getCurationData() {
-            data = localCuration
-        }
-        
-        // 2. 개별 저장된 프로필(닉네임) 정보가 있다면 우선 적용 (가장 최신)
-        let profile = storage.getProfile()
-        if let nickname = profile.nickname {
-            data.nickname = nickname
-        }
-        // data.imgId = profile.imgId (필요 시)
-        
-        // 3. 개별 저장된 관심사 정보가 있다면 우선 적용
-        if let interests = storage.getMemberInterests(), let first = interests.first {
-            let path = first.directFullPath // 예: ["운동", "헬스", "근력"]
-            
-            // 인덱스 안전하게 접근하여 매핑
-            if path.indices.contains(0) {
-                data.interest = InterestData(id: 0, name: path[0])
+    // 직업 ID -> 직업 이름 변환 로직 (기존과 동일)
+    private func fetchJobNames(jobId: Int, jobDetailId: Int) -> Single<(String?, String?)> {
+        return jobService.fetchJobs()
+            .take(1)
+            .asSingle()
+            .flatMap { [weak self] jobs -> Single<(String?, String?)> in
+                guard let self = self else { return .just((nil, nil)) }
+                
+                guard let myJob = jobs.first(where: { $0.id == jobId }) else {
+                    return .just((nil, nil))
+                }
+                let jobName = myJob.jobName
+                
+                if jobName == "자영업" {
+                    return .just((jobName, nil))
+                }
+                
+                return self.jobService.fetchJobDetails(jobId: jobId)
+                    .take(1)
+                    .asSingle()
+                    .map { details in
+                        let detailName = details.first(where: { $0.id == jobDetailId })?.jobDetailName
+                        return (jobName, detailName)
+                    }
+                    .catchAndReturn((jobName, nil))
             }
-            if path.indices.contains(1) {
-                data.interestDetail = InterestData(id: 0, name: path[1])
-            }
-            if path.indices.contains(2) {
-                // interestId는 Goal의 ID
-                data.goal = InterestData(id: first.interestId, name: path[2])
-            }
-        }
-        
-        return data
+            .catchAndReturn((nil, nil))
     }
     
     // 로그아웃 실행

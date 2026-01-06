@@ -50,21 +50,10 @@ final class MyPageViewCoordinator: Coordinator {
     }
     
     func showProfileEdit() {
-        // 1. 현재 닉네임 가져오기 (CurationData 혹은 저장된 UserInfo에서)
-        var currentNickname = "Anonymous"
-        
-        if let savedNickname = TokenStorageService.shared.getProfile().nickname {
-            currentNickname = savedNickname
-        } else if let curationNickname = TokenStorageService.shared.getCurationData()?.nickname {
-            currentNickname = curationNickname
-        }
-        
         print("=== 프로필 수정 진입 ===")
-        print("전달할 닉네임: \(currentNickname)")
         
         // 2. ViewModel 주입
         let vm = ProfileEditViewModel(
-            currentNickname: currentNickname,
             nicknameServiceVM: NicknameSelectViewModel(coordinator: NicknameSelectCoordinator(navigationController: navigationController, curationData: curationData))
         )
         
