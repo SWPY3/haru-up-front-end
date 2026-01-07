@@ -161,7 +161,8 @@ class OnboardingViewController: UIViewController {
     private func setupOnboardingPages() {
         let pageViews: [OnboardingPageView] = [
             OnboardingPageView(page: .init(title: "AI가 당신의 성장목표를 분석해\n맞춤 미션을 추천해줘요", highlightTitle: "맞춤 미션", description: "현재 내가 도전하기 좋은 5단계의 미션을 추천해요.", image: .imageOnboarding1)),
-            OnboardingPageView(page: .init(title: "월간 미션 차트를 참고해서\n미션을 더 쉽게 고르세요.", highlightTitle: "월간 미션 차트", description: "나와 같은 사람들이 얼마나 선택했는지 참고 하세요.", image: .imageOnboarding2))
+//            OnboardingPageView(page: .init(title: "월간 미션 차트를 참고해서\n미션을 더 쉽게 고르세요.", highlightTitle: "월간 미션 차트", description: "나와 같은 사람들이 얼마나 선택했는지 참고 하세요.", image: .imageOnboarding2)),
+            OnboardingPageView(page: .init(title: "미션을 진행하며\n캐릭터와 함께 성장해요", highlightTitle: "캐릭터와 함께 성장해요", description: "미션을 완료해 획득한 경험치로 캐릭터가 성장해요.", image: .imageOnboarding3))
         ]
         
         scrollView.contentSize = CGSize(
