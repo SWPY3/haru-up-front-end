@@ -12,6 +12,7 @@ final class TokenStorageService {
     
     private let accessTokenKey = "HaruUp_AccessToken"
     private let refreshTokenKey = "HaruUp_RefreshToken"
+    
     private let tokenExpiresAtKey = "HaruUp_TokenExpiresAt"
     private let onboardingCompletedKey = "HaruUp_OnboardingCompleted"
     private let onboardingCompletedMemberIdKey = "HaruUp_OnboardingCompletedMemberId"
@@ -35,21 +36,61 @@ final class TokenStorageService {
     private init() {}
     
     func saveToken(_ token: AuthToken) {
-        UserDefaults.standard.set(token.accessToken, forKey: accessTokenKey)
+        KeychainHelper.shared.save(token: token.accessToken, forKey: accessTokenKey)
+        
         if let refreshToken = token.refreshToken {
-            UserDefaults.standard.set(refreshToken, forKey: refreshTokenKey)
+            KeychainHelper.shared.save(token: refreshToken, forKey: refreshTokenKey)
         }
+        
+        // 만료 시간은 민감 정보가 아니므로 UserDefaults 유지 (날짜 비교 편의성)
         if let expiresAt = token.expiresAt {
             UserDefaults.standard.set(expiresAt, forKey: tokenExpiresAtKey)
         }
     }
     
     func getAccessToken() -> String? {
-        return UserDefaults.standard.string(forKey: accessTokenKey)
+        // 1. 먼저 Keychain(보안 저장소)에서 찾아봅니다. (신규 로직)
+        if let token = KeychainHelper.shared.read(forKey: accessTokenKey) {
+            return token
+        }
+        
+        // 2. Keychain에 없다면? -> 혹시 구버전 사용자일 수 있으니 UserDefaults를 확인합니다.
+        if let oldToken = UserDefaults.standard.string(forKey: accessTokenKey) {
+            print("🔄 [Migration] 기존 Access Token 발견! Keychain으로 이동합니다.")
+            
+            // 3. 찾았다면 Keychain에 안전하게 옮겨 적습니다.
+            KeychainHelper.shared.save(token: oldToken, forKey: accessTokenKey)
+            
+            // 4. 기존 취약한 공간(UserDefaults)에서는 지워줍니다.
+            UserDefaults.standard.removeObject(forKey: accessTokenKey)
+            
+            return oldToken
+        }
+        
+        // 둘 다 없으면 진짜 없는 것
+        return nil
     }
     
     func getRefreshToken() -> String? {
-        return UserDefaults.standard.string(forKey: refreshTokenKey)
+        // 1. Keychain 확인
+        if let token = KeychainHelper.shared.read(forKey: refreshTokenKey) {
+            return token
+        }
+        
+        // 2. UserDefaults 확인 (구버전 데이터)
+        if let oldToken = UserDefaults.standard.string(forKey: refreshTokenKey) {
+            print("🔄 [Migration] 기존 Refresh Token 발견! Keychain으로 이동합니다.")
+            
+            // 3. Keychain으로 이동
+            KeychainHelper.shared.save(token: oldToken, forKey: refreshTokenKey)
+            
+            // 4. 기존 데이터 삭제
+            UserDefaults.standard.removeObject(forKey: refreshTokenKey)
+            
+            return oldToken
+        }
+        
+        return nil
     }
     
     func isTokenValid() -> Bool {
@@ -65,8 +106,10 @@ final class TokenStorageService {
     }
     
     func clearTokens() {
-        UserDefaults.standard.removeObject(forKey: accessTokenKey)
-        UserDefaults.standard.removeObject(forKey: refreshTokenKey)
+        KeychainHelper.shared.delete(forKey: accessTokenKey)
+        KeychainHelper.shared.delete(forKey: refreshTokenKey)
+        
+        
         UserDefaults.standard.removeObject(forKey: tokenExpiresAtKey)
     }
     
