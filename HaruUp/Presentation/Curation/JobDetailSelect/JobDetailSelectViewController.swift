@@ -76,6 +76,8 @@ class JobDetailSelectViewController: UIViewController {
     
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
+        // 일단 다크모드가 없으므로 무조건 보여야함
+        scrollView.indicatorStyle = .black
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.showsVerticalScrollIndicator = true
         return scrollView
