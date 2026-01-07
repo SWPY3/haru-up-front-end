@@ -17,7 +17,7 @@ final class ChartCoordinator: Coordinator {
     
     func start() {
         let chartVM = ChartViewModel()
-        let chartVC = ChartViewController(viewModel: chartVM)
+        let chartVC = ChartEmptyViewController(viewModel: chartVM)
         
         navigationController.setViewControllers([chartVC], animated: false)
     }
