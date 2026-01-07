@@ -117,7 +117,7 @@ final class InterestsService: Service {
     }
     
     // MARK: - Fetch Goals
-    /// 목표 목록 가져오기
+    // 목표 목록 가져오기
     func fetchGoals(parentId: Int) -> Observable<[Goal]> {
         return Observable.create { observer in
             let url = NetworkDefine.InterestAPI.getGoalList(parentId: parentId).url
