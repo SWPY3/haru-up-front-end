@@ -60,8 +60,10 @@ final class InterestEditViewController: UIViewController {
     
     private lazy var interestSelectButton: UIButton = {
         let btn = UIButton()
-        let initialTitle = TokenStorageService.shared.getCurationData()?.interest?.name ?? "관심사 선택"
-        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.interest != nil ? .cta : .neutral800
+        let interests = TokenStorageService.shared.getMemberInterests()?.first
+        let path = interests?.directFullPath ?? []
+        let initialTitle = (path.indices.contains(0) ? path[0] : nil) ?? "관심사 선택"
+        let titleColor: UIColor = (path.indices.contains(0)) ? .cta : .neutral800
         btn.setAttributedTitle(
             NSAttributedString(
                 string: initialTitle,
@@ -103,8 +105,12 @@ final class InterestEditViewController: UIViewController {
     
     private lazy var detailInterestSelectButton: UIButton = {
         let btn = UIButton()
-        let initialTitle = TokenStorageService.shared.getCurationData()?.interestDetail?.name ?? "세부 관심사 선택"
-        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.interestDetail != nil ? .cta : .neutral800
+        let interests = TokenStorageService.shared.getMemberInterests()?.first
+        let path = interests?.directFullPath ?? []
+        
+        // Path의 1번째 인덱스가 세부 관심사
+        let initialTitle = (path.indices.contains(1) ? path[1] : nil) ?? "세부 관심사 선택"
+        let titleColor: UIColor = (path.indices.contains(1)) ? .cta : .neutral800
         btn.setAttributedTitle(
             NSAttributedString(
                 string: initialTitle,
@@ -147,8 +153,12 @@ final class InterestEditViewController: UIViewController {
     
     private lazy var goalSelectButton: UIButton = {
         let btn = UIButton()
-        let initialTitle = TokenStorageService.shared.getCurationData()?.goal?.name ?? "목표 선택"
-        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.goal != nil ? .cta : .neutral800
+        let interests = TokenStorageService.shared.getMemberInterests()?.first
+        let path = interests?.directFullPath ?? []
+        
+        // Path의 2번째 인덱스가 목표
+        let initialTitle = (path.indices.contains(2) ? path[2] : nil) ?? "목표 선택"
+        let titleColor: UIColor = (path.indices.contains(2)) ? .cta : .neutral800
         btn.setAttributedTitle(
             NSAttributedString(
                 string: initialTitle,

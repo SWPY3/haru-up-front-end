@@ -673,11 +673,18 @@ final class InterestEditViewModel {
             
             // 1. MemberInterestId 가져오기
             var targetMemberInterestId: Int? = UserStorage.shared.selectedMemberInterestId
+//            if targetMemberInterestId == nil {
+//                if let data = TokenStorageService.shared.getCurationData(),
+//                   let ids = data.memberInterestIds,
+//                   let first = ids.first {
+//                    targetMemberInterestId = first
+//                }
+            //            }
             if targetMemberInterestId == nil {
-                if let data = TokenStorageService.shared.getCurationData(),
-                   let ids = data.memberInterestIds,
-                   let first = ids.first {
-                    targetMemberInterestId = first
+                // MemberInterestDTO에서 ID 꺼내기
+                if let interests = TokenStorageService.shared.getMemberInterests(),
+                   let first = interests.first {
+                    targetMemberInterestId = first.memberInterestId
                 }
             }
             
@@ -706,6 +713,8 @@ final class InterestEditViewModel {
                 }
             }
             
+            // TODO: - 목표가 없는 카테고리가 없다면 바로 지우기
+
             // (3) 목표 처리
             if self.goalListRelay.value.isEmpty {
                 // ✅ [수정] 목표가 없는 카테고리

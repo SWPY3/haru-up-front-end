@@ -484,6 +484,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                 case .success(let profileResponse):
                     if let profileData = profileResponse.data {
                         print("✅ 프로필 조회 성공: \(profileData.nickname)")
+                        print("세부 직무 조회: \(profileData.jobDetailId)")
                         single(.success(profileData))
                     } else {
                         let error = NSError(
