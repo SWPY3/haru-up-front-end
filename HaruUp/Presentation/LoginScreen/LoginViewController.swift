@@ -38,7 +38,7 @@ class LoginViewController: UIViewController {
     }()
     
     private let kakaoLoginButton = KakaoLoginButton()
-    private let naverLoginButton = NaverLoginButton()
+//    private let naverLoginButton = NaverLoginButton()
     private let appleLoginButton: UIControl = {
         let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
         button.cornerRadius = 16
@@ -102,7 +102,7 @@ class LoginViewController: UIViewController {
         view.addSubview(buttonStackView)
         buttonStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        [kakaoLoginButton, naverLoginButton, appleLoginButton].forEach {
+        [kakaoLoginButton, /*naverLoginButton,*/ appleLoginButton].forEach {
             buttonStackView.addArrangedSubview($0)
         }
         
@@ -113,7 +113,7 @@ class LoginViewController: UIViewController {
             buttonStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
             kakaoLoginButton.heightAnchor.constraint(equalToConstant: 54),
-            naverLoginButton.heightAnchor.constraint(equalToConstant: 54),
+//            naverLoginButton.heightAnchor.constraint(equalToConstant: 54),
             appleLoginButton.heightAnchor.constraint(equalToConstant: 54),
         ])
     }
@@ -123,7 +123,7 @@ class LoginViewController: UIViewController {
         let input = LoginViewModel.Input(
             kakaoLoginTapped: kakaoLoginButton.rx.tap.asObservable(),
             appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable(),
-            naverLoginTapped: naverLoginButton.rx.tap.asObservable()
+//            naverLoginTapped: naverLoginButton.rx.tap.asObservable()
         )
         
         let output = viewModel.transform(input)
