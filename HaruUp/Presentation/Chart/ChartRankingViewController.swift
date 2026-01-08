@@ -36,21 +36,21 @@ class ChartRankingViewController: UIViewController {
         return imageView
     }()
     
-    // 검색 조건 추가 버튼 (상단 둥근 버튼)
+    // 검색 조건 버튼
     private let filterButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.image = .iconFilter
-        
-        
-        // attributed title 설정
-        var container = AttributeContainer()
-        container.font = Typography.body4.font
-        config.attributedTitle = AttributedString("검색조건을 추가해보세요.", attributes: container)
-        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
-        
-        let button = UIButton(configuration: config)
-        button.contentHorizontalAlignment = .leading
+        let button = UIButton()
+        button.setImage(.iconFilter, for: .normal)
+        button.contentMode = .scaleAspectFit
         return button
+    }()
+    
+    
+    private let filterLabel: UILabel = {
+        let label = UILabel()
+        label.text = "검색조건을 추가해보세요."
+        label.font = Typography.body4.font
+        label.textColor = .neutral500
+        return label
     }()
     
     private lazy var tableView: UITableView = {
@@ -58,10 +58,12 @@ class ChartRankingViewController: UIViewController {
         tv.register(ChartRankingCell.self, forCellReuseIdentifier: ChartRankingCell.identifier)
         tv.separatorStyle = .singleLine
         tv.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
-        tv.backgroundColor = .clear
+        tv.backgroundColor = .white
         tv.delegate = self
         tv.dataSource = self
         tv.showsVerticalScrollIndicator = false
+        tv.layer.cornerRadius = 20
+        tv.clipsToBounds = true
         return tv
     }()
     
@@ -79,13 +81,13 @@ class ChartRankingViewController: UIViewController {
         super.viewDidLoad()
         setupView()
         setupConstraints()
-        
+        setupActions()
     }
     
     private func setupView() {
         view.backgroundColor = .neutral10
         
-        [titleLabel, infoButton, filterButton, tableView, tooltipView, ].forEach {
+        [titleLabel, infoButton, filterButton, filterLabel, tableView, tooltipView].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -102,10 +104,13 @@ class ChartRankingViewController: UIViewController {
             infoButton.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 6),
             
             // 필터 버튼
-            filterButton.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
-            filterButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            filterButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            filterButton.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            filterButton.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             filterButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            // 필터 안내 텍스트
+            filterLabel.centerYAnchor.constraint(equalTo: filterButton.centerYAnchor),
+            filterLabel.leadingAnchor.constraint(equalTo: filterButton.trailingAnchor, constant: 8),
             
             // 말풍선 툴팁 (i 버튼 아래에 위치)
             tooltipView.topAnchor.constraint(equalTo: infoButton.bottomAnchor, constant: 8),
@@ -117,8 +122,24 @@ class ChartRankingViewController: UIViewController {
             tableView.topAnchor.constraint(equalTo: filterButton.bottomAnchor, constant: 20),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -46)
+            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -46)
         ])
+    }
+    
+    private func setupActions() {
+        infoButton.addTarget(self, action: #selector(infoButtonTapped), for: .touchUpInside)
+        
+        // 화면 터치 시 툴팁 닫기 (선택 사항)
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissTooltip))
+        view.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc private func infoButtonTapped() {
+        tooltipView.isHidden.toggle()
+    }
+    
+    @objc private func dismissTooltip() {
+        tooltipView.isHidden = true
     }
 }
 
@@ -136,13 +157,10 @@ extension ChartRankingViewController: UITableViewDelegate, UITableViewDataSource
         let item = viewModel.rankingData[indexPath.row]
         cell.configure(with: item)
         
-        let isFirst = indexPath.row == 0
-        let isLast = indexPath.row == viewModel.rankingData.count - 1
-        cell.setRoundedCorners(isFirst: isFirst, isLast: isLast)
-        if isLast {
+        if indexPath.row == viewModel.rankingData.count - 1 {
             cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
         } else {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20) // 기존에 설정한 값
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
         }
         return cell
     }

@@ -79,31 +79,6 @@ final class ChartRankingCell: UITableViewCell {
         tagStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
     }
     
-    
-    func setRoundedCorners(isFirst: Bool, isLast: Bool) {
-        let cornerRadius: CGFloat = 16.0 // 원하는 둥글기 정도 (UI에 맞춰 조절)
-        
-        // 1. 기본적으로 둥글게 처리할 준비
-        self.layer.cornerRadius = cornerRadius
-//        self.layer.masksToBounds = true // 내용이 모서리를 넘어가면 자름
-        
-        // 2. 위치에 따라 마스킹할 모서리 결정
-        if isFirst && isLast {
-            // 데이터가 1개뿐일 때: 4면 모두 둥글게
-            self.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        } else if isFirst {
-            // 첫 번째 셀: 위쪽 두 모서리만
-            self.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        } else if isLast {
-            // 마지막 셀: 아래쪽 두 모서리만
-            self.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        } else {
-            // 중간 셀: 둥글기 없음 (재사용 시 꼭 초기화 필요!)
-            self.layer.cornerRadius = 0
-            self.layer.maskedCorners = []
-        }
-    }
-    
     // MARK: - Setup
     private func setupView() {
         backgroundColor = .white
@@ -125,7 +100,7 @@ final class ChartRankingCell: UITableViewCell {
             rankLabel.heightAnchor.constraint(equalToConstant: 24),
             
             // 제목
-            titleLabel.topAnchor.constraint(equalTo: rankLabel.topAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: rankLabel.centerYAnchor),
             titleLabel.leadingAnchor.constraint(equalTo: rankLabel.trailingAnchor, constant: 8),
             titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
@@ -147,9 +122,9 @@ final class ChartRankingCell: UITableViewCell {
     
     // MARK: - Configure
     func configure(with item: ChartItem) {
-        rankLabel.text = "\(item.rank)"
-        titleLabel.text = item.title
-        countLabel.text = "\(item.count)명이 선택했어요"
+        rankLabel.setStyle(Typography.subtitle2, text: "\(item.rank)")
+        titleLabel.setStyle(Typography.subtitle2, text: item.title)
+        countLabel.setStyle(Typography.footnote, text: "\(item.count)명이 선택했어요")
         
         // 태그 동적 생성
         item.tags.forEach { tagText in
