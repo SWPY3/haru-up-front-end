@@ -128,14 +128,33 @@ class ChartRankingViewController: UIViewController {
     
     private func setupActions() {
         infoButton.addTarget(self, action: #selector(infoButtonTapped), for: .touchUpInside)
-        
-        // 화면 터치 시 툴팁 닫기 (선택 사항)
+        filterButton.addTarget(self, action: #selector(filterButtonTapped), for: .touchUpInside)
+        // 화면 터치 시 툴팁 닫기
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissTooltip))
         view.addGestureRecognizer(tapGesture)
     }
     
     @objc private func infoButtonTapped() {
         tooltipView.isHidden.toggle()
+    }
+    
+    @objc private func filterButtonTapped() {
+        let filterVC = FilterModalViewController()
+        filterVC.modalPresentationStyle = .pageSheet
+        
+        // 모달 스타일 설정
+        if let sheet = filterVC.sheetPresentationController {
+            // .medium()은 화면 절반, .large()는 전체 화면
+            sheet.detents = [.medium(), .large()]
+            // 상단 핸들러(잡고 끄는 바) 표시
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+            
+            sheet.prefersEdgeAttachedInCompactHeight = true
+            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
+        }
+        
+        present(filterVC, animated: true)
     }
     
     @objc private func dismissTooltip() {
