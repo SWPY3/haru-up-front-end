@@ -10,6 +10,7 @@ import UIKit
 class ChartRankingViewController: UIViewController, FilterModalDelegate {
     
     private let viewModel: ChartViewModel
+    private var currentActiveTags: [String] = []
     
     // MARK: - UI Components
     private let titleLabel: UILabel = {
@@ -180,6 +181,8 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
     }
     
     func didApplyFilter(selectedTags: [String]) {
+        self.currentActiveTags = selectedTags
+        
         // 1. 기존 태그들 모두 제거
         filterStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         
@@ -225,10 +228,13 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
         label.font = Typography.body4.font
         label.textColor = .neutral800
         
-        let xIcon = UIImageView(image: .iconCancel)
-        xIcon.contentMode = .scaleAspectFit
+        let deleteButton = UIButton()
+        deleteButton.setImage(.iconCancel, for: .normal)
+        deleteButton.contentMode = .scaleAspectFit
         
-        [label, xIcon].forEach {
+        deleteButton.addTarget(self, action: #selector(removeTag(_:)), for: .touchUpInside)
+        
+        [label, deleteButton].forEach {
             container.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -239,13 +245,33 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
             label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
             label.centerYAnchor.constraint(equalTo: container.centerYAnchor),
             
-            xIcon.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 2),
-            xIcon.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -5),
-            xIcon.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            xIcon.widthAnchor.constraint(equalToConstant: 24),
+            deleteButton.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 2),
+            deleteButton.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -5),
+            deleteButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            deleteButton.widthAnchor.constraint(equalToConstant: 24),
         ])
         
         return container
+    }
+    
+    @objc private func removeTag(_ sender: UIButton) {
+        // 1. 스택뷰에서 해당 버튼 제거
+        guard let tagContainer = sender.superview else { return }
+        
+        if let label = tagContainer.subviews.first(where: { $0 is UILabel }) as? UILabel,
+           let textToRemove = label.text {
+            // 배열에서 해당 텍스트 제거
+            currentActiveTags.removeAll { $0 == textToRemove }
+        }
+        
+        tagContainer.removeFromSuperview()
+        filterStackView.layoutIfNeeded()
+        
+        // 2. 남은 태그가 있는지 확인
+        if filterStackView.arrangedSubviews.isEmpty {
+            // 태그가 하나도 없으면 초기 상태(라벨 표시)로 돌아감
+            resetUIState(isActive: false)
+        }
     }
     
     @objc private func infoButtonTapped() {
@@ -256,6 +282,8 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
         let filterVC = FilterModalViewController()
         filterVC.modalPresentationStyle = .pageSheet
         filterVC.delegate = self
+        
+        filterVC.initialSelectedTags = self.currentActiveTags
         
         // 모달 스타일 설정
         if let sheet = filterVC.sheetPresentationController {
@@ -274,6 +302,7 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
     
     @objc private func resetButtonTapped() {
         // 초기화 버튼 누르면 모든 필터 해제
+        self.currentActiveTags = []
         didApplyFilter(selectedTags: [])
     }
     

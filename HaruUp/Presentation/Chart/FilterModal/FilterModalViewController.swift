@@ -16,6 +16,7 @@ protocol FilterModalDelegate: AnyObject {
 class FilterModalViewController: UIViewController {
     
     weak var delegate: FilterModalDelegate?
+    var initialSelectedTags: [String] = []
     
     // MARK: - UI Components
     // 1. 고정 헤더
@@ -32,7 +33,7 @@ class FilterModalViewController: UIViewController {
         view.backgroundColor = .neutral50
         return view
     }()
-
+    
     // 2. 스크롤 영역 (Body)
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
@@ -209,6 +210,9 @@ class FilterModalViewController: UIViewController {
         let tagLayoutView = TagLayoutView()
         tagLayoutView.tags = tags
         
+        tagLayoutView.selectedTagsToHighlight = self.initialSelectedTags
+        tagLayoutView.tags = tags
+        
         [headerLabel, tagLayoutView].forEach {
             sectionView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -230,6 +234,8 @@ class FilterModalViewController: UIViewController {
 // MARK: - Custom Tag Layout Helper
 // 태그들이 자동으로 줄바꿈되도록 하는 커스텀 뷰
 class TagLayoutView: UIView {
+    
+    var selectedTagsToHighlight: [String] = []
     
     var tags: [String] = [] {
         didSet { setupTags() }
@@ -306,20 +312,55 @@ class TagLayoutView: UIView {
         // 버튼 클릭 시 색상 변경 액션 추가
         button.addTarget(self, action: #selector(tagTapped(_:)), for: .touchUpInside)
         
+        if selectedTagsToHighlight.contains(text) {
+            // 선택된 상태라면: isSelected true + 파란색 스타일 적용
+            button.isSelected = true
+            updateButtonStyle(button, isSelected: true)
+        } else {
+            // 선택 안 된 상태: 기본 스타일 적용
+            button.isSelected = false
+            updateButtonStyle(button, isSelected: false)
+        }
+        
         return button
     }
     
     @objc private func tagTapped(_ sender: UIButton) {
         sender.isSelected.toggle()
-        
-        // 1. 현재 설정 가져오기
-        guard var config = sender.configuration else { return }
-        
-        // 2. 폰트와 색상을 담을 컨테이너 생성
+        updateButtonStyle(sender, isSelected: sender.isSelected)
+//        // 1. 현재 설정 가져오기
+//        guard var config = sender.configuration else { return }
+//        
+//        // 2. 폰트와 색상을 담을 컨테이너 생성
+//        var container = AttributeContainer()
+//        container.font = Typography.body4.font
+//        
+//        if sender.isSelected {
+//            container.foregroundColor = .primaryBlue700
+//            config.background.backgroundColor = .primaryBlue50
+//            config.background.strokeColor = .primaryBlue700
+//        } else {
+//            container.foregroundColor = .neutral800
+//            config.background.backgroundColor = .white
+//            config.background.strokeColor = .neutral100
+//        }
+//        // 3. 기존 텍스트 내용을 가져와서 새로운 속성(색상) 적용
+//        // (attributedTitle.string을 통해 순수 텍스트만 가져옵니다)
+//        if let attributedTitle = config.attributedTitle {
+//            let currentText = String(attributedTitle.characters)
+//            config.attributedTitle = AttributedString(currentText, attributes: container)
+//        }
+//        
+//        // 4. 버튼에 설정 반영
+//        sender.configuration = config
+    }
+    
+    private func updateButtonStyle(_ button: UIButton, isSelected: Bool) {
+        guard var config = button.configuration else { return }
         var container = AttributeContainer()
         container.font = Typography.body4.font
         
-        if sender.isSelected {
+        if isSelected {
             container.foregroundColor = .primaryBlue700
             config.background.backgroundColor = .primaryBlue50
             config.background.strokeColor = .primaryBlue700
@@ -328,17 +369,13 @@ class TagLayoutView: UIView {
             config.background.backgroundColor = .white
             config.background.strokeColor = .neutral100
         }
-        // 3. 기존 텍스트 내용을 가져와서 새로운 속성(색상) 적용
-        // (attributedTitle.string을 통해 순수 텍스트만 가져옵니다)
+        
         if let attributedTitle = config.attributedTitle {
             let currentText = String(attributedTitle.characters)
             config.attributedTitle = AttributedString(currentText, attributes: container)
         }
-        
-        // 4. 버튼에 설정 반영
-        sender.configuration = config
+        button.configuration = config
     }
-    
 }
 
 
