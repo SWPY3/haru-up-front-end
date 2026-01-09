@@ -7,7 +7,15 @@
 
 import UIKit
 
+
+// 1. 데이터를 전달할 프로토콜 정의
+protocol FilterModalDelegate: AnyObject {
+    func didApplyFilter(selectedTags: [String])
+}
+
 class FilterModalViewController: UIViewController {
+    
+    weak var delegate: FilterModalDelegate?
     
     // MARK: - UI Components
     // 1. 고정 헤더
@@ -152,6 +160,16 @@ class FilterModalViewController: UIViewController {
     @objc private func applyFilter() {
         // 필터 적용 로직 구현
         print("필터 적용")
+        var selectedTags: [String] = []
+        
+        // contentStackView 내의 모든 TagLayoutView를 순회하며 선택된 버튼 찾기
+        for case let sectionView as UIView in contentStackView.arrangedSubviews {
+            for case let tagLayoutView as TagLayoutView in sectionView.subviews {
+                selectedTags.append(contentsOf: tagLayoutView.getSelectedTags())
+            }
+        }
+        
+        delegate?.didApplyFilter(selectedTags: selectedTags)
         dismiss(animated: true)
     }
     
@@ -215,6 +233,20 @@ class TagLayoutView: UIView {
     
     var tags: [String] = [] {
         didSet { setupTags() }
+    }
+    
+    func getSelectedTags() -> [String] {
+        var selected: [String] = []
+        for subview in subviews {
+            if let button = subview as? UIButton, button.isSelected {
+                if let attributedTitle = button.configuration?.attributedTitle {
+                    let title = String(attributedTitle.characters)
+                    selected.append(title)
+                }
+                
+            }
+        }
+        return selected
     }
     
     private func setupTags() {

@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ChartRankingViewController: UIViewController {
+class ChartRankingViewController: UIViewController, FilterModalDelegate {
     
     private let viewModel: ChartViewModel
     
@@ -44,6 +44,13 @@ class ChartRankingViewController: UIViewController {
         return button
     }()
     
+    private let resetButton: UIButton = {
+        let button = UIButton()
+        button.setImage(.iconReset, for: .normal)
+        button.contentMode = .scaleAspectFit
+        button.isHidden = true // 초기엔 숨김
+        return button
+    }()
     
     private let filterLabel: UILabel = {
         let label = UILabel()
@@ -51,6 +58,22 @@ class ChartRankingViewController: UIViewController {
         label.font = Typography.body4.font
         label.textColor = .neutral500
         return label
+    }()
+    
+    private let filterScrollView: UIScrollView = {
+        let sv = UIScrollView()
+        sv.showsHorizontalScrollIndicator = false
+        sv.isHidden = true
+        return sv
+    }()
+    
+    private let filterStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        stack.distribution = .fillProportionally
+        return stack
     }()
     
     private lazy var tableView: UITableView = {
@@ -87,10 +110,13 @@ class ChartRankingViewController: UIViewController {
     private func setupView() {
         view.backgroundColor = .neutral10
         
-        [titleLabel, infoButton, filterButton, filterLabel, tableView, tooltipView].forEach {
+        [titleLabel, infoButton, filterButton, resetButton, filterLabel, filterScrollView, tableView, tooltipView].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
+        
+        filterScrollView.addSubview(filterStackView)
+        filterStackView.translatesAutoresizingMaskIntoConstraints = false
     }
     
     private func setupConstraints() {
@@ -108,9 +134,27 @@ class ChartRankingViewController: UIViewController {
             filterButton.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             filterButton.heightAnchor.constraint(equalToConstant: 44),
             
+            // 초기화 버튼
+            resetButton.centerYAnchor.constraint(equalTo: filterButton.centerYAnchor),
+            resetButton.leadingAnchor.constraint(equalTo: filterButton.trailingAnchor, constant: 8),
+            resetButton.heightAnchor.constraint(equalToConstant: 32),
+            
             // 필터 안내 텍스트
             filterLabel.centerYAnchor.constraint(equalTo: filterButton.centerYAnchor),
             filterLabel.leadingAnchor.constraint(equalTo: filterButton.trailingAnchor, constant: 8),
+            
+            // 가로 스크롤 뷰
+            filterScrollView.centerYAnchor.constraint(equalTo: filterButton.centerYAnchor),
+            filterScrollView.leadingAnchor.constraint(equalTo: resetButton.trailingAnchor, constant: 4),
+            filterScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            filterScrollView.heightAnchor.constraint(equalToConstant: 35),
+            
+            // 스크롤뷰 내부 스택뷰
+            filterStackView.topAnchor.constraint(equalTo: filterScrollView.contentLayoutGuide.topAnchor),
+            filterStackView.leadingAnchor.constraint(equalTo: filterScrollView.contentLayoutGuide.leadingAnchor),
+            filterStackView.trailingAnchor.constraint(equalTo: filterScrollView.contentLayoutGuide.trailingAnchor),
+            filterStackView.bottomAnchor.constraint(equalTo: filterScrollView.contentLayoutGuide.bottomAnchor),
+            filterStackView.heightAnchor.constraint(equalTo: filterScrollView.frameLayoutGuide.heightAnchor),
             
             // 말풍선 툴팁 (i 버튼 아래에 위치)
             tooltipView.topAnchor.constraint(equalTo: infoButton.bottomAnchor, constant: 8),
@@ -129,9 +173,79 @@ class ChartRankingViewController: UIViewController {
     private func setupActions() {
         infoButton.addTarget(self, action: #selector(infoButtonTapped), for: .touchUpInside)
         filterButton.addTarget(self, action: #selector(filterButtonTapped), for: .touchUpInside)
+        resetButton.addTarget(self, action: #selector(resetButtonTapped), for: .touchUpInside)
         // 화면 터치 시 툴팁 닫기
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissTooltip))
         view.addGestureRecognizer(tapGesture)
+    }
+    
+    func didApplyFilter(selectedTags: [String]) {
+        // 1. 기존 태그들 모두 제거
+        filterStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        if selectedTags.isEmpty {
+            // 태그가 없으면 -> 초기 상태로 복구
+            resetUIState(isActive: false)
+        } else {
+            // 태그가 있으면 -> 태그 뷰 생성 및 UI 활성화
+            resetUIState(isActive: true)
+            
+            for tagText in selectedTags {
+                let tagView = createSelectedTagView(text: tagText)
+                filterStackView.addArrangedSubview(tagView)
+            }
+        }
+    }
+    
+    // UI 상태 전환 (초기 상태 <-> 필터 적용 상태)
+    private func resetUIState(isActive: Bool) {
+        filterLabel.isHidden = isActive
+        resetButton.isHidden = !isActive
+        filterScrollView.isHidden = !isActive
+        
+        // 필터 버튼 아이콘 색상 변경 (활성 시 파랑, 비활성 시 검정/기본)
+        if isActive {
+            filterButton.setImage(.iconFilterSelected, for: .normal)
+        } else {
+            // 기본 상태
+            filterButton.setImage(.iconFilter, for: .normal)
+        }
+    }
+    
+    // 태그 뷰 생성 (캡슐 모양 + 닫기 X 버튼 포함)
+    private func createSelectedTagView(text: String) -> UIView {
+        let container = UIView()
+        container.backgroundColor = .white
+        container.layer.cornerRadius = 12
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor.neutral50.cgColor
+        
+        let label = UILabel()
+        label.text = text
+        label.font = Typography.body4.font
+        label.textColor = .neutral800
+        
+        let xIcon = UIImageView(image: .iconCancel)
+        xIcon.contentMode = .scaleAspectFit
+        
+        [label, xIcon].forEach {
+            container.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 32),
+            
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
+            label.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            
+            xIcon.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 2),
+            xIcon.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -5),
+            xIcon.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            xIcon.widthAnchor.constraint(equalToConstant: 24),
+        ])
+        
+        return container
     }
     
     @objc private func infoButtonTapped() {
@@ -141,6 +255,7 @@ class ChartRankingViewController: UIViewController {
     @objc private func filterButtonTapped() {
         let filterVC = FilterModalViewController()
         filterVC.modalPresentationStyle = .pageSheet
+        filterVC.delegate = self
         
         // 모달 스타일 설정
         if let sheet = filterVC.sheetPresentationController {
@@ -155,6 +270,11 @@ class ChartRankingViewController: UIViewController {
         }
         
         present(filterVC, animated: true)
+    }
+    
+    @objc private func resetButtonTapped() {
+        // 초기화 버튼 누르면 모든 필터 해제
+        didApplyFilter(selectedTags: [])
     }
     
     @objc private func dismissTooltip() {
