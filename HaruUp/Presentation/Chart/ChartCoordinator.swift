@@ -6,26 +6,64 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 final class ChartCoordinator: Coordinator {
     let navigationController: UINavigationController
     var childCoordinators: [any Coordinator] = []
     
+    private let disposeBag = DisposeBag()
+    private let viewModel: ChartViewModel
+    
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
+        self.viewModel = ChartViewModel()
     }
     
     func start() {
-        let chartVM = ChartViewModel()
-        // 분기 처리 로직
-        if chartVM.hasData {
-            // 1. 데이터가 있으면 랭킹 화면
-            let chartRankingVC = ChartRankingViewController(viewModel: chartVM)
-            navigationController.setViewControllers([chartRankingVC], animated: false)
+        let input = ChartViewModel.Input(
+            viewDidLoad: Observable.just(()),
+            filterApplied: Observable.never() // Coordinator에서는 직접 처리 안 함
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        // 초기 화면 설정 및 데이터 변화 감지
+        output.hasData
+            .drive(onNext: { [weak self] hasData in
+                self?.switchViewController(hasData: hasData)
+            })
+            .disposed(by: disposeBag)
+    }
+    // MARK: - Private Methods
+    private func switchViewController(hasData: Bool) {
+        if hasData {
+            showRankingViewController()
         } else {
-            // 2. 데이터가 없으면 대기 화면
-            let chartEmptyVC = ChartEmptyViewController(viewModel: chartVM)
-            navigationController.setViewControllers([chartEmptyVC], animated: false)
+            showEmptyViewController()
         }
+    }
+    
+    private func showRankingViewController() {
+        // 이미 RankingVC가 표시 중이면 중복 방지
+        if let topVC = navigationController.topViewController,
+           topVC is ChartRankingViewController {
+            return
+        }
+        
+        let chartRankingVC = ChartRankingViewController(viewModel: viewModel)
+        navigationController.setViewControllers([chartRankingVC], animated: true)
+    }
+    
+    private func showEmptyViewController() {
+        // 이미 EmptyVC가 표시 중이면 중복 방지
+        if let topVC = navigationController.topViewController,
+           topVC is ChartEmptyViewController {
+            return
+        }
+        
+        let chartEmptyVC = ChartEmptyViewController(viewModel: viewModel)
+        navigationController.setViewControllers([chartEmptyVC], animated: true)
     }
 }

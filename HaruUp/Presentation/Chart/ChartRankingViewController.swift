@@ -6,11 +6,18 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 class ChartRankingViewController: UIViewController, FilterModalDelegate {
     
     private let viewModel: ChartViewModel
     private var currentActiveTags: [String] = []
+    private let disposeBag = DisposeBag()
+    
+    private var rankingData: [ChartItem] = []
+    
+    private let filterAppliedSubject = PublishSubject<[String]>()
     
     // MARK: - UI Components
     private let titleLabel: UILabel = {
@@ -106,6 +113,7 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
         setupView()
         setupConstraints()
         setupActions()
+        bindViewModel()
     }
     
     private func setupView() {
@@ -169,6 +177,24 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -46)
         ])
+    }
+    
+    // MARK: - Bind ViewModel
+    private func bindViewModel() {
+        let input = ChartViewModel.Input(
+            viewDidLoad: Observable.just(()),
+            filterApplied: filterAppliedSubject.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        // 랭킹 데이터 변화 감지하여 테이블뷰 리로드
+        output.rankingData
+            .drive(onNext: { [weak self] data in
+                self?.rankingData = data
+                self?.tableView.reloadData()
+            })
+            .disposed(by: disposeBag)
     }
     
     private func setupActions() {
@@ -314,7 +340,7 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
 // MARK: - UITableView Delegate & DataSource
 extension ChartRankingViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.rankingData.count
+        return rankingData.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -322,10 +348,10 @@ extension ChartRankingViewController: UITableViewDelegate, UITableViewDataSource
             return UITableViewCell()
         }
         
-        let item = viewModel.rankingData[indexPath.row]
+        let item = rankingData[indexPath.row]
         cell.configure(with: item)
         
-        if indexPath.row == viewModel.rankingData.count - 1 {
+        if indexPath.row == rankingData.count - 1 {
             cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
         } else {
             cell.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
