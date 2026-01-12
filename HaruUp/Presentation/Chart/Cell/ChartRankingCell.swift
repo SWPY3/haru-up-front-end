@@ -115,8 +115,10 @@ final class ChartRankingCell: UITableViewCell {
             countStackView.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             countStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
             
-            fireIconImageView.widthAnchor.constraint(equalToConstant: 14),
-            fireIconImageView.heightAnchor.constraint(equalToConstant: 14)
+            fireIconImageView.widthAnchor.constraint(equalToConstant: 16),
+            fireIconImageView.heightAnchor.constraint(equalToConstant: 16),
+            
+            countLabel.bottomAnchor.constraint(equalTo: countStackView.bottomAnchor)
         ])
     }
     
@@ -126,14 +128,22 @@ final class ChartRankingCell: UITableViewCell {
         titleLabel.setStyle(Typography.subtitle2, text: item.title)
         countLabel.setStyle(Typography.footnote, text: "\(item.count)명이 선택했어요")
         
+        tagStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
         // 태그 동적 생성
-        item.tags.forEach { tagText in
+        item.tags.enumerated().forEach { index, tagText in
+            var displayText = tagText
+            if index == 0 {
+                let icon = Interest.iconForInterest(name: tagText)
+                displayText = "\(icon) \(tagText)"
+            }
+            
             let container = UIView()
             container.backgroundColor = .neutral10
             container.layer.cornerRadius = 12
             
             let label = UILabel()
-            label.text = tagText
+            label.text = displayText
             label.font = Typography.body4.font
             label.textColor = .neutral700
             
