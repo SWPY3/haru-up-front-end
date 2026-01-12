@@ -447,12 +447,16 @@ final class HomeHeaderView: UIView {
         self.userNickname = userInfo.nickname
         self.userInterest = userInfo.interest
         
-        characterLevelLabel.setStyle(Typography.level, text: "Lv. \(userInfo.level)")
-        characterNameLabel.setStyle(Typography.subtitle2, text: userInfo.characterId == 0 ? "하루" : "나루")
-        
-        let characterName = userInfo.characterId == 0 ? "haru" : "naru"
+        let characterId = userInfo.characterId
+        let characterImageName = characterId == 0 ? "haru" : "naru"
         let characterLevel = userInfo.level
-        let characterImage = "character_\(characterName)_level\(characterLevel)"
+        let characterImage = "character_\(characterImageName)_level\(characterLevel)"
+        let characterLevelName = CharacterLevel(rawValue: characterLevel)?.title ?? "도전하는"
+        let characterName = characterId == 0 ? "하루" : "나루"
+        let characterNameText = "\(characterLevelName) \(characterName)"
+        
+        characterLevelLabel.setStyle(Typography.level, text: "Lv. \(characterLevel)")
+        characterNameLabel.setStyle(Typography.subtitle2, text: characterNameText)
         characterImageView.image = UIImage(named: characterImage)
         expProgressView.progress = userInfo.currentExp == 0 ? 0.0 : CGFloat(userInfo.currentExp) / CGFloat(userInfo.maxExp)
         currentExpLabel.setStyle(Typography.caption1, text: "\(userInfo.currentExp)")
