@@ -48,16 +48,16 @@ final class ChartViewModel {
     
     private let jobMap = ["직장인": 1, "자영업": 2, "학생": 3, "취준생": 4]
     // TODO: - 세부 직업 Id, 관심사 id 다 불러오기
-    private let jobDetailMap: [String: Int] = [
-        "디자이너": 1,
-        "기획자": 2,
-        "개발자": 3,
-        "사무직": 4,
-        "서비스직": 5,
-        "교육 종사자": 6,
-        "의료직": 7,
-        "공공·복지": 8,
-        "예체능": 9
+    private let jobDetailMap: [String: [Int]] = [
+        "디자이너": [1, 10, 19],
+        "기획자": [2, 11, 20],
+        "개발자": [3, 12, 21],
+        "사무직": [4, 13, 22],
+        "서비스직": [5, 14, 23],
+        "교육 종사자": [6, 15, 24],
+        "의료직": [7, 16, 25],
+        "공공·복지": [8, 17, 26], // UI 태그 이름과 정확히 일치해야 합니다 (가운뎃점 주의)
+        "예체능": [9, 18, 27]
     ]
     
     private let interestKeywords = ["외국어 공부", "자격증 공부", "재테크/투자", "체력관리 및 운동", "직무 관련 역량 개발"]
@@ -105,6 +105,7 @@ final class ChartViewModel {
         
         // 1. UI 태그를 API 파라미터로 변환
         let parameters = convertTagsToParameters(tags: tags)
+        print("차트 API 호출 시도 (파라미터 변환 완료): \(parameters ?? [:])")
         
         // 2. Service를 통해 API 호출
         service.fetchPopularRanking(parameters: parameters)
@@ -144,8 +145,8 @@ final class ChartViewModel {
                 ageGroups.append(age)
             } else if let jobId = jobMap[tag] {
                 jobIds.append(jobId)
-            } else if let detailId = jobDetailMap[tag] {
-                jobDetailIds.append(detailId)
+            } else if let detailIds = jobDetailMap[tag] {
+                jobDetailIds.append(contentsOf: detailIds)
             } else if interestKeywords.contains(tag) {
                 interests.append(tag)
             }

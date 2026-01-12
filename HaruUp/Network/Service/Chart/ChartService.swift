@@ -24,7 +24,8 @@ class ChartService {
             
             // 배열 파라미터 인코딩 (key=value&key=value)
             let encoding = URLEncoding(arrayEncoding: .noBrackets)
-            
+            print("📡 차트 API 요청 URL: \(url)")
+            print("차트 API 보낼 파라미터: \(parameters ?? [:])")
             let request = AF.request(
                 url,
                 method: .get,
@@ -37,18 +38,20 @@ class ChartService {
                     switch response.result {
                     case .success(let apiResponse):
                         // success가 true이고 data가 존재할 때만 방출
+                        print("📥 [Chart API] 응답 상태코드: \(response.response?.statusCode ?? 0)")
                         if apiResponse.success, let data = apiResponse.data {
                             observer.onNext(data)
                             observer.onCompleted()
                         } else {
                             // 서버에서 success: false로 온 경우 에러 처리
                             let message = apiResponse.errorMessage ?? "Unknown Error"
+                            print("❌ [Chart API] 서버 내부 에러: \(message)")
                             let error = NSError(domain: "Network", code: -1, userInfo: [NSLocalizedDescriptionKey: message])
                             observer.onError(error)
                         }
                         
                     case .failure(let error):
-                        print("Network Error: \(error)")
+                        print("❌ [Chart API] 통신 실패: \(error)")
                         observer.onError(error)
                     }
                 }

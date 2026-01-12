@@ -208,6 +208,7 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
     
     func didApplyFilter(selectedTags: [String]) {
         self.currentActiveTags = selectedTags
+        print("사용자가 필터 적용 버튼 클릭함: \(selectedTags)")
         
         // 1. 기존 태그들 모두 제거
         filterStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
@@ -224,6 +225,7 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
                 filterStackView.addArrangedSubview(tagView)
             }
         }
+        filterAppliedSubject.onNext(selectedTags)
     }
     
     // UI 상태 전환 (초기 상태 <-> 필터 적용 상태)
@@ -298,6 +300,8 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
             // 태그가 하나도 없으면 초기 상태(라벨 표시)로 돌아감
             resetUIState(isActive: false)
         }
+        print("태그 삭제됨. 남은 태그로 재검색: \(currentActiveTags)")
+        filterAppliedSubject.onNext(currentActiveTags)
     }
     
     @objc private func infoButtonTapped() {
