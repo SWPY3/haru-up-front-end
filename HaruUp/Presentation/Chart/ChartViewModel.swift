@@ -7,6 +7,7 @@
 
 import RxSwift
 import RxCocoa
+import Foundation
 
 final class ChartViewModel {
     struct Input {
@@ -18,32 +19,65 @@ final class ChartViewModel {
     struct Output {
         let hasData: Driver<Bool>
         let rankingData: Driver<[ChartItem]>
+        let isLoading: Driver<Bool>
+        let error: Driver<String>
     }
     
     // MARK: - Properties
     private let disposeBag = DisposeBag()
     
-    // 실제 데이터를 관리하는 BehaviorRelay
+    private let service = ChartService()
+    
+    // 데이터 흐름을 관리하는 Relay
     private let rankingDataRelay = BehaviorRelay<[ChartItem]>(value: [])
+    private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
+    private let errorRelay = PublishRelay<String>()
+    
+    // MARK: - Filter Mapping Data
+    // UI에서 선택한 한글 태그를 서버 API 파라미터(영어/ID)로 변환하기 위한 맵
+    private let genderMap = ["남성": "MALE", "여성": "FEMALE"]
+    
+    private let ageMap = [
+        "19세 이하": "UNDER_19",
+        "20 - 24세": "MID_20S",
+        "25 - 29세": "LATE_20S",
+        "30 - 34세": "EARLY_30S",
+        "35 - 39세": "LATE_30S",
+        "40세 이상": "FORTIES"
+    ]
+    
+    private let jobMap = ["직장인": 1, "자영업": 2, "학생": 3, "취준생": 4]
+    // TODO: - 세부 직업 Id, 관심사 id 다 불러오기
+    private let jobDetailMap: [String: Int] = [
+        "디자이너": 1,
+        "기획자": 2,
+        "개발자": 3,
+        "사무직": 4,
+        "서비스직": 5,
+        "교육 종사자": 6,
+        "의료직": 7,
+        "공공·복지": 8,
+        "예체능": 9
+    ]
+    
+    private let interestKeywords = ["외국어 공부", "자격증 공부", "재테크/투자", "체력관리 및 운동", "직무 관련 역량 개발"]
     
     init() {
-        // 초기 데이터 설정 (실제로는 API 호출 등으로 가져올 수 있음)
-        loadInitialData()
     }
     
     // MARK: - Transform
     func transform(input: Input) -> Output {
-        // viewDidLoad 시 데이터 로드 (필요시)
+        // 화면 진입 시
         input.viewDidLoad
             .subscribe(onNext: { [weak self] in
-                self?.loadInitialData()
+                self?.fetchRanking(tags: [])
             })
             .disposed(by: disposeBag)
         
-        // 필터 적용 시 데이터 필터링
+        // 필터 적용 시 (선택된 태그로 조회)
         input.filterApplied
             .subscribe(onNext: { [weak self] tags in
-                self?.filterData(by: tags)
+                self?.fetchRanking(tags: tags)
             })
             .disposed(by: disposeBag)
         
@@ -52,45 +86,78 @@ final class ChartViewModel {
             .map { !$0.isEmpty }
             .asDriver(onErrorJustReturn: false)
         
-        // rankingData: 실제 랭킹 데이터
-        let rankingData = rankingDataRelay
-            .asDriver(onErrorJustReturn: [])
+        let rankingData = rankingDataRelay.asDriver(onErrorJustReturn: [])
+        let isLoading = isLoadingRelay.asDriver(onErrorJustReturn: false)
+        let error = errorRelay.asDriver(onErrorJustReturn: "")
         
         return Output(
             hasData: hasData,
-            rankingData: rankingData
+            rankingData: rankingData,
+            isLoading: isLoading,
+            error: error
         )
     }
     
-    // MARK: - Private Methods
-    private func loadInitialData() {
-        // 실제 데이터 (API 호출 등으로 대체 가능)
-        let data: [ChartItem] = [
-            ChartItem(rank: 1, title: "디자인 트렌드 찾아 정리하기", tags: ["직무 관련 역량 개발", "업무 능력 향상"], count: 150),
-            ChartItem(rank: 2, title: "포트폴리오용 프로젝트 정리하기", tags: ["직무 관련 역량 개발", "이직 준비"], count: 98),
-            ChartItem(rank: 3, title: "영국 뉴스 기사 읽기", tags: ["외국어 공부", "영어"], count: 80),
-            ChartItem(rank: 4, title: "물 마시기", tags: ["체력관리 및 운동", "AI 사용 역량 강화"], count: 75),
-            ChartItem(rank: 5, title: "AI로 모션 영상 만들기", tags: ["직무 관련 역량 개발", "AI 사용 역량 강화"], count: 58)
-        ]
+    // MARK: - API Methods
+    private func fetchRanking(tags: [String]) {
+        // 로딩 시작
+        isLoadingRelay.accept(true)
         
-        rankingDataRelay.accept(data)
+        // 1. UI 태그를 API 파라미터로 변환
+        let parameters = convertTagsToParameters(tags: tags)
         
-        // 테스트용: 데이터가 없는 경우
-        // rankingDataRelay.accept([])
+        // 2. Service를 통해 API 호출
+        service.fetchPopularRanking(parameters: parameters)
+            .subscribe(onNext: { [weak self] items in
+                // 성공 시 데이터 업데이트
+                self?.isLoadingRelay.accept(false)
+                self?.rankingDataRelay.accept(items)
+                
+            }, onError: { [weak self] error in
+                // 실패 시 에러 처리
+                self?.isLoadingRelay.accept(false)
+                self?.errorRelay.accept(error.localizedDescription)
+                print("Ranking Fetch Error: \(error)")
+                
+                // 에러 발생 시 기존 데이터를 비울지, 유지할지는 기획에 따라 결정 (여기선 유지)
+                // self?.rankingDataRelay.accept([])
+            })
+            .disposed(by: disposeBag)
     }
     
-    private func filterData(by tags: [String]) {
-        // 필터링 로직 구현
-        // 실제로는 API 재호출 또는 로컬 필터링
-        if tags.isEmpty {
-            loadInitialData()
-        } else {
-            // 태그에 맞는 데이터만 필터링하는 로직
-            // 예시: 실제 구현 필요
-            let filtered = rankingDataRelay.value.filter { item in
-                tags.contains(where: { item.tags.contains($0) })
+    // 한글 태그 배열 -> API 파라미터 딕셔너리 변환 로직
+    private func convertTagsToParameters(tags: [String]) -> [String: Any]? {
+        var params: [String: Any] = [:]
+        
+        params["limit"] = 5
+        
+        var genderValue: String?
+        var ageGroups: [String] = []
+        var jobIds: [Int] = []
+        var jobDetailIds: [Int] = []
+        var interests: [String] = []
+        
+        for tag in tags {
+            if let gender = genderMap[tag] {
+                genderValue = gender
+            } else if let age = ageMap[tag] {
+                ageGroups.append(age)
+            } else if let jobId = jobMap[tag] {
+                jobIds.append(jobId)
+            } else if let detailId = jobDetailMap[tag] {
+                jobDetailIds.append(detailId)
+            } else if interestKeywords.contains(tag) {
+                interests.append(tag)
             }
-            rankingDataRelay.accept(filtered)
         }
+        
+        // API 스펙에 맞춰 딕셔너리에 담기
+        if let g = genderValue { params["gender"] = g }
+        if !ageGroups.isEmpty { params["ageGroups"] = ageGroups }
+        if !jobIds.isEmpty { params["jobIds"] = jobIds }
+        if !jobDetailIds.isEmpty { params["jobDetailIds"] = jobDetailIds }
+        if !interests.isEmpty { params["interests"] = interests }
+        
+        return params
     }
 }
