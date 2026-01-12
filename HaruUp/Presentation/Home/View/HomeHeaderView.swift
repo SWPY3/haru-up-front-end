@@ -450,7 +450,7 @@ final class HomeHeaderView: UIView {
         characterLevelLabel.setStyle(Typography.level, text: "Lv. \(userInfo.level)")
         characterNameLabel.setStyle(Typography.subtitle2, text: userInfo.characterId == 0 ? "하루" : "나루")
         
-        let characterName = userInfo.characterId == 0 ? "haru" : "naru"
+        let characterName = userInfo.characterId == 1 ? "haru" : "naru"
         let characterLevel = userInfo.level
         let characterImage = "character_\(characterName)_level\(characterLevel)"
         characterImageView.image = UIImage(named: characterImage)
