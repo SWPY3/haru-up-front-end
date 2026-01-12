@@ -12,7 +12,7 @@ final class OnboardingPageView: UIView {
     private let stackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 16
+        stackView.spacing = 12
         
         return stackView
     }()
@@ -36,10 +36,13 @@ final class OnboardingPageView: UIView {
     
     private let imageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .scaleAspectFill
         
         return imageView
     }()
+    
+    private var imageTopConstraint: NSLayoutConstraint?
+    private var imageHeightConstraint: NSLayoutConstraint?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -60,8 +63,8 @@ final class OnboardingPageView: UIView {
     private func setupView() {
         backgroundColor = .clear
         
-        configureText()
         configureImage()
+        configureText()
     }
     
     private func configureText() {
@@ -73,9 +76,9 @@ final class OnboardingPageView: UIView {
         }
         
         NSLayoutConstraint.activate([
-            stackView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 56),
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            stackView.trailingAnchor.constraint(equalTo: trailingAnchor)
+            stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: imageView.topAnchor, constant: -18)
         ])
     }
     
@@ -84,8 +87,9 @@ final class OnboardingPageView: UIView {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: stackView.bottomAnchor, constant: 57),
-            imageView.centerXAnchor.constraint(equalTo: centerXAnchor)
+            imageView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            imageView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
     }
     
@@ -93,7 +97,16 @@ final class OnboardingPageView: UIView {
         titleLabel.setStyledText(Typography.title2, fullText: page.title, highlightedText: page.highlightTitle, highlightedColor: .cta, defaultColor: .black)
         descriptionLabel.setStyle(Typography.body3, text: page.description)
         
-        imageView.image = page.image
+        let image = page.image
+        imageView.image = image
+        
+        // 이미지의 비율에 따라서 가득차게 구현
+        imageHeightConstraint?.isActive = false
+        let ratio = image.size.height / image.size.width
+        imageHeightConstraint = imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: ratio) // 높이 = 너비 * 비율
+        imageHeightConstraint?.isActive = true
+        
+        layoutIfNeeded()
     }
 }
 
