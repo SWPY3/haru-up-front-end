@@ -9,7 +9,7 @@ import UIKit
 
 struct RankingResponse: Decodable {
     let success: Bool
-    let data: [ChartItem]? // 실패시 null일 수 있으므로 옵셔널 처리 권장
+    let data: [ChartItem]? 
     let errorMessage: String?
 }
 
