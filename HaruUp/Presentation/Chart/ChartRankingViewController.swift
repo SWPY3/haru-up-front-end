@@ -312,16 +312,16 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
         filterVC.initialSelectedTags = self.currentActiveTags
         
         // 모달 스타일 설정
-        if let sheet = filterVC.sheetPresentationController {
-            // .medium()은 화면 절반, .large()는 전체 화면
-            sheet.detents = [.medium(), .large()]
-            // 상단 핸들러(잡고 끄는 바) 표시
-            sheet.prefersGrabberVisible = true
-            sheet.preferredCornerRadius = 20
-            
-            sheet.prefersEdgeAttachedInCompactHeight = true
-            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
-        }
+//        if let sheet = filterVC.sheetPresentationController {
+//            // .medium()은 화면 절반, .large()는 전체 화면
+//            sheet.detents = [.medium(), .large()]
+//            // 상단 핸들러(잡고 끄는 바) 표시
+//            sheet.prefersGrabberVisible = true
+//            sheet.preferredCornerRadius = 20
+//            
+//            sheet.prefersEdgeAttachedInCompactHeight = true
+//            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
+//        }
         
         present(filterVC, animated: true)
     }

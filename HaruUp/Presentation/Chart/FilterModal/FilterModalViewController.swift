@@ -88,6 +88,7 @@ class FilterModalViewController: UIViewController {
         setupConstraints()
         setupData()
         setupActions()
+        setupModalPresentation()
     }
     
     
@@ -149,9 +150,9 @@ class FilterModalViewController: UIViewController {
         closeButton.addTarget(self, action: #selector(dismissModal), for: .touchUpInside)
         applyButton.addTarget(self, action: #selector(applyFilter), for: .touchUpInside)
         
-        titleLabel.isUserInteractionEnabled = true // 라벨이 터치를 먹을 수 있게 설정
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(titleLabelTapped))
-        titleLabel.addGestureRecognizer(tapGesture)
+//        titleLabel.isUserInteractionEnabled = true // 라벨이 터치를 먹을 수 있게 설정
+//        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(titleLabelTapped))
+//        titleLabel.addGestureRecognizer(tapGesture)
     }
     
     @objc private func dismissModal() {
@@ -174,21 +175,46 @@ class FilterModalViewController: UIViewController {
         dismiss(animated: true)
     }
     
-    @objc private func titleLabelTapped() {
-        guard let sheet = self.sheetPresentationController else { return }
-        
-        // 애니메이션과 함께 높이 변경
-        sheet.animateChanges {
-            // 현재 상태가 .large가 아니면 .large로 변경 (Medium -> Large)
-            // 만약 토글(Medium <-> Large)을 원하시면 if 문을 수정하면 됩니다.
-            if sheet.selectedDetentIdentifier != .large {
-                sheet.selectedDetentIdentifier = .large
-            } else {
-                // (선택사항) 이미 Large 상태일 때 누르면 다시 Medium으로 줄이고 싶다면:
-                sheet.selectedDetentIdentifier = .medium
+    private func setupModalPresentation() {
+            if let sheet = sheetPresentationController {
+                // 화면 높이의 약 1/3 크기로 고정
+                let customDetent = UISheetPresentationController.Detent.custom { context in
+                    return context.maximumDetentValue * 0.7  // 화면의 65% (약 2/3)
+                }
+                
+                // 단일 detent로 고정 (크기 변경 불가)
+                sheet.detents = [customDetent]
+                
+                sheet.prefersGrabberVisible = false
+                
+                // 크기 조절 불가능하게 설정
+                sheet.prefersGrabberVisible = true
+                sheet.preferredCornerRadius = 20
+                
+                // 스크롤 시 모달이 dismiss되지 않도록 설정
+                sheet.largestUndimmedDetentIdentifier = nil
+                
+                // 사용자가 모달 크기를 변경할 수 없도록 설정
+                sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+                sheet.prefersEdgeAttachedInCompactHeight = true
             }
         }
-    }
+    
+//    @objc private func titleLabelTapped() {
+//        guard let sheet = self.sheetPresentationController else { return }
+//        
+//        // 애니메이션과 함께 높이 변경
+//        sheet.animateChanges {
+//            // 현재 상태가 .large가 아니면 .large로 변경 (Medium -> Large)
+//            // 만약 토글(Medium <-> Large)을 원하시면 if 문을 수정하면 됩니다.
+//            if sheet.selectedDetentIdentifier != .large {
+//                sheet.selectedDetentIdentifier = .large
+//            } else {
+//                // (선택사항) 이미 Large 상태일 때 누르면 다시 Medium으로 줄이고 싶다면:
+//                sheet.selectedDetentIdentifier = .medium
+//            }
+//        }
+//    }
     
     // MARK: - Data Rendering
     private func setupData() {
