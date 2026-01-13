@@ -158,7 +158,7 @@ final class ChartRankingCell: UITableViewCell {
             
             let label = UILabel()
             label.text = displayText
-            label.font = Typography.body4.font
+            label.font = Typography.body5.font
             label.textColor = .neutral700
             
             container.addSubview(label)
