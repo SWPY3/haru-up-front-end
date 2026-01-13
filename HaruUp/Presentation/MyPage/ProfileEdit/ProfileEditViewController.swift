@@ -397,7 +397,7 @@ final class ProfileEditViewController: UIViewController {
                 // 2. 현재 화면의 값
                 let currentNickname = owner.nicknameTextField.text?.trimmingCharacters(in: .whitespaces) ?? ""
                 let currentJobId = owner.viewModel.selectedJobRelay.value?.id
-                let currentDetailId = owner.viewModel.selectedDetailJobRelay.value?.id
+                var currentDetailId = owner.viewModel.selectedDetailJobRelay.value?.id
                 
                 // 3. 비교하기 (저장된 값 vs 현재 값)
                 // 닉네임이 다른가? (저장된 닉네임이 없으면 빈 문자열과 비교)
@@ -408,6 +408,7 @@ final class ProfileEditViewController: UIViewController {
                 let isJobChanged = currentJobId != savedJobId
                 
                 // 세부 직무가 다른가?
+                currentDetailId = (currentDetailId == 0) ? nil : currentDetailId
                 let savedDetailId = saved.jobDetailId == 0 ? nil : saved.jobDetailId
                 let isDetailChanged = currentDetailId != savedDetailId
                 

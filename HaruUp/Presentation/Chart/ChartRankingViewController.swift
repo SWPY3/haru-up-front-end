@@ -98,6 +98,43 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
         return tv
     }()
     
+    // MARK: - Empty View Components (From ChartEmptyViewController)
+    private let emptyCardView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.layer.cornerRadius = 20
+        // 그림자 효과
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 0.05
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 10
+        view.isHidden = true // 기본적으로 숨김
+        return view
+    }()
+    
+    private let graphImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "graph_chart")
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+    
+    private let emptyTitleLabel: UILabel = {
+        let label = UILabel()
+        label.setStyle(Typography.subtitle2, text: "아직 충분한 데이터가 모이지 않았어요!")
+        label.textColor = .neutral1000
+        return label
+    }()
+    
+    private let emptyDescriptionLabel: UILabel = {
+        let label = UILabel()
+        label.setStyle(Typography.body4, text: "많이 선택된 미션 TOP 5를 확인할 수 있는\n월간 미션 차트가 곧 업데이트돼요.")
+        label.textColor = .neutral900
+        label.numberOfLines = 2
+        label.textAlignment = .center
+        return label
+    }()
+    
     // MARK: - Init
     init(viewModel: ChartViewModel) {
         self.viewModel = viewModel
@@ -126,6 +163,17 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
         
         filterScrollView.addSubview(filterStackView)
         filterStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(emptyCardView)
+        emptyCardView.translatesAutoresizingMaskIntoConstraints = false
+        
+        [graphImageView, emptyTitleLabel, emptyDescriptionLabel].forEach {
+            emptyCardView.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        // 툴팁은 최상단에 보여야 하므로 가장 마지막에 bringToFront
+        view.bringSubviewToFront(tooltipView)
     }
     
     private func setupConstraints() {
@@ -175,7 +223,25 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
             tableView.topAnchor.constraint(equalTo: filterButton.bottomAnchor, constant: 20),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -46)
+            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -46),
+            
+            // MARK: - Empty Card View Constraints
+            emptyCardView.topAnchor.constraint(equalTo: filterButton.bottomAnchor, constant: 20),
+            emptyCardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            emptyCardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            emptyCardView.heightAnchor.constraint(equalToConstant: 280),
+            
+            // Empty View 내부 컴포넌트
+            graphImageView.topAnchor.constraint(equalTo: emptyCardView.topAnchor, constant: 40),
+            graphImageView.centerXAnchor.constraint(equalTo: emptyCardView.centerXAnchor),
+            graphImageView.widthAnchor.constraint(equalToConstant: 100),
+            graphImageView.heightAnchor.constraint(equalToConstant: 80),
+            
+            emptyTitleLabel.topAnchor.constraint(equalTo: graphImageView.bottomAnchor, constant: 24),
+            emptyTitleLabel.centerXAnchor.constraint(equalTo: emptyCardView.centerXAnchor),
+            
+            emptyDescriptionLabel.topAnchor.constraint(equalTo: emptyTitleLabel.bottomAnchor, constant: 12),
+            emptyDescriptionLabel.centerXAnchor.constraint(equalTo: emptyCardView.centerXAnchor)
         ])
     }
     
@@ -193,6 +259,11 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
             .drive(onNext: { [weak self] data in
                 self?.rankingData = data
                 self?.tableView.reloadData()
+                
+                // 데이터 유무에 따른 View 토글 처리
+                let hasData = !data.isEmpty
+                self?.tableView.isHidden = !hasData
+                self?.emptyCardView.isHidden = hasData
             })
             .disposed(by: disposeBag)
     }
