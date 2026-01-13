@@ -22,48 +22,44 @@ final class ChartCoordinator: Coordinator {
     }
     
     func start() {
-        let input = ChartViewModel.Input(
-            viewDidLoad: Observable.just(()),
-            filterApplied: Observable.never() // Coordinator에서는 직접 처리 안 함
-        )
-        
-        let output = viewModel.transform(input: input)
-        
-        // 초기 화면 설정 및 데이터 변화 감지
-        output.hasData
-            .drive(onNext: { [weak self] hasData in
-                self?.switchViewController(hasData: hasData)
-            })
-            .disposed(by: disposeBag)
-    }
-    // MARK: - Private Methods
-    private func switchViewController(hasData: Bool) {
-        if hasData {
-            showRankingViewController()
-        } else {
-            showEmptyViewController()
-        }
-    }
-    
-    private func showRankingViewController() {
-        // 이미 RankingVC가 표시 중이면 중복 방지
-        if let topVC = navigationController.topViewController,
-           topVC is ChartRankingViewController {
-            return
-        }
-        
         let chartRankingVC = ChartRankingViewController(viewModel: viewModel)
         navigationController.setViewControllers([chartRankingVC], animated: true)
-    }
-    
-    private func showEmptyViewController() {
-        // 이미 EmptyVC가 표시 중이면 중복 방지
-        if let topVC = navigationController.topViewController,
-           topVC is ChartEmptyViewController {
-            return
-        }
         
-        let chartEmptyVC = ChartEmptyViewController(viewModel: viewModel)
-        navigationController.setViewControllers([chartEmptyVC], animated: true)
+        // 초기 화면 설정 및 데이터 변화 감지
+//        output.hasData
+//            .drive(onNext: { [weak self] hasData in
+//                self?.switchViewController(hasData: hasData)
+//            })
+//            .disposed(by: disposeBag)
     }
+    // MARK: - Private Methods
+//    private func switchViewController(hasData: Bool) {
+//        if hasData {
+//            showRankingViewController()
+//        } else {
+//            showEmptyViewController()
+//        }
+//    }
+//    
+//    private func showRankingViewController() {
+//        // 이미 RankingVC가 표시 중이면 중복 방지
+//        if let topVC = navigationController.topViewController,
+//           topVC is ChartRankingViewController {
+//            return
+//        }
+//        
+//        let chartRankingVC = ChartRankingViewController(viewModel: viewModel)
+//        navigationController.setViewControllers([chartRankingVC], animated: true)
+//    }
+//    
+//    private func showEmptyViewController() {
+//        // 이미 EmptyVC가 표시 중이면 중복 방지
+//        if let topVC = navigationController.topViewController,
+//           topVC is ChartEmptyViewController {
+//            return
+//        }
+//        
+//        let chartEmptyVC = ChartEmptyViewController(viewModel: viewModel)
+//        navigationController.setViewControllers([chartEmptyVC], animated: true)
+//    }
 }
