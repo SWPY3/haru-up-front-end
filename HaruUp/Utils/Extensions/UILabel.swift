@@ -46,6 +46,7 @@ extension UILabel {
         let targetLineHeight = baseFont.lineHeight * style.lineHeight
         paragraphStyle.minimumLineHeight = targetLineHeight
         paragraphStyle.maximumLineHeight = targetLineHeight
+        paragraphStyle.lineSpacing = 0
         paragraphStyle.alignment = self.textAlignment
         paragraphStyle.lineBreakMode = self.lineBreakMode
 
