@@ -14,12 +14,12 @@ final class InterestDetailSelectViewModel {
     
     struct Input {
         let viewDidLoad: Observable<Void>
-        let interestDetailSelected: Observable<InterestData>
+        let interestDetailSelected: Observable<InterestDetail>
         let nextButtonTapped: Observable<Void>
     }
     struct Output {
-        let interestDetails: Driver<[InterestData]>
-        let selectedInterestDetail: Driver<InterestData?>
+        let interestDetails: Driver<[InterestDetail]>
+        let selectedInterestDetail: Driver<InterestDetail?>
         let isLoading: Driver<Bool>
     }
     
@@ -28,8 +28,8 @@ final class InterestDetailSelectViewModel {
     private let selectedInterest: Interest
     
     
-    private let interestDetailList = BehaviorRelay<[InterestData]>(value: [])
-    private let currentSelectedInterestDetail = BehaviorRelay<InterestData?>(value: nil)
+    private let interestDetailList = BehaviorRelay<[InterestDetail]>(value: [])
+    private let currentSelectedInterestDetail = BehaviorRelay<InterestDetail?>(value: nil)
     private let isLoading = BehaviorRelay<Bool>(value: false)
     
     init(coordinator: InterestDetailSelectCoordinator?, selectedInterest: Interest) {
@@ -40,7 +40,7 @@ final class InterestDetailSelectViewModel {
     
     func transform(input: Input) -> Output {
         input.viewDidLoad
-            .flatMapLatest { [weak self] _ -> Observable<[InterestData]> in
+            .flatMapLatest { [weak self] _ -> Observable<[InterestDetail]> in
                 guard let self = self else { return .empty() }
                 return self.fetchInterestDetailList(parentId: self.selectedInterest.id)
             }
@@ -63,7 +63,7 @@ final class InterestDetailSelectViewModel {
                 print("🔵 선택된 세부 관심사: \(selectedInterestDetail.name), ID: \(selectedInterestDetail.id)")
                 
                 if selectedInterestDetail.name == "기타" {
-                    self?.coordinator?.showForeignLanguageInput()
+                    self?.coordinator?.showForeignLanguageInput(id: selectedInterestDetail.id)
                 } else {
                     self?.coordinator?.showGoalSelectFlow(selectedInterestDetail: selectedInterestDetail)
                 }
@@ -78,7 +78,7 @@ final class InterestDetailSelectViewModel {
     }
     
     // MARK: - API
-    private func fetchInterestDetailList(parentId: Int) -> Observable<[InterestData]> {
+    private func fetchInterestDetailList(parentId: Int) -> Observable<[InterestDetail]> {
         return Observable.create { [weak self] observer in
             guard let self = self else {
                 observer.onCompleted()
@@ -116,11 +116,12 @@ final class InterestDetailSelectViewModel {
             )
                 .validate()
                 .responseDecodable(of: InterestResponse.self) { [weak self] response in
+                    debugPrint(response)
                     self?.isLoading.accept(false)
                     
                     switch response.result {
                     case .success(let interestResponse):
-                        let interestDetails = interestResponse.interests
+                        let interestDetails = interestResponse.interests.map { InterestDetail(from: $0) }
                         print("✅ 세부 관심사 목록 조회 성공: \(interestDetails.count)개")
                         interestDetails.forEach { print("  - \($0.name) (ID: \($0.id))") }
                         observer.onNext(interestDetails)
