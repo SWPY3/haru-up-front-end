@@ -1,5 +1,5 @@
 //
-//  ChartViewController.swift
+//  ChartEmptyViewController.swift
 //  HaruUp
 //
 //  Created by 조영현 on 12/5/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ChartViewController: UIViewController {
+class ChartEmptyViewController: UIViewController {
     
     private let viewModel: ChartViewModel
     

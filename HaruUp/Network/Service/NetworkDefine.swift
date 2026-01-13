@@ -174,4 +174,19 @@ enum NetworkDefine {
             return APIEnvironment.baseURL + self.path
         }
     }
+    
+    enum RankingAPI {
+        case popular
+        
+        var path: String {
+            switch self {
+            case .popular:
+                return "api/ranking/popular"
+            }
+        }
+        
+        var url: String {
+            return NetworkDefine.APIEnvironment.baseURL + self.path
+        }
+    }
 }

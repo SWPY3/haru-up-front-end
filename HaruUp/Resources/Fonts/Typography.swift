@@ -36,6 +36,7 @@ enum Typography {
     static let body2 = FontStyle(font: .pretendard(size: 14, weight: .bold))
     static let body3 = FontStyle(font: .pretendard(size: 14, weight: .semiBold))
     static let body4 = FontStyle(font: .pretendard(size: 14, weight: .medium))
+    static let body5 = FontStyle(font: .pretendard(size: 13, weight: .medium))
     
     // Footnote
     static let footnote = FontStyle(font: .pretendard(size: 13, weight: .regular))
