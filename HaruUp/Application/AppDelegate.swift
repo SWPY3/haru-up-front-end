@@ -18,6 +18,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
+        // App 최초 실행 여부
+        TokenStorageService.shared.checkFirstLaunch()
+        
         // Naver 로그인 초기화
         NidOAuth.shared.initialize(
             appName: NaverLoginConfig.appName,

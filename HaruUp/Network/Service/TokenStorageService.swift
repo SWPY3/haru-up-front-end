@@ -10,6 +10,8 @@ import Foundation
 final class TokenStorageService {
     static let shared = TokenStorageService()
     
+    private let launchedKey = "HaruUp_Launched"
+    
     private let accessTokenKey = "HaruUp_AccessToken"
     private let refreshTokenKey = "HaruUp_RefreshToken"
     
@@ -34,6 +36,18 @@ final class TokenStorageService {
     private let appleFullNameKey = "HaruUp_AppleFullName"
     
     private init() {}
+    
+    func checkFirstLaunch() {
+        let isFirstLaunch = UserDefaults.standard.bool(forKey: launchedKey) == false
+        
+        print("isFirstLaunch : \(isFirstLaunch)")
+        
+        if isFirstLaunch {
+            clearTokens()
+            
+            UserDefaults.standard.set(true, forKey: launchedKey)
+        }
+    }
     
     func saveToken(_ token: AuthToken) {
         KeychainHelper.shared.save(token: token.accessToken, forKey: accessTokenKey)
