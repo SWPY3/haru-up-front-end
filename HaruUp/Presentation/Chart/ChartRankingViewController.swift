@@ -87,7 +87,7 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
     private lazy var tableView: UITableView = {
         let tv = UITableView()
         tv.register(ChartRankingCell.self, forCellReuseIdentifier: ChartRankingCell.identifier)
-        tv.separatorStyle = .singleLine
+        tv.separatorStyle = .none
         tv.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
         tv.backgroundColor = .white
         tv.delegate = self
@@ -353,13 +353,9 @@ extension ChartRankingViewController: UITableViewDelegate, UITableViewDataSource
         }
         
         let item = rankingData[indexPath.row]
-        cell.configure(with: item)
+        let isLast = indexPath.row == rankingData.count - 1
+        cell.configure(with: item, isLastItem: isLast)
         
-        if indexPath.row == rankingData.count - 1 {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-        } else {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
-        }
         return cell
     }
 }

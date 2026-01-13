@@ -62,6 +62,12 @@ final class ChartRankingCell: UITableViewCell {
         return stack
     }()
     
+    private let separatorView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .neutral50
+        return view
+    }()
+    
     // MARK: - Init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -77,6 +83,7 @@ final class ChartRankingCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         tagStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        separatorView.isHidden = false
     }
     
     // MARK: - Setup
@@ -85,7 +92,7 @@ final class ChartRankingCell: UITableViewCell {
         selectionStyle = .none
         
         [fireIconImageView, countLabel].forEach { countStackView.addArrangedSubview($0) }
-        [rankLabel, titleLabel, tagStackView, countStackView].forEach {
+        [rankLabel, titleLabel, tagStackView, countStackView, separatorView].forEach {
             contentView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -118,20 +125,27 @@ final class ChartRankingCell: UITableViewCell {
             fireIconImageView.widthAnchor.constraint(equalToConstant: 16),
             fireIconImageView.heightAnchor.constraint(equalToConstant: 16),
             
-            countLabel.bottomAnchor.constraint(equalTo: countStackView.bottomAnchor)
+            countLabel.bottomAnchor.constraint(equalTo: countStackView.bottomAnchor),
+            
+            separatorView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 14),
+            separatorView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -14),
+            separatorView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            separatorView.heightAnchor.constraint(equalToConstant: 1)
         ])
     }
     
     // MARK: - Configure
-    func configure(with item: ChartItem) {
+    func configure(with item: ChartItem, isLastItem: Bool) {
         rankLabel.setStyle(Typography.subtitle2, text: "\(item.rank)")
         titleLabel.setStyle(Typography.subtitle2, text: item.title)
         countLabel.setStyle(Typography.footnote, text: "\(item.count)명이 선택했어요")
         
+        separatorView.isHidden = isLastItem
+        
         tagStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         
         // 태그 동적 생성
-        item.tags.enumerated().forEach { index, tagText in
+        item.tags.prefix(2).enumerated().forEach { index, tagText in
             var displayText = tagText
             if index == 0 {
                 let icon = Interest.iconForInterest(name: tagText)
