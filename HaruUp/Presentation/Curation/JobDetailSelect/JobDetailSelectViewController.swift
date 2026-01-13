@@ -99,6 +99,14 @@ class JobDetailSelectViewController: UIViewController {
         return sv
     }()
     
+    private let listBlurView: UIImageView = {
+        let blurView = UIImageView()
+        blurView.image = .imageListBlur
+        blurView.contentMode = .scaleAspectFill
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        return blurView
+    }()
+    
     private let nextButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("다음", for: .normal)
@@ -149,6 +157,7 @@ class JobDetailSelectViewController: UIViewController {
         view.addSubview(stackView)
         view.addSubview(titleLabelStackView)
         view.addSubview(scrollView)
+        view.addSubview(listBlurView)
         view.addSubview(nextButton)
         view.addSubview(activityIndicator)
         
@@ -215,7 +224,12 @@ class JobDetailSelectViewController: UIViewController {
             left: contentView.leftAnchor,
             bottom: contentView.bottomAnchor,
             right: contentView.rightAnchor,
-            
+        )
+        
+        listBlurView.anchor(
+            left: view.leftAnchor,
+            bottom: view.safeAreaLayoutGuide.bottomAnchor,
+            right: view.rightAnchor
         )
         
         nextButton.anchor(

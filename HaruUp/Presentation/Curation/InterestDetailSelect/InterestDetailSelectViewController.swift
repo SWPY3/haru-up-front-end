@@ -93,6 +93,14 @@ class InterestDetailSelectViewController: UIViewController {
         return sv
     }()
     
+    private let listBlurView: UIImageView = {
+        let blurView = UIImageView()
+        blurView.image = .imageListBlur
+        blurView.contentMode = .scaleAspectFill
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        return blurView
+    }()
+    
     private let nextButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("다음", for: .normal)
@@ -128,6 +136,7 @@ class InterestDetailSelectViewController: UIViewController {
         view.addSubview(backButton)
         view.addSubview(stackView)
         view.addSubview(interestDetailButtonsStackView)
+        view.addSubview(listBlurView)
         view.addSubview(nextButton)
         view.addSubview(activityIndicator)
         
@@ -175,6 +184,12 @@ class InterestDetailSelectViewController: UIViewController {
             paddingTop: 56,
             paddingLeft: 20,
             paddingRight: 20
+        )
+        
+        listBlurView.anchor(
+            left: view.leftAnchor,
+            bottom: view.safeAreaLayoutGuide.bottomAnchor,
+            right: view.rightAnchor
         )
         
         nextButton.anchor(
