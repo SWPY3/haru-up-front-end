@@ -151,12 +151,15 @@ final class MyPageViewModel {
         .subscribe(onSuccess: { [weak self] (jobName, jobDetailName, profile, interests) in
             guard let self = self else { return }
             
+            let isSelfEmployed = (jobName == "자영업")
+            let finalJobDetailId = isSelfEmployed ? 0 : profile.jobDetailId
+            
             // 2. 프로필 정보 로컬 저장 (이름 포함)
             self.tokenStorage.saveProfile(
                 nickname: profile.nickname ?? "",
                 jobId: profile.jobId,
                 jobName: jobName,           // 찾아온 직업 이름 저장
-                jobDetailId: profile.jobDetailId,
+                jobDetailId: finalJobDetailId,
                 jobDetailName: jobDetailName // 찾아온 상세 직업 이름 저장
             )
             
