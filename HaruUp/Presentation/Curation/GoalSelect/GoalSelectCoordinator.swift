@@ -14,11 +14,11 @@ final class GoalSelectCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
     
     private var curationData: CurationData
-    private let selectedInterestDetail: InterestData
+    private let selectedInterestDetail: InterestDetail
     
     var onFinish: ((CurationData) -> Void)?
     
-    init(navigationController: UINavigationController, selectedInterestDetail: InterestData, curationData: CurationData) {
+    init(navigationController: UINavigationController, selectedInterestDetail: InterestDetail, curationData: CurationData) {
         self.navigationController = navigationController
         self.selectedInterestDetail = selectedInterestDetail
         self.curationData = curationData
