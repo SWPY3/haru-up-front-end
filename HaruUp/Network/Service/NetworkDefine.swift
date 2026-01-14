@@ -9,8 +9,11 @@ import Foundation
 
 enum NetworkDefine {
     enum APIEnvironment {
-//        static let baseURL = "http://223.130.141.179:8080/"
+        #if DEBUG
+        static let baseURL = "http://223.130.141.179:8082/"
+        #else
         static let baseURL = "https://haru.jinuk.dev/"
+        #endif
     }
     
     enum AuthAPI {
@@ -169,6 +172,21 @@ enum NetworkDefine {
         
         var url: String {
             return APIEnvironment.baseURL + self.path
+        }
+    }
+    
+    enum RankingAPI {
+        case popular
+        
+        var path: String {
+            switch self {
+            case .popular:
+                return "api/ranking/popular"
+            }
+        }
+        
+        var url: String {
+            return NetworkDefine.APIEnvironment.baseURL + self.path
         }
     }
 }

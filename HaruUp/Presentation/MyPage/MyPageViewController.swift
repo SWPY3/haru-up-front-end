@@ -155,6 +155,9 @@ class MyPageViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         bind()
+        print("우리가 사용하는 중요한 MemberInterestId: \(UserStorage.shared.selectedMemberInterestId)")
+        print("토큰 스토리지에서 getInterests한 MemberId: \(TokenStorageService.shared.getMemberInterests()?.first?.memberId)")
+        print("토큰 스토리지에서 getInterests한 memberInterestId: \(TokenStorageService.shared.getMemberInterests()?.first?.memberInterestId)")
     }
     
     private func setupUI() {
@@ -182,14 +185,14 @@ class MyPageViewController: UIViewController {
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-                        scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                        scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                        scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
             contentView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
-                        contentView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
-                        contentView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
-                        contentView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
             
             titleLabel.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 10),

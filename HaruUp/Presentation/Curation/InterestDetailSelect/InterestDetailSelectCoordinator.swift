@@ -39,7 +39,7 @@ final class InterestDetailSelectCoordinator: Coordinator {
         navigationController.pushViewController(interestDetailSelectVC, animated: true)
     }
     
-    func showForeignLanguageInput() {
+    func showForeignLanguageInput(id: Int) {
         print("🔵 외국어 입력 모달 표시")
         
         let vm = ForeignLanguageInputBottomSheetViewModel()
@@ -54,8 +54,10 @@ final class InterestDetailSelectCoordinator: Coordinator {
         bottomSheet.onFinish = { [weak self] foreignLanguage in
             print("✅ 입력된 외국어: \(foreignLanguage)")
             // 입력된 외국어를 다음 화면으로 전달
-            let customInterestDetail = InterestData(id: 9, name: foreignLanguage)
-            self?.curationData.interestDetail = customInterestDetail
+            let customInterestData = InterestData(id: id, name: foreignLanguage)
+            let customInterestDetail = InterestDetail(id: id, name: foreignLanguage)
+            
+            self?.curationData.interestDetail = customInterestData
             self?.showGoalSelectFlow(selectedInterestDetail: customInterestDetail)
         }
         
@@ -64,9 +66,12 @@ final class InterestDetailSelectCoordinator: Coordinator {
     }
     
     // 다음 화면으로 이동
-    func showGoalSelectFlow(selectedInterestDetail: InterestData) {
+    func showGoalSelectFlow(selectedInterestDetail: InterestDetail) {
         print("선택된 관심사: \(selectedInterest), 선택된 세부 직무: \(selectedInterestDetail)")
-        curationData.interestDetail = selectedInterestDetail
+        
+        let interestData = InterestData(id: selectedInterestDetail.id, name: selectedInterestDetail.name)
+        
+        curationData.interestDetail = interestData
         print("📦 저장된 데이터 - 세부 관심사: \(selectedInterestDetail.name), ID: \(selectedInterestDetail.id)")
         
         let goalSelectCoordinator = GoalSelectCoordinator(navigationController: navigationController, selectedInterestDetail: selectedInterestDetail, curationData: curationData)

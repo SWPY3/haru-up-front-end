@@ -60,8 +60,10 @@ final class InterestEditViewController: UIViewController {
     
     private lazy var interestSelectButton: UIButton = {
         let btn = UIButton()
-        let initialTitle = TokenStorageService.shared.getCurationData()?.interest?.name ?? "관심사 선택"
-        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.interest != nil ? .cta : .neutral800
+        let interests = TokenStorageService.shared.getMemberInterests()?.first
+        let path = interests?.directFullPath ?? []
+        let initialTitle = (path.indices.contains(0) ? path[0] : nil) ?? "관심사 선택"
+        let titleColor: UIColor = (path.indices.contains(0)) ? .cta : .neutral800
         btn.setAttributedTitle(
             NSAttributedString(
                 string: initialTitle,
@@ -103,8 +105,12 @@ final class InterestEditViewController: UIViewController {
     
     private lazy var detailInterestSelectButton: UIButton = {
         let btn = UIButton()
-        let initialTitle = TokenStorageService.shared.getCurationData()?.interestDetail?.name ?? "세부 관심사 선택"
-        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.interestDetail != nil ? .cta : .neutral800
+        let interests = TokenStorageService.shared.getMemberInterests()?.first
+        let path = interests?.directFullPath ?? []
+        
+        // Path의 1번째 인덱스가 세부 관심사
+        let initialTitle = (path.indices.contains(1) ? path[1] : nil) ?? "세부 관심사 선택"
+        let titleColor: UIColor = (path.indices.contains(1)) ? .cta : .neutral800
         btn.setAttributedTitle(
             NSAttributedString(
                 string: initialTitle,
@@ -147,8 +153,12 @@ final class InterestEditViewController: UIViewController {
     
     private lazy var goalSelectButton: UIButton = {
         let btn = UIButton()
-        let initialTitle = TokenStorageService.shared.getCurationData()?.goal?.name ?? "목표 선택"
-        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.goal != nil ? .cta : .neutral800
+        let interests = TokenStorageService.shared.getMemberInterests()?.first
+        let path = interests?.directFullPath ?? []
+        
+        // Path의 2번째 인덱스가 목표
+        let initialTitle = (path.indices.contains(2) ? path[2] : nil) ?? "목표 선택"
+        let titleColor: UIColor = (path.indices.contains(2)) ? .cta : .neutral800
         btn.setAttributedTitle(
             NSAttributedString(
                 string: initialTitle,
@@ -366,28 +376,11 @@ final class InterestEditViewController: UIViewController {
         // Back Button
         backButton.rx.tap
             .subscribe(with: self, onNext: { owner, _ in
-                // 1. 현재 저장되어 있는 최신 데이터 가져오기
-                let saved = TokenStorageService.shared.getCurationData()
-                
-                // 2. 현재 화면에 선택된 값 가져오기
-                let currentInterestId = owner.viewModel.selectedInterestRelay.value?.id
-                let currentDetailId = owner.viewModel.selectedDetailInterestRelay.value?.id
-                let currentGoalId = owner.viewModel.selectedGoalRelay.value?.id
-                
-                // 3. 비교하기 (저장된 값 vs 현재 값)
-                // 관심사가 다른가?
-                let isInterestChanged = currentInterestId != saved?.interest?.id
-                
-                // 세부 관심사가 다른가?
-                let isDetailChanged = currentDetailId != saved?.interestDetail?.id
-                
-                // 목표가 다른가?
-                let isGoalChanged = currentGoalId != saved?.goal?.id
-                
-                // 4. 하나라도 다르면(수정 중이면) Alert, 아니면 바로 Pop
-                if isInterestChanged || isDetailChanged || isGoalChanged {
+                if owner.viewModel.isModified() {
+                    // 변경사항이 있다면 얼럿 표시
                     owner.showCancelAlert()
                 } else {
+                    // 변경사항이 없다면 바로 뒤로가기
                     owner.navigationController?.popViewController(animated: true)
                 }
             })

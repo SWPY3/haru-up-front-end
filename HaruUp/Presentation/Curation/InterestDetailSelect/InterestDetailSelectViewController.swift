@@ -14,10 +14,10 @@ class InterestDetailSelectViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     private let viewDidLoadSubject = PublishSubject<Void>()
-    private let interestDetailSelectedSubject = PublishSubject<InterestData>()
+    private let interestDetailSelectedSubject = PublishSubject<InterestDetail>()
     private var interestDetailButtons: [SelectButton] = []
-    private var interestDetails: [InterestData] = []
-    
+    private var interestDetailIconButtons: [InterestButton] = []
+    private var interestDetails: [InterestDetail] = []
     
     private let activityIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .large)
@@ -93,6 +93,14 @@ class InterestDetailSelectViewController: UIViewController {
         return sv
     }()
     
+    private let listBlurView: UIImageView = {
+        let blurView = UIImageView()
+        blurView.image = .imageListBlur
+        blurView.contentMode = .scaleAspectFill
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        return blurView
+    }()
+    
     private let nextButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("다음", for: .normal)
@@ -128,6 +136,7 @@ class InterestDetailSelectViewController: UIViewController {
         view.addSubview(backButton)
         view.addSubview(stackView)
         view.addSubview(interestDetailButtonsStackView)
+        view.addSubview(listBlurView)
         view.addSubview(nextButton)
         view.addSubview(activityIndicator)
         
@@ -175,6 +184,12 @@ class InterestDetailSelectViewController: UIViewController {
             paddingTop: 56,
             paddingLeft: 20,
             paddingRight: 20
+        )
+        
+        listBlurView.anchor(
+            left: view.leftAnchor,
+            bottom: view.safeAreaLayoutGuide.bottomAnchor,
+            right: view.rightAnchor
         )
         
         nextButton.anchor(
@@ -232,6 +247,11 @@ class InterestDetailSelectViewController: UIViewController {
                     let isSelected = self.interestDetails[index].id == selectedInterestDetail?.id
                     button.setSelected(isSelected)
                 }
+                
+                self.interestDetailIconButtons.enumerated().forEach { index, button in
+                    let isSelected = self.interestDetails[index].id == selectedInterestDetail?.id
+                    button.setSelected(isSelected)
+                }
             })
             .disposed(by: disposeBag)
         
@@ -245,23 +265,38 @@ class InterestDetailSelectViewController: UIViewController {
             .disposed(by: disposeBag)
     }
     
-    private func createInterestDetailButtons(with interestDetails: [InterestData]) {
+    private func createInterestDetailButtons(with interestDetails: [InterestDetail]) {
         interestDetailButtonsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         interestDetailButtons.removeAll()
         
         interestDetails.forEach { interestDetail in
-            let button = SelectButton()
-            button.setTitle(interestDetail.name, for: .normal)
-            button.translatesAutoresizingMaskIntoConstraints = false
-            button.heightAnchor.constraint(equalToConstant: 56).isActive = true
-            
-            button.rx.tap
-                .map { interestDetail }
-                .bind(to: interestDetailSelectedSubject)
-                .disposed(by: disposeBag)
-            
-            interestDetailButtons.append(button)
-            interestDetailButtonsStackView.addArrangedSubview(button)
+            if let interestDetailicon = interestDetail.icon {
+                let button = InterestButton()
+                button.configure(icon: interestDetailicon, title: interestDetail.name)
+                button.translatesAutoresizingMaskIntoConstraints = false
+                button.heightAnchor.constraint(equalToConstant: 56).isActive = true
+                
+                button.rx.tap
+                    .map { interestDetail }
+                    .bind(to: interestDetailSelectedSubject)
+                    .disposed(by: disposeBag)
+                
+                interestDetailIconButtons.append(button)
+                interestDetailButtonsStackView.addArrangedSubview(button)
+            } else {
+                let button = SelectButton()
+                button.setTitle(interestDetail.name, for: .normal)
+                button.translatesAutoresizingMaskIntoConstraints = false
+                button.heightAnchor.constraint(equalToConstant: 56).isActive = true
+                
+                button.rx.tap
+                    .map { interestDetail }
+                    .bind(to: interestDetailSelectedSubject)
+                    .disposed(by: disposeBag)
+                
+                interestDetailButtons.append(button)
+                interestDetailButtonsStackView.addArrangedSubview(button)
+            }
         }
     }
 }

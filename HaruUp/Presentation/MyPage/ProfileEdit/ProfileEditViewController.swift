@@ -108,8 +108,9 @@ final class ProfileEditViewController: UIViewController {
     // 직업 선택 버튼
     private lazy var jobSelectButton: UIButton = {
         let btn = UIButton()
-        let initialTitle = TokenStorageService.shared.getCurationData()?.job?.jobName ?? "직업선택"
-        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.job != nil ? .cta : .neutral800
+        let profile = TokenStorageService.shared.getProfile()
+        let initialTitle = profile.jobName ?? "직업선택"
+        let titleColor: UIColor = profile.jobName != nil ? .cta : .neutral800
         btn.setAttributedTitle(NSAttributedString(string: initialTitle, attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]), for: .normal)
         btn.contentHorizontalAlignment = .left
         btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
@@ -145,8 +146,9 @@ final class ProfileEditViewController: UIViewController {
     // 디자이너 (Unselected State Mock)
     private lazy var detailJobSelectButton: UIButton = {
         let btn = UIButton()
-        let initialTitle = TokenStorageService.shared.getCurationData()?.jobDetail?.jobDetailName ?? "세부 직무 선택"
-        let titleColor: UIColor = TokenStorageService.shared.getCurationData()?.jobDetail != nil ? .cta : .neutral800
+        let profile = TokenStorageService.shared.getProfile()
+        let initialTitle = profile.jobDetailName ?? "세부 직무 선택"
+        let titleColor: UIColor = profile.jobDetailName != nil ? .cta : .neutral800
         btn.setAttributedTitle(NSAttributedString(string: initialTitle, attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]), for: .normal)
         btn.contentHorizontalAlignment = .left
         btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
@@ -389,24 +391,26 @@ final class ProfileEditViewController: UIViewController {
         // "현재 화면의 값"과 "저장된 값"을 실시간으로 비교하여 처리
         backButton.rx.tap
             .subscribe(with: self, onNext: { owner, _ in
-                // 1. 현재 저장되어 있는 최신 데이터 가져오기
-                // (완료 버튼을 눌렀다면 이 데이터가 갱신되어 있을 것이고, 안 눌렀다면 예전 데이터일 것입니다)
-                let saved = TokenStorageService.shared.getCurationData()
+                // 1. 현재 로컬 스토리지에 저장된 값 가져오기
+                let saved = TokenStorageService.shared.getProfile()
                 
-                // 2. 현재 화면에 입력/선택된 값 가져오기
+                // 2. 현재 화면의 값
                 let currentNickname = owner.nicknameTextField.text?.trimmingCharacters(in: .whitespaces) ?? ""
                 let currentJobId = owner.viewModel.selectedJobRelay.value?.id
-                let currentDetailId = owner.viewModel.selectedDetailJobRelay.value?.id
+                var currentDetailId = owner.viewModel.selectedDetailJobRelay.value?.id
                 
                 // 3. 비교하기 (저장된 값 vs 현재 값)
                 // 닉네임이 다른가? (저장된 닉네임이 없으면 빈 문자열과 비교)
-                let isNicknameChanged = currentNickname != (saved?.nickname ?? "")
+                let isNicknameChanged = currentNickname != (saved.nickname ?? "")
                 
                 // 직업이 다른가?
-                let isJobChanged = currentJobId != saved?.job?.id
+                let savedJobId = saved.jobId == 0 ? nil : saved.jobId
+                let isJobChanged = currentJobId != savedJobId
                 
                 // 세부 직무가 다른가?
-                let isDetailChanged = currentDetailId != saved?.jobDetail?.id
+                currentDetailId = (currentDetailId == 0) ? nil : currentDetailId
+                let savedDetailId = saved.jobDetailId == 0 ? nil : saved.jobDetailId
+                let isDetailChanged = currentDetailId != savedDetailId
                 
                 // 4. 하나라도 다르면(수정 중이면) Alert, 아니면 바로 Pop
                 if isNicknameChanged || isJobChanged || isDetailChanged {
@@ -685,8 +689,8 @@ final class ProfileEditViewController: UIViewController {
                 
                 // 변경된 항목에 따라 토스트 메시지 다르게 표시
                 let nicknameChanged = owner.nicknameTextField.text != owner.viewModel.initialNicknameValue
-                let jobChanged = owner.viewModel.selectedJobRelay.value?.id != owner.viewModel.savedData?.job?.id
-                let detailJobChanged = owner.viewModel.selectedDetailJobRelay.value?.id != owner.viewModel.savedData?.jobDetail?.id
+                let jobChanged = owner.viewModel.selectedJobRelay.value?.id != owner.viewModel.savedProfile.jobId
+                let detailJobChanged = owner.viewModel.selectedDetailJobRelay.value?.id != owner.viewModel.savedProfile.jobDetailId
                 
                 var message = " 프로필 수정이 완료되었어요"
                 if nicknameChanged && (jobChanged || detailJobChanged) {

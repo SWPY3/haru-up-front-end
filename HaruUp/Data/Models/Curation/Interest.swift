@@ -58,7 +58,7 @@ struct MemberInterestResponse: Decodable {
 }
 
 // 리스트 내부 아이템
-struct MemberInterestDTO: Decodable {
+struct MemberInterestDTO: Codable {
     let memberInterestId: Int
     let memberId: Int
     let interestId: Int // 이게 '목표'의 ID입니다.
@@ -88,16 +88,51 @@ extension Interest: DropdownDisplayable {
 }
 
 struct InterestDetail: DropdownDisplayable {
+    let parentId: Int?
     let id: Int
     let name: String
+    let icon: String?
     
     var displayName: String {
         return name
     }
     
     init(from data: InterestData) {
+        self.parentId = data.parentId
         self.id = data.id
         self.name = data.name
+        // parentId가 1! 즉 외국어 공부인 경우에만 적용
+        self.icon = (data.parentId == 1) ? Self.iconForInterestDetail(name: data.name) : nil
+    }
+    
+    init(id: Int, name: String, parentId: Int? = nil) {
+        self.id = id
+        self.name = name
+        self.parentId = parentId
+        self.icon = (parentId == 1) ? Self.iconForInterestDetail(name: name) : nil
+    }
+    
+    static func iconForInterestDetail(name: String) -> String {
+        switch name {
+        case "영어":
+            return "🇺🇸"
+        case "중국어":
+            return "🇨🇳"
+        case "일본어":
+            return "🇯🇵"
+        case "스페인어":
+            return "🇪🇸"
+        case "이탈리아어":
+            return "🇮🇹"
+        case "프랑스어":
+            return "🇫🇷"
+        case "독일어":
+            return "🇩🇪"
+        case "러시아어":
+            return "🇷🇺"
+        default:
+            return "🇰🇷"
+        }
     }
 }
 

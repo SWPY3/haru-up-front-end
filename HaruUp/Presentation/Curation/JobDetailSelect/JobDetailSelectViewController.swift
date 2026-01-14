@@ -76,6 +76,8 @@ class JobDetailSelectViewController: UIViewController {
     
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
+        // 일단 다크모드가 없으므로 무조건 보여야함
+        scrollView.indicatorStyle = .black
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.showsVerticalScrollIndicator = true
         return scrollView
@@ -95,6 +97,14 @@ class JobDetailSelectViewController: UIViewController {
         sv.distribution = .fill
         sv.spacing = 12
         return sv
+    }()
+    
+    private let listBlurView: UIImageView = {
+        let blurView = UIImageView()
+        blurView.image = .imageListBlur
+        blurView.contentMode = .scaleAspectFill
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        return blurView
     }()
     
     private let nextButton: UIButton = {
@@ -147,6 +157,7 @@ class JobDetailSelectViewController: UIViewController {
         view.addSubview(stackView)
         view.addSubview(titleLabelStackView)
         view.addSubview(scrollView)
+        view.addSubview(listBlurView)
         view.addSubview(nextButton)
         view.addSubview(activityIndicator)
         
@@ -213,7 +224,12 @@ class JobDetailSelectViewController: UIViewController {
             left: contentView.leftAnchor,
             bottom: contentView.bottomAnchor,
             right: contentView.rightAnchor,
-            
+        )
+        
+        listBlurView.anchor(
+            left: view.leftAnchor,
+            bottom: view.safeAreaLayoutGuide.bottomAnchor,
+            right: view.rightAnchor
         )
         
         nextButton.anchor(

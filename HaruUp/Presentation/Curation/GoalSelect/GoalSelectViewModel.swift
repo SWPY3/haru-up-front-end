@@ -26,14 +26,14 @@ final class GoalSelectViewModel {
     
     private weak var coordinator: GoalSelectCoordinator?
     private let disposeBag = DisposeBag()
-    private let selectedInterestDetail: InterestData
+    private let selectedInterestDetail: InterestDetail
     
     
     private let goalList = BehaviorRelay<[InterestData]>(value: [])
     private let currentSelectedGoal = BehaviorRelay<InterestData?>(value: nil)
     private let isLoading = BehaviorRelay<Bool>(value: false)
     
-    init(coordinator: GoalSelectCoordinator?, selectedInterestDetail: InterestData) {
+    init(coordinator: GoalSelectCoordinator?, selectedInterestDetail: InterestDetail) {
         self.coordinator = coordinator
         self.selectedInterestDetail = selectedInterestDetail
     }

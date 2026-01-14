@@ -24,7 +24,7 @@ final class OnboardingViewModel {
     
     private let disposeBag = DisposeBag()
     
-    private let totalPages = 2
+    private let totalPages = 3
     
     init() {
         let pages = totalPages
