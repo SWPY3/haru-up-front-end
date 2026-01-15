@@ -42,7 +42,7 @@ final class AppCoordinator: Coordinator {
             case .needLogin:
                 showLoginFlow()
             case .onboardingRequired:
-                showOnboardingFlow()
+                showAgreeFlow()
             case .onboardingCompleted:
                 showMainTabFlow()
             }
@@ -96,6 +96,22 @@ final class AppCoordinator: Coordinator {
             }
             
             self.showOnboardingFlow()
+        }
+        
+        agreeCoordinator.onBack = { [weak self, weak agreeCoordinator] in
+            guard let self = self else { return }
+            
+            // 1. AgreeCoordinator 정리
+            if let coordinator = agreeCoordinator,
+               let index = self.childCoordinators.firstIndex(where: {$0 === coordinator}) {
+                self.childCoordinators.remove(at: index)
+            }
+            
+            // 2. 현재 화면(약관동의)을 pop 하고
+            self.navigationController.popViewController(animated: true)
+            
+            // 3. 로그인 플로우 다시 시작
+            self.showLoginFlow()
         }
         
         childCoordinators.append(agreeCoordinator)

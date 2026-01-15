@@ -35,16 +35,16 @@ final class AgreementCell: UIView {
     // 오른쪽 화살표 버튼
     private let arrowButton: UIButton = {
         let button = UIButton()
-        button.setImage(.chevronRight, for: .normal)
-        button.tintColor = .neutral300
+        button.setImage(.chevronRightGray, for: .normal)
         button.contentMode = .scaleAspectFit
         return button
     }()
     
-    init(title: String, hasArrow: Bool = true) {
+    init(title: String, font: UIFont, hasArrow: Bool = true) {
         super.init(frame: .zero)
         setupLayout(hasArrow: hasArrow)
         titleLabel.text = title
+        titleLabel.font = font
         bind()
     }
     

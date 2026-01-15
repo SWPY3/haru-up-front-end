@@ -31,12 +31,14 @@ final class AgreeViewModel {
         let isConfirmButtonEnabled: Driver<Bool>
         
         // Coordinator로 보낼 신호
-        let navigateToTerm1Detail: Signal<Void>
-        let navigateToTerm2Detail: Signal<Void>
+        let navigateToWeb: Signal<String>
         let didTapConfirm: Signal<Void>
     }
     
     private let disposeBag = DisposeBag()
+    
+    private let term1Url = "https://melodic-roar-3e1.notion.site/2e0849f596f380eabc6de523ab0d9bd9"
+    private let term2Url = "https://melodic-roar-3e1.notion.site/2e0849f596f380969043ee98e361c7bf"
     
     // 상태 관리용 Relay
     private let term1Relay = BehaviorRelay<Bool>(value: false)
@@ -84,14 +86,19 @@ final class AgreeViewModel {
             .map { $0 && $1 && $2 }
             .asDriver(onErrorJustReturn: false)
         
+        let term1Navigation = input.term1DetailTap.map { [weak self] _ in self?.term1Url ?? "" }
+        let term2Navigation = input.term2DetailTap.map { [weak self] _ in self?.term2Url ?? "" }
+        
+        let navigateToWebSignal = Observable.merge(term1Navigation, term2Navigation)
+            .asSignal(onErrorJustReturn: "")
+        
         return Output(
             isAllChecked: allStateObservable.asDriver(onErrorJustReturn: false),
             isTerm1Checked: term1Relay.asDriver(),
             isTerm2Checked: term2Relay.asDriver(),
             isTerm3Checked: term3Relay.asDriver(),
             isConfirmButtonEnabled: isButtonEnabled,
-            navigateToTerm1Detail: input.term1DetailTap.asSignal(onErrorJustReturn: ()),
-            navigateToTerm2Detail: input.term2DetailTap.asSignal(onErrorJustReturn: ()),
+            navigateToWeb: navigateToWebSignal,
             didTapConfirm: input.confirmButtonTapped.asSignal(onErrorJustReturn: ())
         )
     }
