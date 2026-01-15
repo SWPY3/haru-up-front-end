@@ -69,8 +69,8 @@ final class AppCoordinator: Coordinator {
                 print("✅ 온보딩 완료 → 홈 화면으로 이동")
                 self.showMainTabFlow()
             } else {
-                print("⚠️ 온보딩 필요 → 온보딩 화면으로 이동")
-                self.showOnboardingFlow()
+                print("⚠️ 온보딩 필요 → 온보딩 전 동의화면으로 이동")
+                self.showAgreeFlow()
             }
         }
         
@@ -82,6 +82,24 @@ final class AppCoordinator: Coordinator {
         
         childCoordinators.append(loginCoordinator)
         loginCoordinator.start()
+    }
+    
+    private func showAgreeFlow() {
+        let agreeCoordinator = AgreeCoordinator(navigationController: navigationController)
+        
+        agreeCoordinator.onFinish = { [weak self, weak agreeCoordinator] in
+            guard let self = self else { return }
+            
+            if let coordinator = agreeCoordinator,
+               let index = self.childCoordinators.firstIndex(where: {$0 === coordinator}) {
+                self.childCoordinators.remove(at: index)
+            }
+            
+            self.showOnboardingFlow()
+        }
+        
+        childCoordinators.append(agreeCoordinator)
+        agreeCoordinator.start()
     }
     
     private func showOnboardingFlow() {
