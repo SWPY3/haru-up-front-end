@@ -448,11 +448,11 @@ final class HomeHeaderView: UIView {
         self.userInterest = userInfo.interest
         
         let characterId = userInfo.characterId
-        let characterImageName = characterId == 0 ? "haru" : "naru"
+        let characterImageName = characterId == 1 ? "haru" : "naru"
         let characterLevel = userInfo.level
         let characterImage = "character_\(characterImageName)_level\(characterLevel)"
         let characterLevelName = CharacterLevel(rawValue: characterLevel)?.title ?? "도전하는"
-        let characterName = characterId == 0 ? "하루" : "나루"
+        let characterName = characterId == 1 ? "하루" : "나루"
         let characterNameText = "\(characterLevelName) \(characterName)"
         
         characterLevelLabel.setStyle(Typography.level, text: "Lv. \(characterLevel)")
