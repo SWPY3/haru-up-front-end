@@ -29,6 +29,7 @@ final class AgreementCell: UIView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
+        label.textColor = .neutral700
         return label
     }()
     
@@ -99,6 +100,4 @@ final class AgreementCell: UIView {
         
         self.heightAnchor.constraint(equalToConstant: 44).isActive = true
     }
-    
-    
 }

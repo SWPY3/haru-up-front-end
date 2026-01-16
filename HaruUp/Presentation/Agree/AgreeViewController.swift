@@ -30,7 +30,7 @@ class AgreeViewController: UIViewController {
         let label = UILabel()
         label.setStyle(Typography.title2, text: "하루업 이용을 위해\n이용약관 동의가 필요해요")
         label.numberOfLines = 0
-        label.textColor = .black
+        label.textColor = .neutral800
         return label
     }()
     
