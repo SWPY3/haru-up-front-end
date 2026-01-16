@@ -110,6 +110,54 @@ class HistoryViewController: UIViewController {
     }()
     
     private var calendarHeightConstraint: NSLayoutConstraint!
+    
+    // MARK: - 미션 정보 UI
+    private let missionCardView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.layer.cornerRadius = 24
+        
+        return view
+    }()
+    
+    private let missionTitleLabel: UILabel = {
+        let label = UILabel()
+        label.setStyle(Typography.subtitle1, text: "1월 1일 완료한 미션")
+        label.textColor = .black
+        
+        return label
+    }()
+    
+    private let missionContentStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 16
+        
+        return stackView
+    }()
+    
+    private let emptyMissionView: UIView = {
+        let view = UIView()
+        
+        return view
+    }()
+    
+    private let emptyImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = .iconCalendarEmpty
+        imageView.contentMode = .scaleAspectFit
+        
+        return imageView
+    }()
+    
+    private let emptyLabel: UILabel = {
+        let label = UILabel()
+        label.setStyle(Typography.subtitle2, text: "완료한 미션이 없어요")
+        label.textColor = .neutral600
+        label.textAlignment = .center
+        
+        return label
+    }()
     init(viewModel: HistoryViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -119,11 +167,16 @@ class HistoryViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .red
         setupUI()
+        setupActions()
+        loadCalendarData()
+        updateMonthYearLabel()
+        selectToday()
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -139,11 +192,15 @@ class HistoryViewController: UIViewController {
         super.viewDidLayoutSubviews()
         updateCalendarHeight()
     }
+    
     // MARK: - Setup
     private func setupUI() {
         view.backgroundColor = .neutral10
+        
         setupTitle()
         setupScrollView()
+        setupCalendarCard()
+        setupMissionCard()
     }
     private func setupTitle() {
         view.addSubview(viewTitleLabel)
@@ -221,6 +278,269 @@ class HistoryViewController: UIViewController {
             calendarHeightConstraint
         ])
     }
+    
+    private func setupMissionCard() {
+        contentStackView.addArrangedSubview(missionCardView)
+        
+        [missionTitleLabel, missionContentStackView].forEach {
+            missionCardView.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        [emptyImageView, emptyLabel].forEach {
+            emptyMissionView.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        NSLayoutConstraint.activate([
+            emptyImageView.topAnchor.constraint(equalTo: emptyMissionView.topAnchor, constant: 12),
+            emptyImageView.centerXAnchor.constraint(equalTo: emptyMissionView.centerXAnchor),
+            emptyImageView.widthAnchor.constraint(equalToConstant: 56),
+            emptyImageView.heightAnchor.constraint(equalToConstant: 56),
+            
+            emptyLabel.topAnchor.constraint(equalTo: emptyImageView.bottomAnchor, constant: 2),
+            emptyLabel.centerXAnchor.constraint(equalTo: emptyMissionView.centerXAnchor),
+            emptyLabel.bottomAnchor.constraint(equalTo: emptyMissionView.bottomAnchor)
+        ])
+        
+        NSLayoutConstraint.activate([
+            missionTitleLabel.topAnchor.constraint(equalTo: missionCardView.topAnchor, constant: 24),
+            missionTitleLabel.leadingAnchor.constraint(equalTo: missionCardView.leadingAnchor, constant: 24),
+            missionTitleLabel.trailingAnchor.constraint(equalTo: missionCardView.trailingAnchor, constant: -24),
+            
+            missionContentStackView.topAnchor.constraint(equalTo: missionTitleLabel.bottomAnchor),
+            missionContentStackView.leadingAnchor.constraint(equalTo: missionCardView.leadingAnchor, constant: 24),
+            missionContentStackView.trailingAnchor.constraint(equalTo: missionCardView.trailingAnchor, constant: -24),
+            missionContentStackView.bottomAnchor.constraint(equalTo: missionCardView.bottomAnchor, constant: -20)
+        ])
+    }
+    
+    
+    // MARK: - Actions
+    private func setupActions() {
+        prevButton.addTarget(self, action: #selector(prevMonthTapped), for: .touchUpInside)
+        nextButton.addTarget(self, action: #selector(nextMonthTapped), for: .touchUpInside)
+    }
+    
+    @objc private func prevMonthTapped() {
+        if let newDate = Calendar.current.date(byAdding: .month, value: -1, to: currentDate) {
+            currentDate = newDate
+            updateMonthYearLabel()
+            loadCalendarData()
+            selectedDay = 1
+            updateMissionCard()
+            calendarCollectionView.reloadData()
+            updateCalendarHeight()
+        }
+    }
+    
+    @objc private func nextMonthTapped() {
+        if let newDate = Calendar.current.date(byAdding: .month, value: 1, to: currentDate) {
+            currentDate = newDate
+            updateMonthYearLabel()
+            loadCalendarData()
+            selectedDay = 1
+            updateMissionCard()
+            calendarCollectionView.reloadData()
+            updateCalendarHeight()
+        }
+    }
+    
+    // MARK: - Helper Methods
+    // 출석일 및 완료한 미션 View
+    private func createStatView(title: String, value: String, unit: String) -> (UIView, UILabel) {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        
+        let titleLabel = UILabel()
+        titleLabel.setStyle(Typography.body4, text: title)
+        titleLabel.textColor = .neutral900
+        titleLabel.textAlignment = .center
+        
+        let valueLabel = UILabel()
+        valueLabel.setStyle(Typography.head2, text: value)
+        valueLabel.textColor = .cta
+//        valueLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        let unitLabel = UILabel()
+        unitLabel.setStyle(Typography.caption2, text: unit)
+        unitLabel.textColor = .neutral600
+//        unitLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        let valueStack = UIStackView(arrangedSubviews: [valueLabel, unitLabel])
+        valueStack.axis = .horizontal
+        valueStack.spacing = 6
+        valueStack.alignment = .lastBaseline
+        
+        [titleLabel, valueStack].forEach {
+            container.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor),
+            titleLabel.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            
+            valueStack.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
+            valueStack.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            valueStack.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+        ])
+        
+        return (container, valueLabel)
+    }
+    
+    private func updateCalendarHeight() {
+        let cellWidth = (calendarCollectionView.frame.width) / 7
+        let numberOfRows = ceil(Double(numberOfDaysInMonth() + firstWeekdayOfMonth()) / 7.0)
+        let headerHeight: CGFloat = 40
+        let height = (cellWidth * CGFloat(numberOfRows)) + headerHeight
+        
+        if calendarHeightConstraint.constant != height && height > 0 {
+            calendarHeightConstraint.constant = height
+            view.layoutIfNeeded()
+        }
+    }
+    
+    private func loadCalendarData() {
+        // TODO: 서버에서 데이터 가져오기
+        calendarData = HistoryModel.CalendarData(
+            attendanceDays: 12,
+            completedMissions: 23,
+            dailyMissions: [
+                1: [.init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .low, exp: 50)],
+                10: [.init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .veryHigh, exp: 250)],
+                13: [
+                    .init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .low, exp: 150),
+                    .init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .medium, exp: 100)],
+                15: [.init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .mediumHigh, exp: 250)],
+                16: [.init(title: "영어 회화 유튜브 강의 10분 시청하기 및 암기한 영단어 문장 외우기", difficulty: .high, exp: 200)],
+                17: [
+                    .init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .low, exp: 50),
+                    .init(title: "영어 회화 유튜브 강의 10분 시청하기 및 암기한 영단어 문장 외우기", difficulty: .veryHigh, exp: 150),
+                    .init(title: "영어 회화 유튜브 강의 10분 시청하기 및 암기한 영단어 문장 외우기", difficulty: .mediumHigh, exp: 100)
+                ]
+            ],
+            specialDays: [1, 13, 15, 17]
+        )
+        
+        attendanceValueLabel.text = "\(calendarData?.attendanceDays ?? 0)"
+        missionValueLabel.text = "\(calendarData?.completedMissions ?? 0)"
+        
+        calendarCollectionView.reloadData()
+    }
+    
+    private func updateMonthYearLabel() {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy년 M월"
+        monthYearLabel.text = formatter.string(from: currentDate)
+    }
+    
+    private func selectToday() {
+        let calendar = Calendar.current
+        let today = Date()
+        let currentComponents = calendar.dateComponents([.year, .month], from: currentDate)
+        let todayComponents = calendar.dateComponents([.year, .month, .day], from: today)
+        
+        if currentComponents.year == todayComponents.year && currentComponents.month == todayComponents.month {
+            selectedDay = todayComponents.day
+        } else {
+            selectedDay = 1
+        }
+        
+        updateMissionCard()
+    }
+    
+    private func updateMissionCard() {
+        guard let day = selectedDay else { return }
+        
+        let titleText: String = "\(Calendar.current.component(.month, from: currentDate))월 \(day)일 완료한 미션"
+        missionTitleLabel.setStyle(Typography.subtitle1, text: titleText)
+        
+        missionContentStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        let missions = calendarData?.dailyMissions[day] ?? []
+        
+        if missions.isEmpty {
+            missionContentStackView.addArrangedSubview(emptyMissionView)
+        } else {
+            for (index, mission) in missions.enumerated() {
+                let missionView = createMissionItemView(mission: mission)
+                missionContentStackView.addArrangedSubview(missionView)
+                
+                if index < missions.count - 1 {
+                    let separator = createSeparator()
+                    missionContentStackView.addArrangedSubview(separator)
+                }
+            }
+        }
+    }
+    
+    // MARK: Create UI Helpers
+    // 완료한 미션 목록에 들어가는 각 view
+    private func createMissionItemView(mission: HistoryModel.Mission) -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        
+        let titleLabel = UILabel()
+        titleLabel.setStyle(Typography.body1, text: mission.title)
+        titleLabel.textColor = .neutral900
+        titleLabel.numberOfLines = 0
+        
+        let badgeStackView = UIStackView()
+        badgeStackView.axis = .horizontal
+        badgeStackView.spacing = 8
+        
+        let difficultyBadge = MissionDifficultyBadgeView()
+        let expBadge = MissionExpBadgeView()
+        
+        difficultyBadge.configure(difficulty: mission.difficulty)
+        expBadge.configure(exp: mission.exp)
+        
+        badgeStackView.addArrangedSubview(difficultyBadge)
+        badgeStackView.addArrangedSubview(expBadge)
+        
+        [titleLabel, badgeStackView].forEach {
+            container.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 18),
+            titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            
+            badgeStackView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            badgeStackView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            badgeStackView.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -18)
+        ])
+        
+        return container
+    }
+    
+    // 완료한 미션 목록의 Line
+    private func createSeparator() -> UIView {
+        let separator = UIView()
+        separator.backgroundColor = .neutral50
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        separator.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        return separator
+    }
+    
+    // MARK: - Calendar Helpers
+    private func numberOfDaysInMonth() -> Int {
+        let range = Calendar.current.range(of: .day, in: .month, for: currentDate)!
+        return range.count
+    }
+    
+    private func firstWeekdayOfMonth() -> Int {
+        let components = Calendar.current.dateComponents([.year, .month], from: currentDate)
+        let firstDay = Calendar.current.date(from: components)!
+        let weekday = Calendar.current.component(.weekday, from: firstDay)
+        return weekday == 1 ? 6 : weekday - 2
+    }
+}
+
 // MARK: - UICollectionView DataSource & Delegate
 extension HistoryViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     
