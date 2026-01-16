@@ -158,6 +158,39 @@ class HistoryViewController: UIViewController {
         
         return label
     }()
+    
+    // MARK: - 차트 UI
+    private let chartCardView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.layer.cornerRadius = 24
+        
+        return view
+    }()
+    
+    private let chartTitleLabel: UILabel = {
+        let label = UILabel()
+        label.setStyle(Typography.subtitle1, text: "성장차트")
+        label.textColor = .black
+        
+        return label
+    }()
+    
+    private let chartDescriptionLabel: UILabel = {
+        let label = UILabel()
+        label.setStyle(Typography.body4, text: "5개월간 얼마나 자주 방문했는지 비교해볼 수 있어요.")
+        label.textColor = .neutral500
+        
+        return label
+    }()
+    
+    private lazy var chartView: UIView = {
+        let view = GrowthChartViewFactory.create()
+        
+        return view
+    }()
+    
+    // MARK: - Init
     init(viewModel: HistoryViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -201,7 +234,9 @@ class HistoryViewController: UIViewController {
         setupScrollView()
         setupCalendarCard()
         setupMissionCard()
+        setupChartCard()
     }
+    
     private func setupTitle() {
         view.addSubview(viewTitleLabel)
         viewTitleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -312,6 +347,38 @@ class HistoryViewController: UIViewController {
             missionContentStackView.leadingAnchor.constraint(equalTo: missionCardView.leadingAnchor, constant: 24),
             missionContentStackView.trailingAnchor.constraint(equalTo: missionCardView.trailingAnchor, constant: -24),
             missionContentStackView.bottomAnchor.constraint(equalTo: missionCardView.bottomAnchor, constant: -20)
+        ])
+    }
+    
+    private func setupChartCard() {
+        contentStackView.addArrangedSubview(chartCardView)
+        
+        [chartTitleLabel, chartDescriptionLabel, chartView].forEach {
+            chartCardView.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        GrowthChartViewFactory.configure(chartView, with: [
+            ("8월", 8),
+            ("9월", 15),
+            ("10월", 12),
+            ("11월", 25),
+            ("12월", 28)
+        ], highlightLast: true)
+        
+        NSLayoutConstraint.activate([
+            chartTitleLabel.topAnchor.constraint(equalTo: chartCardView.topAnchor, constant: 28),
+            chartTitleLabel.leadingAnchor.constraint(equalTo: chartCardView.leadingAnchor, constant: 24),
+            
+            chartDescriptionLabel.topAnchor.constraint(equalTo: chartTitleLabel.bottomAnchor),
+            chartDescriptionLabel.leadingAnchor.constraint(equalTo: chartCardView.leadingAnchor, constant: 24),
+            chartDescriptionLabel.trailingAnchor.constraint(equalTo: chartCardView.trailingAnchor, constant: -24),
+            
+            chartView.topAnchor.constraint(equalTo: chartDescriptionLabel.bottomAnchor, constant: 10),
+            chartView.leadingAnchor.constraint(equalTo: chartCardView.leadingAnchor, constant: 24),
+            chartView.trailingAnchor.constraint(equalTo: chartCardView.trailingAnchor, constant: -24),
+            chartView.bottomAnchor.constraint(equalTo: chartCardView.bottomAnchor, constant: -24),
+            chartView.heightAnchor.constraint(equalToConstant: 180)
         ])
     }
     

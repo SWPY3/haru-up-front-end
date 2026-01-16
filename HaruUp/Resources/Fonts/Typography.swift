@@ -60,4 +60,8 @@ enum Typography {
     // Calendar
     static let calendarWeek = FontStyle(font: .pretendard(size: 13, weight: .medium), lineHeight: 1.50)
     static let calendarDay = FontStyle(font: .pretendard(size: 13, weight: .medium), lineHeight: 1.50)
+    
+    // Chart
+    static let yText = FontStyle(font: .pretendard(size: 11, weight: .medium), lineHeight: 1.00)
+    static let xText = FontStyle(font: .pretendard(size: 13, weight: .medium), lineHeight: 1.00)
 }
