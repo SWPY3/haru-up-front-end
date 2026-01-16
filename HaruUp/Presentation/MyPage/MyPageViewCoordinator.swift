@@ -38,6 +38,10 @@ final class MyPageViewCoordinator: Coordinator {
             self?.showInterestEdit()
         }
         
+        myPageVC.onNotificationSetting = { [weak self] in
+            self?.showNotificationSetting()
+        }
+        
         myPageVC.onLogout = { [weak self] in
             self?.onFinish?()
         }
@@ -71,5 +75,14 @@ final class MyPageViewCoordinator: Coordinator {
         let vc = InterestEditViewController(viewModel: vm)
         // Coordinator에서 push
         navigationController.pushViewController(vc, animated: true)
+    }
+    
+    func showNotificationSetting() {
+        print("=== 알림 설정 진입 ===")
+        
+        let notifiVM = NotificationSettingViewModel()
+        
+        let notifiVC = NotificationSettingViewController()
+        navigationController.pushViewController(notifiVC, animated: true)
     }
 }
