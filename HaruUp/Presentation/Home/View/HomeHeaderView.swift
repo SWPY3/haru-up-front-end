@@ -95,7 +95,7 @@ final class HomeHeaderView: UIView {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
-        imageView.image = .characterHaruLevel1
+        imageView.image = nil
         imageView.isUserInteractionEnabled = true
         
         return imageView
@@ -457,7 +457,10 @@ final class HomeHeaderView: UIView {
         
         characterLevelLabel.setStyle(Typography.level, text: "Lv. \(characterLevel)")
         characterNameLabel.setStyle(Typography.subtitle2, text: characterNameText)
-        characterImageView.image = UIImage(named: characterImage)
+//        characterImageView.image = UIImage(named: characterImage)
+        UIView.transition(with: characterImageView, duration: 0.3, options: .transitionCrossDissolve) {
+            self.characterImageView.image = UIImage(named: characterImage)
+        }
         expProgressView.progress = userInfo.currentExp == 0 ? 0.0 : CGFloat(userInfo.currentExp) / CGFloat(userInfo.maxExp)
         currentExpLabel.setStyle(Typography.caption1, text: "\(userInfo.currentExp)")
         maxExpLabel.setStyle(Typography.caption1, text: "\(userInfo.maxExp)")
