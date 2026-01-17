@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 class HistoryViewController: UIViewController {
     
@@ -15,6 +17,12 @@ class HistoryViewController: UIViewController {
     private var selectedDay: Int?
     
     private let viewModel: HistoryViewModel
+    private let disposeBag = DisposeBag()
+    
+    // Subjects for Input
+    private let viewDidLoadRelay = PublishRelay<Void>()
+    private let monthChangedRelay = BehaviorRelay<Date>(value: Date())
+    private let daySelectedRelay = PublishRelay<Int>()
     
     // MARK: - UI Components
     private let viewTitleLabel: UILabel = {
@@ -209,6 +217,9 @@ class HistoryViewController: UIViewController {
         loadCalendarData()
         updateMonthYearLabel()
         selectToday()
+        
+        bindViewModel()
+        viewDidLoadRelay.accept(())
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -382,6 +393,63 @@ class HistoryViewController: UIViewController {
         ])
     }
     
+    // MARK: - bind
+    private func bindViewModel() {
+        let input = HistoryViewModel.Input(
+            viewDidLoad: viewDidLoadRelay.asObservable(),
+            monthChanged: monthChangedRelay.asObservable(),
+            daySelected: daySelectedRelay.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        // 월 타이틀 바인딩
+        output.monthTitle
+            .drive(monthYearLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        // 출석일 바인딩
+        output.attendanceDays
+            .map { "\($0)" }
+            .drive(attendanceValueLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        // 완료한 미션 수 바인딩
+        output.completedMissions
+            .map { "\($0)" }
+            .drive(missionValueLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        // 캘린더 데이터 바인딩
+        output.dailyMissions
+            .drive(onNext: { [weak self] missions in
+                self?.updateCalendar(with: missions)
+            })
+            .disposed(by: disposeBag)
+        
+        // 선택된 날짜 미션 바인딩
+        output.selectedDayMissions
+            .drive(onNext: { [weak self] count in
+                self?.updateMissionCard(missionCount: count)
+            })
+            .disposed(by: disposeBag)
+        
+        // 로딩 상태
+        output.isLoading
+            .drive(onNext: { [weak self] isLoading in
+                // 로딩 인디케이터 표시/숨김
+                isLoading ? self?.showLoading() : self?.hideLoading()
+            })
+            .disposed(by: disposeBag)
+        
+        // 에러 처리
+        output.error
+            .filter { !$0.isEmpty }
+            .drive(onNext: { [weak self] message in
+                self?.showError(message: message)
+            })
+            .disposed(by: disposeBag)
+    }
     
     // MARK: - Actions
     private func setupActions() {
@@ -427,12 +495,10 @@ class HistoryViewController: UIViewController {
         let valueLabel = UILabel()
         valueLabel.setStyle(Typography.head2, text: value)
         valueLabel.textColor = .cta
-//        valueLabel.translatesAutoresizingMaskIntoConstraints = false
         
         let unitLabel = UILabel()
         unitLabel.setStyle(Typography.caption2, text: unit)
         unitLabel.textColor = .neutral600
-//        unitLabel.translatesAutoresizingMaskIntoConstraints = false
         
         let valueStack = UIStackView(arrangedSubviews: [valueLabel, unitLabel])
         valueStack.axis = .horizontal
@@ -605,6 +671,30 @@ class HistoryViewController: UIViewController {
         let firstDay = Calendar.current.date(from: components)!
         let weekday = Calendar.current.component(.weekday, from: firstDay)
         return weekday == 1 ? 6 : weekday - 2
+    }
+    
+    // MARK: - Helper Methods
+    private func updateCalendar(with missions: [DailyMission]) {
+        // 캘린더 CollectionView 업데이트
+        print("mission: \(missions)")
+//        self.dailyMissions = missions
+        calendarCollectionView.reloadData()
+    }
+    
+    private func updateMissionCard(missionCount: Int) {
+        // 미션 카드 업데이트
+    }
+    
+    private func showLoading() {
+        // 로딩 표시
+    }
+    
+    private func hideLoading() {
+        // 로딩 숨김
+    }
+    
+    private func showError(message: String) {
+        // 에러 알림 표시
     }
 }
 

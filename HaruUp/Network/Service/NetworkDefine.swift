@@ -9,11 +9,11 @@ import Foundation
 
 enum NetworkDefine {
     enum APIEnvironment {
-        #if DEBUG
-        static let baseURL = "http://223.130.141.179:8082/"
-        #else
+//        #if DEBUG
+//        static let baseURL = "http://223.130.141.179:8082/"
+//        #else
         static let baseURL = "https://haru.jinuk.dev/"
-        #endif
+//        #endif
     }
     
     enum AuthAPI {
@@ -46,6 +46,7 @@ enum NetworkDefine {
         case list                  /// 오늘의 미션 목록
         case status                /// 미션 성공 및 실패
         case challenge             /// 미션 달성 여부
+        case history               /// 월별 미션 수행 현황 조회
         
         var path: String {
             switch self {
@@ -63,6 +64,8 @@ enum NetworkDefine {
                 return "api/member/mission/status"
             case .challenge:
                 return "api/member/mission/completion-status"
+            case .history:
+                return "api/member/mission/continue/mission/month"
             }
         }
         
