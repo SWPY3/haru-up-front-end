@@ -138,8 +138,7 @@ class HomeViewController: UIViewController {
     
     private func bind() {
         let input = HomeViewModel.Input(
-//            viewDidLoad: viewDidLoadRelay.asObservable(),
-            viewDidLoad: Observable.just(()),
+            viewDidLoad: viewDidLoadRelay.asObservable(),
             viewDidAppear: viewDidAppearRelay.asObservable(),
             reload: reloadSubject.asObservable()
         )

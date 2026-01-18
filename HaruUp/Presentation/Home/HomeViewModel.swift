@@ -99,7 +99,7 @@ final class HomeViewModel {
             .bind(to: challengeDataRelay)
             .disposed(by: disposeBag)
         
-        let userInfo = input.viewDidLoad
+        let userInfo = loadTrigger
             .flatMapLatest { [weak self] _ -> Observable<HomeMemberInfo> in
                 guard let self = self else { return .empty() }
                 
