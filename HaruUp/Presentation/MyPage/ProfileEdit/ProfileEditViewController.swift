@@ -410,7 +410,16 @@ final class ProfileEditViewController: UIViewController {
                 // 세부 직무가 다른가?
                 currentDetailId = (currentDetailId == 0) ? nil : currentDetailId
                 let savedDetailId = saved.jobDetailId == 0 ? nil : saved.jobDetailId
-                let isDetailChanged = currentDetailId != savedDetailId
+//                let isDetailChanged = currentDetailId != savedDetailId
+                
+                // 자영업인 경우 세부직무 비교를 무시
+                var isDetailChanged = false
+                
+                // 현재 선택된 직업이 자영업이 아닐 때만 세부직무 비교
+                let currentJobName = owner.viewModel.selectedJobRelay.value?.jobName
+                if currentJobName != "자영업" {
+                    isDetailChanged = currentDetailId != savedDetailId
+                }
                 
                 // 4. 하나라도 다르면(수정 중이면) Alert, 아니면 바로 Pop
                 if isNicknameChanged || isJobChanged || isDetailChanged {
