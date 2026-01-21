@@ -220,7 +220,7 @@ final class HomeViewModel {
                 formatter.dateFormat = "yyyy-MM-dd"
                 let todayString = formatter.string(from: Date())
                 
-                let status: [MemberMission.MissionStatusType] = [.completed, .inactive]
+                let status: [MemberMission.MissionStatusType] = [.completed, .active]
                 
                 return self.missionService.fetchMissionList(
                     memberInterestId: id,
