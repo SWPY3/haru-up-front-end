@@ -22,7 +22,7 @@ class HistoryViewController: UIViewController {
     
     // Subjects for Input
     private let viewDidLoadRelay = PublishRelay<Void>()
-    private let monthChangedRelay = BehaviorRelay<Date>(value: Date())
+    private let monthChangedRelay = PublishRelay<Date>()
     private let daySelectedRelay = PublishRelay<(day: Int, hasCompleted: Bool)>()
     
     // MARK: - UI Components
@@ -467,22 +467,26 @@ class HistoryViewController: UIViewController {
     }
     
     @objc private func prevMonthTapped() {
+        print("prevMonthTapped")
         if let newDate = Calendar.current.date(byAdding: .month, value: -1, to: currentDate) {
             currentDate = newDate
             updateMonthYearLabel()
             selectedDay = 1
-            updateMissionCard()
+            
+            monthChangedRelay.accept(newDate)
             calendarCollectionView.reloadData()
             updateCalendarHeight()
         }
     }
     
     @objc private func nextMonthTapped() {
+        print("nextMonthTapped")
         if let newDate = Calendar.current.date(byAdding: .month, value: 1, to: currentDate) {
             currentDate = newDate
             updateMonthYearLabel()
             selectedDay = 1
-            updateMissionCard()
+            
+            monthChangedRelay.accept(newDate)
             calendarCollectionView.reloadData()
             updateCalendarHeight()
         }
@@ -558,33 +562,6 @@ class HistoryViewController: UIViewController {
             selectedDay = todayComponents.day
         } else {
             selectedDay = 1
-        }
-        
-        updateMissionCard()
-    }
-    
-    private func updateMissionCard() {
-        guard let day = selectedDay else { return }
-        
-        let titleText: String = "\(Calendar.current.component(.month, from: currentDate))월 \(day)일 완료한 미션"
-        missionTitleLabel.setStyle(Typography.subtitle1, text: titleText)
-        
-        missionContentStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
-        let missions = calendarData?.dailyMissions[day] ?? []
-        
-        if missions.isEmpty {
-            missionContentStackView.addArrangedSubview(emptyMissionView)
-        } else {
-            for (index, mission) in missions.enumerated() {
-                let missionView = createMissionItemView(mission: mission)
-                missionContentStackView.addArrangedSubview(missionView)
-                
-                if index < missions.count - 1 {
-                    let separator = createSeparator()
-                    missionContentStackView.addArrangedSubview(separator)
-                }
-            }
         }
     }
     

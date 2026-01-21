@@ -48,36 +48,6 @@ final class HistoryViewModel {
         let selectedDayMissions = BehaviorRelay<[HistoryModel.Mission]>(value: [])
         let currentMonth = BehaviorRelay<Date>(value: Date())
         
-        // 월 변경 시 캘린더 데이터 로드
-        input.monthChanged
-            .do(onNext: { date in
-                currentMonth.accept(date)
-                isLoading.accept(true)
-            })
-            .flatMapLatest { [weak self] date -> Observable<[DailyMission]> in
-                guard let self = self else { return .empty() }
-                let targetMonth = self.formatMonth(from: date)
-                
-                return self.missionService.fetchMonthlyMissions(targetMonth: targetMonth)
-                    .asObservable()
-                    .map { response -> [DailyMission] in
-                        guard response.success else {
-                            if let errorMessage = response.errorMessage {
-                                error.accept(errorMessage)
-                            }
-                            return []
-                        }
-                        return response.data.toDomain()
-                    }
-                    .catch { err in
-                        error.accept(err.localizedDescription)
-                        return .just([])
-                    }
-            }
-            .do(onNext: { _ in isLoading.accept(false) })
-            .bind(to: dailyMissions)
-            .disposed(by: disposeBag)
-        
         // 날짜 선택 시 상세 미션 조회 (완료된 미션이 있는 경우에만)
         input.daySelected
             .do(onNext: { _ in
@@ -134,13 +104,16 @@ final class HistoryViewModel {
         
         // 데이터 로드
         let loadTrigger = Observable.merge(
-            input.viewDidLoad,
-            input.monthChanged.map { _ in () }
+            input.viewDidLoad.map { Date() },  // 초기 진입 시 현재 날짜
+            input.monthChanged
         )
         
         loadTrigger
-            .withLatestFrom(currentMonth)
-            .do(onNext: { _ in isLoading.accept(true) })
+            .do(onNext: { date in
+                print("date : \(date)")
+                currentMonth.accept(date)  // currentMonth 업데이트
+                isLoading.accept(true)
+            })
             .flatMapLatest { [weak self] date -> Observable<[DailyMission]> in
                 guard let self = self else { return .empty() }
                 
