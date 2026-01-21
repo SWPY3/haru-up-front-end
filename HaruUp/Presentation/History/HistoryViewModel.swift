@@ -15,7 +15,7 @@ final class HistoryViewModel {
     struct Input {
         let viewDidLoad: Observable<Void>
         let monthChanged: Observable<Date>
-        let daySelected: Observable<Int>
+        let daySelected: Observable<(day: Int, hasCompleted: Bool)>
     }
     
     // MARK: - Output
@@ -24,8 +24,9 @@ final class HistoryViewModel {
         let attendanceDays: Driver<Int>
         let completedMissions: Driver<Int>
         let dailyMissions: Driver<[DailyMission]>
-        let selectedDayMissions: Driver<Int>
+        let selectedDayMissions: Driver<[HistoryModel.Mission]>  // 수정: 상세 미션 배열
         let isLoading: Driver<Bool>
+        let isMissionLoading: Driver<Bool>  // 추가: 상세 미션 로딩 상태
         let error: Driver<String>
     }
     
@@ -41,20 +42,85 @@ final class HistoryViewModel {
     // MARK: - Transform
     func transform(input: Input) -> Output {
         let isLoading = BehaviorRelay<Bool>(value: false)
+        let isMissionLoading = BehaviorRelay<Bool>(value: false)
         let error = PublishRelay<String>()
         let dailyMissions = BehaviorRelay<[DailyMission]>(value: [])
+        let selectedDayMissions = BehaviorRelay<[HistoryModel.Mission]>(value: [])
         let currentMonth = BehaviorRelay<Date>(value: Date())
-        let selectedDay = BehaviorRelay<Int>(value: Calendar.current.component(.day, from: Date()))
         
-        // 현재 월 업데이트
+        // 월 변경 시 캘린더 데이터 로드
         input.monthChanged
-            .bind(to: currentMonth)
+            .do(onNext: { date in
+                currentMonth.accept(date)
+                isLoading.accept(true)
+            })
+            .flatMapLatest { [weak self] date -> Observable<[DailyMission]> in
+                guard let self = self else { return .empty() }
+                let targetMonth = self.formatMonth(from: date)
+                
+                return self.missionService.fetchMonthlyMissions(targetMonth: targetMonth)
+                    .asObservable()
+                    .map { response -> [DailyMission] in
+                        guard response.success else {
+                            if let errorMessage = response.errorMessage {
+                                error.accept(errorMessage)
+                            }
+                            return []
+                        }
+                        return response.data.toDomain()
+                    }
+                    .catch { err in
+                        error.accept(err.localizedDescription)
+                        return .just([])
+                    }
+            }
+            .do(onNext: { _ in isLoading.accept(false) })
+            .bind(to: dailyMissions)
             .disposed(by: disposeBag)
         
-        // 선택된 날짜 업데이트
+        // 날짜 선택 시 상세 미션 조회 (완료된 미션이 있는 경우에만)
         input.daySelected
-            .bind(to: selectedDay)
+            .do(onNext: { _ in
+                selectedDayMissions.accept([])  // 초기화
+            })
+            .filter { $0.hasCompleted }  // 완료된 미션이 있는 경우만 API 호출
+            .do(onNext: { _ in isMissionLoading.accept(true) })
+            .withLatestFrom(currentMonth) { ($0, $1) }
+            .flatMapLatest { [weak self] (dayInfo, month) -> Observable<[HistoryModel.Mission]> in
+                guard let self = self else { return .empty() }
+                
+                guard let id = UserStorage.shared.selectedMemberInterestId else {
+                    return .empty() // TODO: 해결 필요
+                }
+                let targetDate = self.formatDate(from: month, day: dayInfo.day)
+                let status: [MemberMission.MissionStatusType] = [.completed]
+                
+                return self.missionService.fetchMissionList(memberInterestId: id, targetDate: targetDate, status: status)
+                    .asObservable()
+                    .map { response -> [HistoryModel.Mission] in
+                        guard response.success else {
+                            if let errorMessage = response.errorMessage {
+                                error.accept(errorMessage)
+                            }
+                            return []
+                        }
+                        return response.data.map { dto in
+                            HistoryModel.Mission(
+                                title: dto.missionContent,
+                                difficulty: MissionDifficultyModel(rawValue: dto.difficulty) ?? .low,
+                                exp: dto.expEarned
+                            )
+                        }
+                    }
+                    .catch { err in
+                        error.accept(err.localizedDescription)
+                        return .just([])
+                    }
+            }
+            .do(onNext: { _ in isMissionLoading.accept(false) })
+            .bind(to: selectedDayMissions)
             .disposed(by: disposeBag)
+        
         
         // 월 타이틀
         let monthTitle = currentMonth
@@ -115,21 +181,14 @@ final class HistoryViewModel {
             }
             .asDriver(onErrorJustReturn: 0)
         
-        // 선택된 날짜의 미션 수
-        let selectedDayMissions = Observable
-            .combineLatest(dailyMissions, selectedDay)
-            .map { missions, day -> Int in
-                missions.first { $0.day == day }?.completedCount ?? 0
-            }
-            .asDriver(onErrorJustReturn: 0)
-        
         return Output(
             monthTitle: monthTitle,
             attendanceDays: attendanceDays,
             completedMissions: completedMissions,
             dailyMissions: dailyMissions.asDriver(onErrorJustReturn: []),
-            selectedDayMissions: selectedDayMissions,
+            selectedDayMissions: selectedDayMissions.asDriver(onErrorJustReturn: []),
             isLoading: isLoading.asDriver(),
+            isMissionLoading: isMissionLoading.asDriver(onErrorJustReturn: false),
             error: error.asDriver(onErrorJustReturn: "")
         )
     }
@@ -139,5 +198,18 @@ final class HistoryViewModel {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM"
         return formatter.string(from: date)
+    }
+    
+    // MARK: - Helper
+    private func formatDate(from date: Date, day: Int) -> String {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month], from: date)
+        components.day = day
+        
+        guard let targetDate = calendar.date(from: components) else { return "" }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: targetDate)
     }
 }

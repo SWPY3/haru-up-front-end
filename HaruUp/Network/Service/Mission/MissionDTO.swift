@@ -145,8 +145,15 @@ enum MemberMission {
     }
     
     // MARK: 미션 목록
+    enum MissionStatusType: String {
+        case active = "ACTIVE"
+        case inactive = "INACTIVE"
+        case completed = "COMPLETED"
+    }
+    
     struct FetchMissionRequestDTO: Encodable {
-        let missionStatus: String = "ACTIVE,COMPLETED"
+        let missionStatus: String // ACTIVE, INACTIVE, COMPLETED
+        let targetDate: String // yyyy-MM-dd
         let memberInterestId: Int
     }
     

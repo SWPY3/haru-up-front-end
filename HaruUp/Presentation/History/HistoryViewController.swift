@@ -15,6 +15,7 @@ class HistoryViewController: UIViewController {
     private var currentDate = Date()
     private var calendarData: HistoryModel.CalendarData?
     private var selectedDay: Int?
+    private var dailyMissions: [DailyMission] = []
     
     private let viewModel: HistoryViewModel
     private let disposeBag = DisposeBag()
@@ -22,7 +23,7 @@ class HistoryViewController: UIViewController {
     // Subjects for Input
     private let viewDidLoadRelay = PublishRelay<Void>()
     private let monthChangedRelay = BehaviorRelay<Date>(value: Date())
-    private let daySelectedRelay = PublishRelay<Int>()
+    private let daySelectedRelay = PublishRelay<(day: Int, hasCompleted: Bool)>()
     
     // MARK: - UI Components
     private let viewTitleLabel: UILabel = {
@@ -214,7 +215,6 @@ class HistoryViewController: UIViewController {
         
         setupUI()
         setupActions()
-        loadCalendarData()
         updateMonthYearLabel()
         selectToday()
         
@@ -423,21 +423,29 @@ class HistoryViewController: UIViewController {
         // 캘린더 데이터 바인딩
         output.dailyMissions
             .drive(onNext: { [weak self] missions in
-                self?.updateCalendar(with: missions)
+                self?.dailyMissions = missions
+                self?.calendarCollectionView.reloadData()
+                self?.selectTodayOrFirst()
             })
             .disposed(by: disposeBag)
         
-        // 선택된 날짜 미션 바인딩
+        // 선택된 날짜의 상세 미션 바인딩
         output.selectedDayMissions
-            .drive(onNext: { [weak self] count in
-                self?.updateMissionCard(missionCount: count)
+            .drive(onNext: { [weak self] missions in
+                self?.updateMissionCard(with: missions)
             })
             .disposed(by: disposeBag)
         
-        // 로딩 상태
+        // 상세 미션 로딩 상태
+        output.isMissionLoading
+            .drive(onNext: { [weak self] isLoading in
+                self?.updateMissionCardLoading(isLoading)
+            })
+            .disposed(by: disposeBag)
+        
+        // 캘린더 로딩 상태
         output.isLoading
             .drive(onNext: { [weak self] isLoading in
-                // 로딩 인디케이터 표시/숨김
                 isLoading ? self?.showLoading() : self?.hideLoading()
             })
             .disposed(by: disposeBag)
@@ -461,7 +469,6 @@ class HistoryViewController: UIViewController {
         if let newDate = Calendar.current.date(byAdding: .month, value: -1, to: currentDate) {
             currentDate = newDate
             updateMonthYearLabel()
-            loadCalendarData()
             selectedDay = 1
             updateMissionCard()
             calendarCollectionView.reloadData()
@@ -473,7 +480,6 @@ class HistoryViewController: UIViewController {
         if let newDate = Calendar.current.date(byAdding: .month, value: 1, to: currentDate) {
             currentDate = newDate
             updateMonthYearLabel()
-            loadCalendarData()
             selectedDay = 1
             updateMissionCard()
             calendarCollectionView.reloadData()
@@ -532,34 +538,6 @@ class HistoryViewController: UIViewController {
             calendarHeightConstraint.constant = height
             view.layoutIfNeeded()
         }
-    }
-    
-    private func loadCalendarData() {
-        // TODO: 서버에서 데이터 가져오기
-        calendarData = HistoryModel.CalendarData(
-            attendanceDays: 12,
-            completedMissions: 23,
-            dailyMissions: [
-                1: [.init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .low, exp: 50)],
-                10: [.init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .veryHigh, exp: 250)],
-                13: [
-                    .init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .low, exp: 150),
-                    .init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .medium, exp: 100)],
-                15: [.init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .mediumHigh, exp: 250)],
-                16: [.init(title: "영어 회화 유튜브 강의 10분 시청하기 및 암기한 영단어 문장 외우기", difficulty: .high, exp: 200)],
-                17: [
-                    .init(title: "영어 회화 유튜브 강의 10분 시청하기", difficulty: .low, exp: 50),
-                    .init(title: "영어 회화 유튜브 강의 10분 시청하기 및 암기한 영단어 문장 외우기", difficulty: .veryHigh, exp: 150),
-                    .init(title: "영어 회화 유튜브 강의 10분 시청하기 및 암기한 영단어 문장 외우기", difficulty: .mediumHigh, exp: 100)
-                ]
-            ],
-            specialDays: [1, 13, 15, 17]
-        )
-        
-        attendanceValueLabel.text = "\(calendarData?.attendanceDays ?? 0)"
-        missionValueLabel.text = "\(calendarData?.completedMissions ?? 0)"
-        
-        calendarCollectionView.reloadData()
     }
     
     private func updateMonthYearLabel() {
@@ -677,12 +655,117 @@ class HistoryViewController: UIViewController {
     private func updateCalendar(with missions: [DailyMission]) {
         // 캘린더 CollectionView 업데이트
         print("mission: \(missions)")
-//        self.dailyMissions = missions
+        
+        self.dailyMissions = missions
+        
+        // 출석일 계산 (completedCount > 0인 날 수)
+        let attendanceDays = missions.filter { $0.hasCompleted }.count
+        attendanceValueLabel.text = "\(attendanceDays)"
+        
+        // 완료한 미션 총 개수
+        let totalMissions = missions.reduce(0) { $0 + $1.completedCount }
+        missionValueLabel.text = "\(totalMissions)"
+        
         calendarCollectionView.reloadData()
+        updateMissionCardFromDailyMissions()
     }
     
-    private func updateMissionCard(missionCount: Int) {
-        // 미션 카드 업데이트
+    private func updateMissionCardFromDailyMissions() {
+        guard let day = selectedDay else { return }
+        
+        let month = Calendar.current.component(.month, from: currentDate)
+        let titleText = "\(month)월 \(day)일 완료한 미션"
+        missionTitleLabel.setStyle(Typography.subtitle1, text: titleText)
+        
+        missionContentStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        // 선택된 날짜의 미션 데이터 찾기
+        let missionForDay = dailyMissions.first { $0.day == day }
+        let missionCount = missionForDay?.completedCount ?? 0
+        
+        if missionCount == 0 {
+            missionContentStackView.addArrangedSubview(emptyMissionView)
+        } else {
+            // 미션 개수만 표시하거나, 상세 정보가 필요하면 별도 API 호출
+            let summaryLabel = UILabel()
+            summaryLabel.setStyle(Typography.body1, text: "완료한 미션 \(missionCount)개")
+            summaryLabel.textColor = .neutral900
+            missionContentStackView.addArrangedSubview(summaryLabel)
+        }
+    }
+    
+    private func updateMissionTitle(for day: Int) {
+        let month = Calendar.current.component(.month, from: currentDate)
+        let titleText = "\(month)월 \(day)일 완료한 미션"
+        missionTitleLabel.setStyle(Typography.subtitle1, text: titleText)
+    }
+    
+    private func updateMissionCard(with missions: [HistoryModel.Mission]) {
+        missionContentStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        if missions.isEmpty {
+            missionContentStackView.addArrangedSubview(emptyMissionView)
+        } else {
+            for (index, mission) in missions.enumerated() {
+                let missionView = createMissionItemView(mission: mission)
+                missionContentStackView.addArrangedSubview(missionView)
+                
+                if index < missions.count - 1 {
+                    let separator = createSeparator()
+                    missionContentStackView.addArrangedSubview(separator)
+                }
+            }
+        }
+    }
+    
+    private func updateMissionCardLoading(_ isLoading: Bool) {
+        if isLoading {
+            missionContentStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            
+            // 로딩 인디케이터 표시
+            let loadingIndicator = UIActivityIndicatorView(style: .medium)
+            loadingIndicator.startAnimating()
+            
+            let container = UIView()
+            container.addSubview(loadingIndicator)
+            loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+            
+            NSLayoutConstraint.activate([
+                loadingIndicator.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+                loadingIndicator.topAnchor.constraint(equalTo: container.topAnchor, constant: 40),
+                loadingIndicator.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -40)
+            ])
+            
+            missionContentStackView.addArrangedSubview(container)
+        }
+    }
+    
+    private func selectTodayOrFirst() {
+        let calendar = Calendar.current
+        let today = Date()
+        let currentComponents = calendar.dateComponents([.year, .month], from: currentDate)
+        let todayComponents = calendar.dateComponents([.year, .month, .day], from: today)
+        
+        let day: Int
+        if currentComponents.year == todayComponents.year && currentComponents.month == todayComponents.month {
+            day = todayComponents.day ?? 1
+        } else {
+            day = 1
+        }
+        
+        selectedDay = day
+        
+        let missionForDay = dailyMissions.first { $0.day == day }
+        let hasCompleted = missionForDay?.hasCompleted ?? false
+        
+        updateMissionTitle(for: day)
+        
+        if !hasCompleted {
+            updateMissionCard(with: [])
+        }
+        
+        daySelectedRelay.accept((day: day, hasCompleted: hasCompleted))
+        calendarCollectionView.reloadData()
     }
     
     private func showLoading() {
@@ -716,12 +799,21 @@ extension HistoryViewController: UICollectionViewDataSource, UICollectionViewDel
             let day = indexPath.item - firstWeekday + 1
             let isToday = isDateToday(day: day)
             let isSelected = day == selectedDay
-            let missions = calendarData?.dailyMissions[day] ?? []
-            let hasAttendance = !missions.isEmpty
-            let missionCount = missions.count
-            let isSpecial = calendarData?.specialDays.contains(day) ?? false
             
-            cell.configure(day: day, isSelected: isSelected, isToday: isToday, hasAttendance: hasAttendance, missionCount: missionCount, isSpecial: isSpecial)
+            // dailyMissions에서 해당 날짜 데이터 찾기
+            let missionForDay = dailyMissions.first { $0.day == day }
+            let hasAttendance = missionForDay?.hasCompleted ?? false
+            let missionCount = missionForDay?.completedCount ?? 0
+            let isSpecial = missionCount >= 3  // 예: 3개 이상 완료 시 특별 표시
+            
+            cell.configure(
+                day: day,
+                isSelected: isSelected,
+                isToday: isToday,
+                hasAttendance: hasAttendance,
+                missionCount: missionCount,
+                isSpecial: isSpecial
+            )
         }
         
         return cell
@@ -739,12 +831,27 @@ extension HistoryViewController: UICollectionViewDataSource, UICollectionViewDel
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let firstWeekday = firstWeekdayOfMonth()
-        if indexPath.item >= firstWeekday {
-            let day = indexPath.item - firstWeekday + 1
-            selectedDay = day
-            updateMissionCard()
-            collectionView.reloadData()
+        guard indexPath.item >= firstWeekday else { return }
+        
+        let day = indexPath.item - firstWeekday + 1
+        selectedDay = day
+        
+        // 해당 날짜의 완료 여부 확인
+        let missionForDay = dailyMissions.first { $0.day == day }
+        let hasCompleted = missionForDay?.hasCompleted ?? false
+        
+        // 미션 타이틀 업데이트
+        updateMissionTitle(for: day)
+        
+        // 완료된 미션이 없으면 빈 상태 UI 표시
+        if !hasCompleted {
+            updateMissionCard(with: [])
         }
+        
+        // ViewModel에 선택 이벤트 전달
+        daySelectedRelay.accept((day: day, hasCompleted: hasCompleted))
+        
+        collectionView.reloadData()
     }
     
     private func isDateToday(day: Int) -> Bool {
