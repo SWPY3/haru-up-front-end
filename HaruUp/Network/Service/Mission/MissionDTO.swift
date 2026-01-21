@@ -201,4 +201,20 @@ enum MemberMission {
         let targetDate: String  // yyyy-MM-dd
         let isCompleted: Bool
     }
+    
+    // MARK: 월별 미션 완료
+    struct HistoryRequestDTO: Encodable {
+        let targetMonth: String
+    }
+    
+    struct HistoryResponseDTO: Decodable {
+        let success: Bool
+        let data: [HistoryDTO]
+        let errorMessage: String?
+    }
+    
+    struct HistoryDTO: Decodable {
+        let targetDate: String
+        let completedCount: Int
+    }
 }

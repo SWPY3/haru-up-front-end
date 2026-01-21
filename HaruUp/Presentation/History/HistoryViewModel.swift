@@ -30,12 +30,12 @@ final class HistoryViewModel {
     }
     
     // MARK: - Properties
-    private let historyService: HistoryServiceProtocol
+    private let missionService: MissionServiceProtocol
     private let disposeBag = DisposeBag()
     
     // MARK: - Init
-    init(historyService: HistoryServiceProtocol = HistoryService()) {
-        self.historyService = historyService
+    init(missionService: MissionServiceProtocol) {
+        self.missionService = missionService
     }
     
     // MARK: - Transform
@@ -80,7 +80,7 @@ final class HistoryViewModel {
                 
                 let targetMonth = self.formatMonth(from: date)
                 
-                return self.historyService.fetchMonthlyMissions(targetMonth: targetMonth)
+                return self.missionService.fetchMonthlyMissions(targetMonth: targetMonth)
                     .asObservable()
                     .map { response -> [DailyMission] in
                         // DTO → Domain Model 변환

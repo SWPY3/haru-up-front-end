@@ -27,6 +27,8 @@ protocol MissionServiceProtocol {
     func setMissionStatus(id: Int, status: String) -> Single<MemberMission.MissionStatusResponseDTO>
     // 미션 달성 일정
     func fetchChallengeDate() -> Single<MemberMission.ChallengeResponseDTO>
+    // 월별 미션 완료일
+    func fetchMonthlyMissions(targetMonth: String) -> Single<MemberMission.HistoryResponseDTO>
 }
 
 final class MissionService: Service, MissionServiceProtocol {
@@ -139,6 +141,18 @@ final class MissionService: Service, MissionServiceProtocol {
         let query = MemberMission.ChallengeRequestDTO(startDate: startDate, endDate: endDate)
 
         return request(url, method: .get, header: headers, query: query)
+    }
+    
+    func fetchMonthlyMissions(targetMonth: String) -> Single<MemberMission.HistoryResponseDTO> {
+        let url: String = NetworkDefine.MissionAPI.history.url + "/\(targetMonth)"
+        
+        var headers: HTTPHeaders = ["Accept": "application/json"]
+
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
+        
+        return request(url, method: .post, header: headers)
     }
 }
 

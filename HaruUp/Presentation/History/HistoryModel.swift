@@ -40,13 +40,13 @@ struct DailyMission {
 
 // MARK: - DTO → Domain 변환
 extension DailyMission {
-    init(from dto: MissionHistory.HistoryDTO) {
+    init(from dto: MemberMission.HistoryDTO) {
         self.targetDate = dto.targetDate
         self.completedCount = dto.completedCount
     }
 }
 
-extension Array where Element == MissionHistory.HistoryDTO {
+extension Array where Element == MemberMission.HistoryDTO {
     func toDomain() -> [DailyMission] {
         self.map { DailyMission(from: $0) }
     }
