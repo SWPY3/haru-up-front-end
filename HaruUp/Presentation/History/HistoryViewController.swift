@@ -140,7 +140,7 @@ class HistoryViewController: UIViewController {
     private let missionContentStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 16
+        stackView.spacing = 0
         
         return stackView
     }()
@@ -369,6 +369,7 @@ class HistoryViewController: UIViewController {
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
         
+        // TODO: 데이터 서버로부터 갱신 필요
         GrowthChartViewFactory.configure(chartView, with: [
             ("8월", 8),
             ("9월", 15),
