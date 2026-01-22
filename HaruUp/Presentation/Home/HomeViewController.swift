@@ -178,7 +178,6 @@ class HomeViewController: UIViewController {
                     
                     cell.configure(mission: mission)
                     cell.onTapSetting = { [weak self] in
-                        print("setting tap")
                         self?.onShowBottomSheet?(mission)
                     }
                     

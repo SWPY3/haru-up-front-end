@@ -24,6 +24,7 @@ class HistoryViewController: UIViewController {
     private let viewDidLoadRelay = PublishRelay<Void>()
     private let monthChangedRelay = PublishRelay<Date>()
     private let daySelectedRelay = PublishRelay<(day: Int, hasCompleted: Bool)>()
+    private let needRefreshRelay = BehaviorRelay<Bool>(value: false)
     
     // MARK: - UI Components
     private let viewTitleLabel: UILabel = {
@@ -219,6 +220,7 @@ class HistoryViewController: UIViewController {
         selectToday()
         
         bindViewModel()
+        bindNotifications()
         viewDidLoadRelay.accept(())
     }
     
@@ -460,6 +462,32 @@ class HistoryViewController: UIViewController {
             .disposed(by: disposeBag)
     }
     
+    private func bindNotifications() {
+        NotificationCenter.default.rx
+            .notification(.missionCompleted)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] notification in
+                guard let self = self else { return }
+                
+                if self.isViewLoaded && self.view.window != nil {
+                    monthChangedRelay.accept(currentDate)
+                } else {
+                    self.needRefreshRelay.accept(true)
+                }
+                
+            })
+            .disposed(by: disposeBag)
+        
+        rx.methodInvoked(#selector(viewWillAppear))
+            .withLatestFrom(needRefreshRelay)
+            .filter { $0 }
+            .subscribe(onNext: { [weak self] _ in
+                guard let self = self else { return }
+                self.monthChangedRelay.accept(self.currentDate)
+                self.needRefreshRelay.accept(false)
+            })
+    }
+    
     // MARK: - Actions
     private func setupActions() {
         prevButton.addTarget(self, action: #selector(prevMonthTapped), for: .touchUpInside)
@@ -467,7 +495,6 @@ class HistoryViewController: UIViewController {
     }
     
     @objc private func prevMonthTapped() {
-        print("prevMonthTapped")
         if let newDate = Calendar.current.date(byAdding: .month, value: -1, to: currentDate) {
             currentDate = newDate
             updateMonthYearLabel()
@@ -480,7 +507,6 @@ class HistoryViewController: UIViewController {
     }
     
     @objc private func nextMonthTapped() {
-        print("nextMonthTapped")
         if let newDate = Calendar.current.date(byAdding: .month, value: 1, to: currentDate) {
             currentDate = newDate
             updateMonthYearLabel()

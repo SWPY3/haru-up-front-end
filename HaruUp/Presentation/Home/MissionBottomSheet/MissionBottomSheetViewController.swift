@@ -217,6 +217,8 @@ final class MissionBottomSheetViewController: UIViewController {
         
         output.complete
             .emit(onNext: { [weak self] _ in
+                // 완료 했을 때 Notification 전달
+                NotificationCenter.default.post(name: .missionCompleted, object: nil)
                 self?.showCompleteView()
                 
                 self?.onMissionStatusChanged?()
