@@ -37,13 +37,13 @@ class CalendarCell: UICollectionViewCell {
         return imageView
     }()
     
-    private let dotsStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.spacing = 3
-        stack.distribution = .fillEqually
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
+    private let selectedView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .calendarSelected
+        view.clipsToBounds = true
+        view.isHidden = true  // 기본값은 숨김
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }()
     
     override init(frame: CGRect) {
@@ -55,22 +55,36 @@ class CalendarCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        // 셀 재사용 시 초기화
+        selectedView.isHidden = true
+        todayImageView.alpha = 0.0
+        clearMissionImageView.alpha = 0.0
+        dayLabel.text = ""
+        dayLabel.textColor = .black
+    }
+    
     private func setupUI() {
         contentView.addSubview(todayImageView)
         contentView.addSubview(clearMissionImageView)
         contentView.addSubview(dayLabel)
+        contentView.addSubview(selectedView)
         
         NSLayoutConstraint.activate([
             todayImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             todayImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-//            todayImageView.widthAnchor.constraint(equalToConstant: 50),
-//            todayImageView.heightAnchor.constraint(equalToConstant: 50),
             
             clearMissionImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             clearMissionImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             
             dayLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             dayLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            
+            selectedView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            selectedView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            selectedView.widthAnchor.constraint(equalTo: clearMissionImageView.widthAnchor),
+            selectedView.heightAnchor.constraint(equalTo: clearMissionImageView.widthAnchor),
         ])
     }
     
@@ -78,18 +92,21 @@ class CalendarCell: UICollectionViewCell {
         guard let day = day else {
             dayLabel.text = ""
             todayImageView.alpha = 0.0
-            dotsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            clearMissionImageView.alpha = 0.0
+            selectedView.isHidden = true
             return
         }
         
         dayLabel.text = "\(day)"
         
-        if isToday {
-            todayImageView.alpha = 1.0
-        } else {
-            todayImageView.alpha = 0.0
-        }
+        // 선택 상태 처리
+        selectedView.isHidden = !isSelected
+        selectedView.layer.cornerRadius = selectedView.bounds.width / 2
         
+        // 오늘 날짜 표시
+        todayImageView.alpha = isToday ? 1.0 : 0.0
+        
+        // 미션 완료 표시 및 텍스트 색상
         if missionCount > 0 {
             clearMissionImageView.alpha = 1.0
             let missionCountString = "icon_calendar_clear_\(missionCount)"
