@@ -16,6 +16,8 @@ class HomeViewController: UIViewController {
     private let viewDidLoadRelay = PublishRelay<Void>() // PublishSubject에서 PublishRelay로 변경.
     private let viewDidAppearRelay = PublishRelay<Void>()
     private let reloadSubject = PublishSubject<Void>()
+    private let profileRefreshSubject = PublishSubject<Void>()
+    private let needProfileRefreshRelay = BehaviorRelay<Bool>(value: false) // 사용자 프로필 수정 시 refresh
     private let disposeBag = DisposeBag()
     
     var onSelectTodayMission: (() -> Void)? // Coordinator와의 연결은 단순히 클로저 사용
@@ -62,8 +64,10 @@ class HomeViewController: UIViewController {
         super.viewDidLoad()
         
         setupView()
-        bind()
         setActions()
+        
+        bind()
+        bindViewModel()
         
         viewDidLoadRelay.accept(())
     }
@@ -140,7 +144,8 @@ class HomeViewController: UIViewController {
         let input = HomeViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
             viewDidAppear: viewDidAppearRelay.asObservable(),
-            reload: reloadSubject.asObservable()
+            reload: reloadSubject.asObservable(),
+            profileRefresh: profileRefreshSubject.asObservable()
         )
         
         let output = viewModel.transform(input: input)
@@ -246,6 +251,32 @@ class HomeViewController: UIViewController {
             .drive(onNext: { [weak self] listData in
                 self?.challengeData = listData
             })
+            .disposed(by: disposeBag)
+    }
+    
+    private func bindViewModel() {
+        NotificationCenter.default.rx
+            .notification(.changedProfile)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] _ in
+                guard let self else { return }
+                
+                if self.isViewLoaded && self.view.window != nil {
+                    self.profileRefreshSubject.onNext(())
+                } else {
+                    self.needProfileRefreshRelay.accept(true)
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        rx.methodInvoked(#selector(viewWillAppear))
+            .withLatestFrom(needProfileRefreshRelay)
+            .filter { $0 }
+            .subscribe { [weak self] _ in
+                guard let self = self else { return }
+                self.profileRefreshSubject.onNext(())
+                self.needProfileRefreshRelay.accept(false)
+            }
             .disposed(by: disposeBag)
     }
     

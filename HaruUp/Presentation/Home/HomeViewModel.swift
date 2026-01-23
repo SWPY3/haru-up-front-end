@@ -15,6 +15,7 @@ final class HomeViewModel {
         let viewDidLoad: Observable<Void>
         let viewDidAppear: Observable<Void>
         let reload: Observable<Void>
+        let profileRefresh: Observable<Void>
     }
 
     struct Output {
@@ -99,7 +100,12 @@ final class HomeViewModel {
             .bind(to: challengeDataRelay)
             .disposed(by: disposeBag)
         
-        let userInfo = loadTrigger
+        let userInfoTrigger = Observable.merge(
+            loadTrigger,
+            input.profileRefresh
+        )
+        
+        let userInfo = userInfoTrigger
             .flatMapLatest { [weak self] _ -> Observable<HomeMemberInfo> in
                 guard let self = self else { return .empty() }
                 
@@ -249,7 +255,7 @@ final class HomeViewModel {
     
     private func resolveMemberInterestId() -> Single<Int> {
         // UserDefaults에 저장된 값 사용
-        if let saved = UserStorage.shared.selectedMemberInterestId {
+        if let saved = UserDefaultsManager.shared.selectedMemberInterestId {
             return .just(saved)
         }
         
@@ -262,7 +268,7 @@ final class HomeViewModel {
                                   userInfo: [NSLocalizedDescriptionKey: "관심사가 없습니다."])
                 }
                 
-                UserStorage.shared.selectedMemberInterestId = id // UserDefaults 값 업데이트
+                UserDefaultsManager.shared.selectedMemberInterestId = id // UserDefaults 값 업데이트
                 return id
             }
     }

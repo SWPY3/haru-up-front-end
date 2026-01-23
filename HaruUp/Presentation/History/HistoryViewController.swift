@@ -490,6 +490,7 @@ class HistoryViewController: UIViewController {
                 self.monthChangedRelay.accept(self.currentDate)
                 self.needRefreshRelay.accept(false)
             })
+            .disposed(by: disposeBag)
     }
     
     // MARK: - Actions

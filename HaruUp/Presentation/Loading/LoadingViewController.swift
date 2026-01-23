@@ -227,7 +227,7 @@ class LoadingViewController: UIViewController {
             .subscribe(onNext: { [weak self] memberInterestIds in
                 guard let self = self else { return }
                 print("🚀 다음 화면으로 이동. 전달 데이터: \(memberInterestIds)")
-                UserStorage.shared.selectedMemberInterestId = memberInterestIds.first
+                UserDefaultsManager.shared.selectedMemberInterestId = memberInterestIds.first
                 
                 self.onFinish?()
             })

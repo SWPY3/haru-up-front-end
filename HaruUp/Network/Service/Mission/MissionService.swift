@@ -32,7 +32,6 @@ protocol MissionServiceProtocol {
 }
 
 final class MissionService: Service, MissionServiceProtocol {
-    private let defaults = UserDefaults.standard
     
     func requestRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO> {
         
@@ -168,15 +167,11 @@ final class MissionService: Service, MissionServiceProtocol {
 // MARK: UserDefaults - 미션 선택 여부
 extension MissionService {
     func needShowTodayMissionFlow() -> Single<Bool> {
-        let today = Self.todayString()
-        let saved = defaults.string(forKey: UserDefaultsKey.todayMissionSelectedDate)
-        let needShow = (saved != today)
-        return .just(needShow)
+        return .just(UserDefaultsManager.shared.needShowTodayMissionFlow)
     }
     
     func markTodayMissionSelected() {
-        let today = Self.todayString()
-        defaults.set(today, forKey: UserDefaultsKey.todayMissionSelectedDate)
+        UserDefaultsManager.shared.markTodayMissionSelected()
     }
     
     private static func todayString() -> String {

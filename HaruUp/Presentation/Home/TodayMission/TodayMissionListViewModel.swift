@@ -243,7 +243,7 @@ final class TodayMissionListViewModel {
     
     private func resolveMemberInterestId() -> Single<Int> {
         // UserDefaults에 저장된 값 사용
-        if let saved = UserStorage.shared.selectedMemberInterestId {
+        if let saved = UserDefaultsManager.shared.selectedMemberInterestId {
             return .just(saved)
         }
         
@@ -256,7 +256,7 @@ final class TodayMissionListViewModel {
                                   userInfo: [NSLocalizedDescriptionKey: "관심사가 없습니다."])
                 }
                 
-                UserStorage.shared.selectedMemberInterestId = id // UserDefaults 값 업데이트
+                UserDefaultsManager.shared.selectedMemberInterestId = id // UserDefaults 값 업데이트
                 return id
             }
     }

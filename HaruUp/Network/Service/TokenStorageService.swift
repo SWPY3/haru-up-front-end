@@ -276,7 +276,7 @@ final class TokenStorageService {
     }
     
     private func clearSelectedInterestId() {
-        UserStorage.shared.selectedMemberInterestId = nil
+        UserDefaultsManager.shared.clearSelectedMemberInterestId()
         print("🗑️ 선택된 관심사 ID 초기화")
     }
     
