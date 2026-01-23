@@ -175,6 +175,7 @@ class HistoryViewController: UIViewController {
         let view = UIView()
         view.backgroundColor = .white
         view.layer.cornerRadius = 24
+        view.isHidden = true // TODO: chart API 연결 전 해당 UI 숨김
         
         return view
     }()
