@@ -145,8 +145,15 @@ enum MemberMission {
     }
     
     // MARK: 미션 목록
+    enum MissionStatusType: String {
+        case active = "ACTIVE"
+        case inactive = "INACTIVE"
+        case completed = "COMPLETED"
+    }
+    
     struct FetchMissionRequestDTO: Encodable {
-        let missionStatus: String = "ACTIVE,COMPLETED"
+        let missionStatus: String // ACTIVE, INACTIVE, COMPLETED
+        let targetDate: String // yyyy-MM-dd
         let memberInterestId: Int
     }
     
@@ -200,5 +207,21 @@ enum MemberMission {
     struct ChallengeDataDTO: Decodable {
         let targetDate: String  // yyyy-MM-dd
         let isCompleted: Bool
+    }
+    
+    // MARK: 월별 미션 완료
+    struct HistoryRequestDTO: Encodable {
+        let targetMonth: String
+    }
+    
+    struct HistoryResponseDTO: Decodable {
+        let success: Bool
+        let data: [HistoryDTO]
+        let errorMessage: String?
+    }
+    
+    struct HistoryDTO: Decodable {
+        let targetDate: String
+        let completedCount: Int
     }
 }

@@ -39,6 +39,12 @@ class Service {
                 case .success(let value):
                     single(.success(value))
                 case .failure(let error):
+                    if error.isExplicitlyCancelledError {
+                        print("요청이 취소되었습니다. (에러 처리 무시)")
+                        return
+                    }
+                    
+                    // 진짜 에러인 경우에만 로그 찍고 failure 전달
                     if let data = resp.data,
                        let body = String(data: data, encoding: .utf8) {
                         print("Server error body:", body)

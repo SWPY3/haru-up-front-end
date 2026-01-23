@@ -216,7 +216,17 @@ final class HomeViewModel {
             .flatMap { [weak self] id -> Observable<MemberMission.FetchMissionResponseDTO> in
                 guard let self = self else { return .empty() }
                 
-                return self.missionService.fetchMissionList(memberInterestId: id).asObservable()
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                let todayString = formatter.string(from: Date())
+                
+                let status: [MemberMission.MissionStatusType] = [.completed, .active]
+                
+                return self.missionService.fetchMissionList(
+                    memberInterestId: id,
+                    targetDate: todayString,
+                    status: status
+                ).asObservable()
             }
             .map { response -> [Mission] in
                 let missions = response.data

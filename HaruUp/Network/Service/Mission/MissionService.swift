@@ -22,11 +22,13 @@ protocol MissionServiceProtocol {
     func selectMissions(missionIDs: [Int]) -> Single<MemberMission.SelectMissionResponseDTO>
     func markTodayMissionSelected() // UserDefaults 갱신
     // 미션 목록 표시
-    func fetchMissionList(memberInterestId: Int) -> Single<MemberMission.FetchMissionResponseDTO>
+    func fetchMissionList(memberInterestId: Int, targetDate: String, status: [MemberMission.MissionStatusType]) -> Single<MemberMission.FetchMissionResponseDTO>
     // 미션 완료 및 삭제
     func setMissionStatus(id: Int, status: String) -> Single<MemberMission.MissionStatusResponseDTO>
     // 미션 달성 일정
     func fetchChallengeDate() -> Single<MemberMission.ChallengeResponseDTO>
+    // 월별 미션 완료일
+    func fetchMonthlyMissions(targetMonth: String) -> Single<MemberMission.HistoryResponseDTO>
 }
 
 final class MissionService: Service, MissionServiceProtocol {
@@ -92,17 +94,23 @@ final class MissionService: Service, MissionServiceProtocol {
         return request(url, method: .post, header: headers, body: body)
     }
     
-    func fetchMissionList(memberInterestId: Int) -> Single<MemberMission.FetchMissionResponseDTO> {
+    func fetchMissionList(memberInterestId: Int, targetDate: String, status: [MemberMission.MissionStatusType]) -> Single<MemberMission.FetchMissionResponseDTO> {
         
         let url: String = NetworkDefine.MissionAPI.list.url
         
         var headers: HTTPHeaders = ["Accept": "application/json"]
-
+        
         if let accessToken = TokenStorageService.shared.getAccessToken() {
             headers["Authorization"] = "Bearer \(accessToken)"
         }
         
-        let query = MemberMission.FetchMissionRequestDTO(memberInterestId: memberInterestId)
+        let statusString = status.map { $0.rawValue }.joined(separator: ",")
+        
+        let query = MemberMission.FetchMissionRequestDTO(
+            missionStatus: statusString,
+            targetDate: targetDate,
+            memberInterestId: memberInterestId
+        )
 
         return request(url, method: .get, header: headers, query: query)
     }
@@ -139,6 +147,21 @@ final class MissionService: Service, MissionServiceProtocol {
         let query = MemberMission.ChallengeRequestDTO(startDate: startDate, endDate: endDate)
 
         return request(url, method: .get, header: headers, query: query)
+    }
+    
+    func fetchMonthlyMissions(targetMonth: String) -> Single<MemberMission.HistoryResponseDTO> {
+        
+        print("fetchMonthlyMissions")
+        
+        let url: String = NetworkDefine.MissionAPI.history.url + "/\(targetMonth)"
+        
+        var headers: HTTPHeaders = ["Accept": "application/json"]
+
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
+        
+        return request(url, method: .post, header: headers)
     }
 }
 
