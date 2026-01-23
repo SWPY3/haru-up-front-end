@@ -159,7 +159,7 @@ class MyPageViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         bind()
-        print("우리가 사용하는 중요한 MemberInterestId: \(UserStorage.shared.selectedMemberInterestId)")
+        print("우리가 사용하는 중요한 MemberInterestId: \(UserDefaultsManager.shared.selectedMemberInterestId)")
         print("토큰 스토리지에서 getInterests한 MemberId: \(TokenStorageService.shared.getMemberInterests()?.first?.memberId)")
         print("토큰 스토리지에서 getInterests한 memberInterestId: \(TokenStorageService.shared.getMemberInterests()?.first?.memberInterestId)")
     }

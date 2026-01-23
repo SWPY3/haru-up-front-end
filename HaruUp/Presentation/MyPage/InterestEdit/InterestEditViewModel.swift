@@ -672,7 +672,7 @@ final class InterestEditViewModel {
             guard let self = self else { return Disposables.create() }
             
             // 1. MemberInterestId 가져오기
-            var targetMemberInterestId: Int? = UserStorage.shared.selectedMemberInterestId
+            var targetMemberInterestId: Int? = UserDefaultsManager.shared.selectedMemberInterestId
 //            if targetMemberInterestId == nil {
 //                if let data = TokenStorageService.shared.getCurationData(),
 //                   let ids = data.memberInterestIds,
