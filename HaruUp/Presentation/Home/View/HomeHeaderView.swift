@@ -112,6 +112,14 @@ final class HomeHeaderView: UIView {
         return imageView
     }()
     
+    private let shadowView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .red.withAlphaComponent(0.2)
+        view.isHidden = true
+        
+        return view
+    }()
+    
     private let characterInfoStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -346,14 +354,22 @@ final class HomeHeaderView: UIView {
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
         
+        characterContainer.addSubview(shadowView)
+        shadowView.translatesAutoresizingMaskIntoConstraints = false
+        
         NSLayoutConstraint.activate([
             characterImageView.topAnchor.constraint(equalTo: characterContainer.topAnchor),
             characterImageView.bottomAnchor.constraint(equalTo: characterContainer.bottomAnchor),
             characterImageView.leadingAnchor.constraint(equalTo: characterContainer.leadingAnchor),
             characterImageView.trailingAnchor.constraint(equalTo: characterContainer.trailingAnchor),
             
-            characterShadowImageView.bottomAnchor.constraint(equalTo: characterImageView.bottomAnchor, constant: -3),
-            characterShadowImageView.leadingAnchor.constraint(equalTo: characterImageView.centerXAnchor, constant: -32)
+            characterShadowImageView.bottomAnchor.constraint(equalTo: characterImageView.bottomAnchor, constant: 6),
+            characterShadowImageView.leadingAnchor.constraint(equalTo: characterImageView.centerXAnchor, constant: -40),
+            
+            shadowView.topAnchor.constraint(equalTo: characterShadowImageView.topAnchor),
+            shadowView.bottomAnchor.constraint(equalTo: characterShadowImageView.bottomAnchor),
+            shadowView.leadingAnchor.constraint(equalTo: characterShadowImageView.leadingAnchor),
+            shadowView.trailingAnchor.constraint(equalTo: characterShadowImageView.trailingAnchor)
         ])
     }
     
@@ -453,7 +469,8 @@ final class HomeHeaderView: UIView {
         let characterId = userInfo.characterId
         let characterImageName = characterId == 1 ? "haru" : "naru"
         let characterLevel = userInfo.level
-        let characterImage = "character_\(characterImageName)_level\(characterLevel)"
+//        let characterImage = "character_\(characterImageName)_level\(characterLevel)"
+        let characterImage = "character_naru_level2"
         let characterLevelName = CharacterLevel(rawValue: characterLevel)?.title ?? "도전하는"
         let characterName = characterId == 1 ? "하루" : "나루"
         let characterNameText = "\(characterLevelName) \(characterName)"
