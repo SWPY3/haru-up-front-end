@@ -69,7 +69,7 @@ final class MissionDayBottomSheetViewController: UIViewController {
     
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.body4, text: "시작이 반이에요. 화이팅!")
+        label.font = Typography.body4.font
         label.textColor = .neutral700
         label.textAlignment = .center
         
@@ -166,6 +166,9 @@ final class MissionDayBottomSheetViewController: UIViewController {
         }
         
         dayLabel.setStyledText(Typography.title2, fullText: "\(countDay) 일차", highlightedText: "\(countDay)", highlightedColor: .primaryBlue700, defaultColor: .black, highlightedFont: Typography.head2.font)
+        
+        let descriptionText = countDay == 1 ? "시작이 반이에요. 화이팅!" : "대단해요! 잘하고 있어요."
+        descriptionLabel.setStyle(Typography.body4, text: descriptionText)
         
         NSLayoutConstraint.activate([
             textStackView.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 12),
