@@ -662,7 +662,7 @@ final class InterestEditViewModel {
         let min = goalLockoutRemainingSeconds / 60
         let sec = goalLockoutRemainingSeconds % 60
         // 메시지 포맷
-        let msg = "*직접입력 목표는 \(min)분 \(sec)초 후에 입력가능해요"
+        let msg = "*직접입력 목표는 \(min)분 \(sec)초 후에 입력 가능해요"
         goalLockWarningRelay.accept(msg)
     }
     

@@ -67,7 +67,7 @@ final class MyPageViewModel {
             })
             .disposed(by: disposeBag)
         
-        let version = Driver.just("버전.v.1.0.0")
+        let version = Driver.just("버전.v.1.0.2")
         
         // 로그아웃 Alert 표시
         let showLogoutAlert = input.logoutTapped

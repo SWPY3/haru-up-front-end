@@ -1,0 +1,13 @@
+//
+//  NotificationSettingViewModel.swift
+//  HaruUp
+//
+//  Created by 하다현 on 1/16/26.
+//
+
+import Foundation
+
+
+final class NotificationSettingViewModel {
+    
+}

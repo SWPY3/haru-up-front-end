@@ -80,6 +80,7 @@ final class HomeHeaderView: UIView {
     
     private let bubbleView: SpeechBubbleView = {
         let view = SpeechBubbleView()
+        view.isHidden = true
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -95,7 +96,7 @@ final class HomeHeaderView: UIView {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
-        imageView.image = .characterHaruLevel1
+        imageView.image = nil
         imageView.isUserInteractionEnabled = true
         
         return imageView
@@ -106,6 +107,7 @@ final class HomeHeaderView: UIView {
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         imageView.image = .characterShadow
+        imageView.isHidden = true
         
         return imageView
     }()
@@ -139,13 +141,14 @@ final class HomeHeaderView: UIView {
         view.backgroundColor = .neutral400
         view.layer.cornerRadius = 8
         view.clipsToBounds = true
+        view.isHidden = true
         
         return view
     }()
     
     private let characterLevelLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.level, text: "Lv. 1")
+//        label.setStyle(Typography.level, text: "Lv. 1")
         label.textColor = .white
         
         return label
@@ -153,7 +156,7 @@ final class HomeHeaderView: UIView {
     
     private let characterNameLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.subtitle2, text: "꾸준한 하루")
+//        label.setStyle(Typography.subtitle2, text: "꾸준한 하루")
         label.textColor = .black
         
         return label
@@ -457,10 +460,18 @@ final class HomeHeaderView: UIView {
         
         characterLevelLabel.setStyle(Typography.level, text: "Lv. \(characterLevel)")
         characterNameLabel.setStyle(Typography.subtitle2, text: characterNameText)
-        characterImageView.image = UIImage(named: characterImage)
+//        characterImageView.image = UIImage(named: characterImage)
+        UIView.transition(with: characterImageView, duration: 0.3, options: .transitionCrossDissolve) {
+            self.characterImageView.image = UIImage(named: characterImage)
+        }
         expProgressView.progress = userInfo.currentExp == 0 ? 0.0 : CGFloat(userInfo.currentExp) / CGFloat(userInfo.maxExp)
         currentExpLabel.setStyle(Typography.caption1, text: "\(userInfo.currentExp)")
         maxExpLabel.setStyle(Typography.caption1, text: "\(userInfo.maxExp)")
+        
+        // 데이터가 표시되기 시작한 후 Hidden 처리 개선
+        bubbleView.isHidden = false
+        characterShadowImageView.isHidden = false
+        characterLevelContainer.isHidden = false
     }
     
     func updateChallengeDay(_ day: Int) {

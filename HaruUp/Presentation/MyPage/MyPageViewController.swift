@@ -19,6 +19,7 @@ class MyPageViewController: UIViewController {
     // Coordinator 연결용
     var onEditProfile: (() -> Void)?
     var onEditInterest: (() -> Void)?
+    var onNotificationSetting: (() -> Void)?
     var onLogout: (() -> Void)?
     var onWithdraw: (() -> Void)?
     
@@ -123,8 +124,11 @@ class MyPageViewController: UIViewController {
     }()
     
     private let editInterestBtn = MyPageMenuButton(title: "관심사 수정")
-    private let feedbackBtn = MyPageMenuButton(title: "의견남기기")   // 변경됨
-    private let inquiryBtn = MyPageMenuButton(title: "문의하기")      // 추가됨
+    private let feedbackBtn = MyPageMenuButton(title: "의견남기기")
+    private let inquiryBtn = MyPageMenuButton(title: "문의하기")
+    private let notificationSettingButton = MyPageMenuButton(title: "알림 설정")
+    private let termsButton = MyPageMenuButton(title: "서비스 이용약관")
+    private let privacyPolicyButton = MyPageMenuButton(title: "개인정보 처리방침")
     private let logoutBtn = MyPageMenuButton(title: "로그아웃", hasArrow: false)
     private let withdrawBtn = MyPageMenuButton(title: "탈퇴하기", hasArrow: false, isDestructive: true, showSeparator: false)
     
@@ -175,7 +179,7 @@ class MyPageViewController: UIViewController {
         }
         goalBadgeContainer.addSubview(goalBadgeLabel)
         
-        [editInterestBtn, feedbackBtn, inquiryBtn, logoutBtn, withdrawBtn].forEach {
+        [editInterestBtn, feedbackBtn, inquiryBtn, notificationSettingButton, termsButton, privacyPolicyButton, logoutBtn, withdrawBtn].forEach {
             menuStackView.addArrangedSubview($0)
         }
         
@@ -372,9 +376,35 @@ class MyPageViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
+        // 이용약관 이동
+        termsButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                guard let url = URL(string: "https://melodic-roar-3e1.notion.site/2e0849f596f380eabc6de523ab0d9bd9") else { return }
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        // 개인정보 처리방침 이동
+        privacyPolicyButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                guard let url = URL(string: "https://melodic-roar-3e1.notion.site/2e0849f596f380969043ee98e361c7bf") else { return }
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
+            })
+            .disposed(by: disposeBag)
+        
         
         editInterestBtn.rx.tap
             .subscribe(onNext: { [weak self] in self?.onEditInterest?() })
+            .disposed(by: disposeBag)
+        
+        notificationSettingButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.onNotificationSetting?() // 코디네이터에게 알림
+            })
             .disposed(by: disposeBag)
     }
     
