@@ -38,6 +38,24 @@ struct DailyMission {
     }
 }
 
+// MARK: - Calendar 데이터 모델
+struct CalendarDay {
+    let day: Int
+    let month: Int  // 해당 날짜의 실제 월
+    let year: Int   // 해당 날짜의 실제 연도
+    let isCurrentMonth: Bool
+    
+    /// 이전달로 이동해야 하는지
+    var isPreviousMonth: Bool {
+        return !isCurrentMonth && day > 15
+    }
+    
+    /// 다음달로 이동해야 하는지
+    var isNextMonth: Bool {
+        return !isCurrentMonth && day < 15
+    }
+}
+
 // MARK: - DTO → Domain 변환
 extension DailyMission {
     init(from dto: MemberMission.HistoryDTO) {

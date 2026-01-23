@@ -88,16 +88,18 @@ class CalendarCell: UICollectionViewCell {
         ])
     }
     
-    func configure(day: Int?, isSelected: Bool, isToday: Bool, hasAttendance: Bool, missionCount: Int, isSpecial: Bool) {
-        guard let day = day else {
-            dayLabel.text = ""
+    func configure(day: Int, isCurrentMonth: Bool, isSelected: Bool, isToday: Bool, missionCount: Int) {
+        
+        dayLabel.text = "\(day)"
+        
+        // 현재 월이 아닌 경우 (이전달/다음달)
+        if !isCurrentMonth {
+            dayLabel.textColor = .neutral200  // 회색으로 표시
             todayImageView.alpha = 0.0
             clearMissionImageView.alpha = 0.0
             selectedView.isHidden = true
             return
         }
-        
-        dayLabel.text = "\(day)"
         
         // 선택 상태 처리
         selectedView.isHidden = !isSelected

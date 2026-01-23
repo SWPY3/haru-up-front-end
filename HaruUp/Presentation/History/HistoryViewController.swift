@@ -13,9 +13,10 @@ class HistoryViewController: UIViewController {
     
     // MARK: - Properties
     private var currentDate = Date()
-    private var calendarData: HistoryModel.CalendarData?
     private var selectedDay: Int?
     private var dailyMissions: [DailyMission] = []
+    private var calendarDays: [CalendarDay] = []
+    private var pendingSelectedDay: Int?  // 월 이동 시 선택할 날짜 저장
     
     private let viewModel: HistoryViewModel
     private let disposeBag = DisposeBag()
@@ -217,7 +218,7 @@ class HistoryViewController: UIViewController {
         setupUI()
         setupActions()
         updateMonthYearLabel()
-        selectToday()
+        generateCalendarDays()
         
         bindViewModel()
         bindNotifications()
@@ -427,7 +428,9 @@ class HistoryViewController: UIViewController {
         output.dailyMissions
             .drive(onNext: { [weak self] missions in
                 self?.dailyMissions = missions
+                self?.generateCalendarDays()
                 self?.calendarCollectionView.reloadData()
+                self?.updateCalendarHeight()
                 self?.selectTodayOrFirst()
             })
             .disposed(by: disposeBag)
@@ -499,6 +502,7 @@ class HistoryViewController: UIViewController {
             currentDate = newDate
             updateMonthYearLabel()
             selectedDay = 1
+            generateCalendarDays()
             
             monthChangedRelay.accept(newDate)
             calendarCollectionView.reloadData()
@@ -511,6 +515,7 @@ class HistoryViewController: UIViewController {
             currentDate = newDate
             updateMonthYearLabel()
             selectedDay = 1
+            generateCalendarDays()
             
             monthChangedRelay.accept(newDate)
             calendarCollectionView.reloadData()
@@ -559,9 +564,78 @@ class HistoryViewController: UIViewController {
         return (container, valueLabel)
     }
     
+    // Calendar 데이터 생성
+    private func generateCalendarDays() {
+        calendarDays.removeAll()
+        
+        let calendar = Calendar.current
+        let currentComponents = calendar.dateComponents([.year, .month], from: currentDate)
+        let currentYear = currentComponents.year!
+        let currentMonth = currentComponents.month!
+        
+        // 현재 월의 첫째 날
+        let firstDayOfMonth = calendar.date(from: currentComponents)!
+        
+        // 현재 월의 일수
+        let daysInMonth = calendar.range(of: .day, in: .month, for: currentDate)!.count
+        
+        // 첫째 날의 요일 (월요일 = 0, 일요일 = 6)
+        let firstWeekday = calendar.component(.weekday, from: firstDayOfMonth)
+        let firstWeekdayIndex = firstWeekday == 1 ? 6 : firstWeekday - 2
+        
+        // 이전 달 정보
+        let previousMonth = calendar.date(byAdding: .month, value: -1, to: firstDayOfMonth)!
+        let previousMonthComponents = calendar.dateComponents([.year, .month], from: previousMonth)
+        let daysInPreviousMonth = calendar.range(of: .day, in: .month, for: previousMonth)!.count
+        
+        // 다음 달 정보
+        let nextMonth = calendar.date(byAdding: .month, value: 1, to: firstDayOfMonth)!
+        let nextMonthComponents = calendar.dateComponents([.year, .month], from: nextMonth)
+        
+        // 1. 이전 달 날짜 추가
+        for i in 0..<firstWeekdayIndex {
+            let day = daysInPreviousMonth - firstWeekdayIndex + 1 + i
+            calendarDays.append(CalendarDay(
+                day: day,
+                month: previousMonthComponents.month!,
+                year: previousMonthComponents.year!,
+                isCurrentMonth: false
+            ))
+        }
+        
+        // 2. 현재 달 날짜 추가
+        for day in 1...daysInMonth {
+            calendarDays.append(CalendarDay(
+                day: day,
+                month: currentMonth,
+                year: currentYear,
+                isCurrentMonth: true
+            ))
+        }
+        
+        // 3. 다음 달 날짜 추가 (6주를 채우기 위해)
+        let totalCells = 42  // 6주 x 7일
+        let remainingCells = totalCells - calendarDays.count
+        
+        // 또는 필요한 만큼만 채우기 (다음 주 토요일까지)
+        let currentCount = calendarDays.count
+        let remainingInWeek = currentCount % 7 == 0 ? 0 : 7 - (currentCount % 7)
+        
+        if remainingInWeek > 0 {  // 추가: 0일 때 for문 실행 방지
+            for day in 1...remainingInWeek {
+                calendarDays.append(CalendarDay(
+                    day: day,
+                    month: nextMonthComponents.month!,
+                    year: nextMonthComponents.year!,
+                    isCurrentMonth: false
+                ))
+            }
+        }
+    }
+    
     private func updateCalendarHeight() {
         let cellWidth = (calendarCollectionView.frame.width) / 7
-        let numberOfRows = ceil(Double(numberOfDaysInMonth() + firstWeekdayOfMonth()) / 7.0)
+        let numberOfRows = ceil(Double(calendarDays.count) / 7.0)  // 수정
         let headerHeight: CGFloat = 40
         let height = (cellWidth * CGFloat(numberOfRows)) + headerHeight
         
@@ -576,19 +650,6 @@ class HistoryViewController: UIViewController {
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "yyyy년 M월"
         monthYearLabel.text = formatter.string(from: currentDate)
-    }
-    
-    private func selectToday() {
-        let calendar = Calendar.current
-        let today = Date()
-        let currentComponents = calendar.dateComponents([.year, .month], from: currentDate)
-        let todayComponents = calendar.dateComponents([.year, .month, .day], from: today)
-        
-        if currentComponents.year == todayComponents.year && currentComponents.month == todayComponents.month {
-            selectedDay = todayComponents.day
-        } else {
-            selectedDay = 1
-        }
     }
     
     // MARK: Create UI Helpers
@@ -642,60 +703,29 @@ class HistoryViewController: UIViewController {
         return separator
     }
     
-    // MARK: - Calendar Helpers
-    private func numberOfDaysInMonth() -> Int {
-        let range = Calendar.current.range(of: .day, in: .month, for: currentDate)!
-        return range.count
-    }
-    
-    private func firstWeekdayOfMonth() -> Int {
-        let components = Calendar.current.dateComponents([.year, .month], from: currentDate)
-        let firstDay = Calendar.current.date(from: components)!
-        let weekday = Calendar.current.component(.weekday, from: firstDay)
-        return weekday == 1 ? 6 : weekday - 2
-    }
-    
     // MARK: - Helper Methods
-    private func updateCalendar(with missions: [DailyMission]) {
-        // 캘린더 CollectionView 업데이트
-        print("mission: \(missions)")
+    // 월 이동
+    private func moveToMonth(year: Int, month: Int, selectDay: Int) {
+        print("🚀 moveToMonth 호출: \(year)년 \(month)월 \(selectDay)일")
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = 1
         
-        self.dailyMissions = missions
+        guard let newDate = Calendar.current.date(from: components) else { return }
         
-        // 출석일 계산 (completedCount > 0인 날 수)
-        let attendanceDays = missions.filter { $0.hasCompleted }.count
-        attendanceValueLabel.text = "\(attendanceDays)"
+        currentDate = newDate
+        selectedDay = selectDay  // 선택한 날짜 설정
         
-        // 완료한 미션 총 개수
-        let totalMissions = missions.reduce(0) { $0 + $1.completedCount }
-        missionValueLabel.text = "\(totalMissions)"
+        pendingSelectedDay = selectDay
+        print("  - pendingSelectedDay 설정: \(selectDay)")
+        
+        updateMonthYearLabel()
+        generateCalendarDays()
+        monthChangedRelay.accept(newDate)
         
         calendarCollectionView.reloadData()
-        updateMissionCardFromDailyMissions()
-    }
-    
-    private func updateMissionCardFromDailyMissions() {
-        guard let day = selectedDay else { return }
-        
-        let month = Calendar.current.component(.month, from: currentDate)
-        let titleText = "\(month)월 \(day)일 완료한 미션"
-        missionTitleLabel.setStyle(Typography.subtitle1, text: titleText)
-        
-        missionContentStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
-        // 선택된 날짜의 미션 데이터 찾기
-        let missionForDay = dailyMissions.first { $0.day == day }
-        let missionCount = missionForDay?.completedCount ?? 0
-        
-        if missionCount == 0 {
-            missionContentStackView.addArrangedSubview(emptyMissionView)
-        } else {
-            // 미션 개수만 표시하거나, 상세 정보가 필요하면 별도 API 호출
-            let summaryLabel = UILabel()
-            summaryLabel.setStyle(Typography.body1, text: "완료한 미션 \(missionCount)개")
-            summaryLabel.textColor = .neutral900
-            missionContentStackView.addArrangedSubview(summaryLabel)
-        }
+        updateCalendarHeight()
     }
     
     private func updateMissionTitle(for day: Int) {
@@ -751,13 +781,25 @@ class HistoryViewController: UIViewController {
         let todayComponents = calendar.dateComponents([.year, .month, .day], from: today)
         
         let day: Int
-        if currentComponents.year == todayComponents.year && currentComponents.month == todayComponents.month {
+        
+        print("🗓 selectTodayOrFirst 호출")
+        print("  - pendingSelectedDay: \(String(describing: pendingSelectedDay))")
+        print("  - currentDate: \(currentDate)")
+        
+        // 월 이동으로 인한 날짜 선택이 있는 경우
+        if let pending = pendingSelectedDay {
+            day = pending
+            pendingSelectedDay = nil  // 사용 후 초기화
+        } else if currentComponents.year == todayComponents.year && currentComponents.month == todayComponents.month {
+            // 현재 월이면 오늘 날짜
             day = todayComponents.day ?? 1
         } else {
+            // 다른 월이면 1일
             day = 1
         }
         
         selectedDay = day
+        print("  - 최종 selectedDay: \(day)")
         
         let missionForDay = dailyMissions.first { $0.day == day }
         let hasCompleted = missionForDay?.hasCompleted ?? false
@@ -789,36 +831,36 @@ class HistoryViewController: UIViewController {
 extension HistoryViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return numberOfDaysInMonth() + firstWeekdayOfMonth()
+        return calendarDays.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CalendarCell.identifier, for: indexPath) as! CalendarCell
         
-        let firstWeekday = firstWeekdayOfMonth()
+        let calendarDay = calendarDays[indexPath.item]
         
-        if indexPath.item < firstWeekday {
-            cell.configure(day: nil, isSelected: false, isToday: false, hasAttendance: false, missionCount: 0, isSpecial: false)
+        // 오늘 날짜 확인
+        let isToday = isDateToday(calendarDay: calendarDay)
+        
+        // 선택된 날짜 확인 (현재 월만)
+        let isSelected = calendarDay.isCurrentMonth && calendarDay.day == selectedDay
+        
+        // 미션 수 (현재 월만)
+        let missionCount: Int
+        if calendarDay.isCurrentMonth {
+            let missionForDay = dailyMissions.first { $0.day == calendarDay.day }
+            missionCount = missionForDay?.completedCount ?? 0
         } else {
-            let day = indexPath.item - firstWeekday + 1
-            let isToday = isDateToday(day: day)
-            let isSelected = day == selectedDay
-            
-            // dailyMissions에서 해당 날짜 데이터 찾기
-            let missionForDay = dailyMissions.first { $0.day == day }
-            let hasAttendance = missionForDay?.hasCompleted ?? false
-            let missionCount = missionForDay?.completedCount ?? 0
-            let isSpecial = missionCount >= 3  // 예: 3개 이상 완료 시 특별 표시
-            
-            cell.configure(
-                day: day,
-                isSelected: isSelected,
-                isToday: isToday,
-                hasAttendance: hasAttendance,
-                missionCount: missionCount,
-                isSpecial: isSpecial
-            )
+            missionCount = 0
         }
+        
+        cell.configure(
+            day: calendarDay.day,
+            isCurrentMonth: calendarDay.isCurrentMonth,
+            isSelected: isSelected,
+            isToday: isToday,
+            missionCount: missionCount
+        )
         
         return cell
     }
@@ -834,39 +876,40 @@ extension HistoryViewController: UICollectionViewDataSource, UICollectionViewDel
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let firstWeekday = firstWeekdayOfMonth()
-        guard indexPath.item >= firstWeekday else { return }
+        guard indexPath.item < calendarDays.count else { return }
         
-        let day = indexPath.item - firstWeekday + 1
-        selectedDay = day
+        let calendarDay = calendarDays[indexPath.item]
         
-        // 해당 날짜의 완료 여부 확인
-        let missionForDay = dailyMissions.first { $0.day == day }
-        let hasCompleted = missionForDay?.hasCompleted ?? false
-        
-        // 미션 타이틀 업데이트
-        updateMissionTitle(for: day)
-        
-        // 완료된 미션이 없으면 빈 상태 UI 표시
-        if !hasCompleted {
-            updateMissionCard(with: [])
+        if calendarDay.isCurrentMonth {
+            // 현재 월의 날짜 선택
+            selectedDay = calendarDay.day
+            
+            let missionForDay = dailyMissions.first { $0.day == calendarDay.day }
+            let hasCompleted = missionForDay?.hasCompleted ?? false
+            
+            updateMissionTitle(for: calendarDay.day)
+            
+            if !hasCompleted {
+                updateMissionCard(with: [])
+            }
+            
+            daySelectedRelay.accept((day: calendarDay.day, hasCompleted: hasCompleted))
+            collectionView.reloadData()
+            
+        } else {
+            // 이전 달 또는 다음 달로 이동 (선택한 날짜도 함께 전달)
+            moveToMonth(year: calendarDay.year, month: calendarDay.month, selectDay: calendarDay.day)
         }
-        
-        // ViewModel에 선택 이벤트 전달
-        daySelectedRelay.accept((day: day, hasCompleted: hasCompleted))
-        
-        collectionView.reloadData()
     }
     
-    private func isDateToday(day: Int) -> Bool {
+    // MARK: - Helper
+    private func isDateToday(calendarDay: CalendarDay) -> Bool {
         let calendar = Calendar.current
         let today = Date()
-        
-        let currentComponents = calendar.dateComponents([.year, .month], from: currentDate)
         let todayComponents = calendar.dateComponents([.year, .month, .day], from: today)
         
-        return currentComponents.year == todayComponents.year &&
-        currentComponents.month == todayComponents.month &&
-        day == todayComponents.day
+        return calendarDay.year == todayComponents.year &&
+        calendarDay.month == todayComponents.month &&
+        calendarDay.day == todayComponents.day
     }
 }
