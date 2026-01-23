@@ -15,7 +15,7 @@ final class HomeHeaderView: UIView {
     private let backgroundImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
-        imageView.image = .imageHomeBackgroundDay
+        imageView.image = nil
         imageView.clipsToBounds = true
         
         return imageView
@@ -148,7 +148,7 @@ final class HomeHeaderView: UIView {
     
     private let characterLevelLabel: UILabel = {
         let label = UILabel()
-//        label.setStyle(Typography.level, text: "Lv. 1")
+        //        label.setStyle(Typography.level, text: "Lv. 1")
         label.textColor = .white
         
         return label
@@ -156,7 +156,7 @@ final class HomeHeaderView: UIView {
     
     private let characterNameLabel: UILabel = {
         let label = UILabel()
-//        label.setStyle(Typography.subtitle2, text: "꾸준한 하루")
+        //        label.setStyle(Typography.subtitle2, text: "꾸준한 하루")
         label.textColor = .black
         
         return label
@@ -180,7 +180,7 @@ final class HomeHeaderView: UIView {
     private let expProgressView: RoundedProgressView = {
         let view = RoundedProgressView()
         view.setColors(trackTintColor: .white, trackBorderColor: .neutral50, progressColor: .primaryBlue700)
-
+        
         return view
     }()
     
@@ -250,6 +250,13 @@ final class HomeHeaderView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window != nil {
+            updateBackgroundImage()
+        }
+    }
+    
     private func setupView() {
         configureBackground()
         configureAchievement()
@@ -259,12 +266,13 @@ final class HomeHeaderView: UIView {
         configureCharacterInfo()
         
         applyBackgroundAspect()
+        updateBackgroundImage()
     }
-
+    
     private func applyBackgroundAspect() {
         guard let backgroundImage = backgroundImageView.image else { return }
         let ratio = backgroundImage.size.height / backgroundImage.size.width
-
+        
         /// 기존의 제약 조건 비활성화 후, 다시 생성 후 적용
         backgroundAspectConstraint?.isActive = false
         backgroundAspectConstraint = heightAnchor.constraint(equalTo: widthAnchor, multiplier: ratio)
@@ -460,7 +468,7 @@ final class HomeHeaderView: UIView {
         
         characterLevelLabel.setStyle(Typography.level, text: "Lv. \(characterLevel)")
         characterNameLabel.setStyle(Typography.subtitle2, text: characterNameText)
-//        characterImageView.image = UIImage(named: characterImage)
+        //        characterImageView.image = UIImage(named: characterImage)
         UIView.transition(with: characterImageView, duration: 0.3, options: .transitionCrossDissolve) {
             self.characterImageView.image = UIImage(named: characterImage)
         }
@@ -480,6 +488,23 @@ final class HomeHeaderView: UIView {
             achievementImageView.image = .iconFireInactive
         } else {
             achievementImageView.image = .iconFireActive
+        }
+    }
+    
+    // MARK: - Time-based Background
+    private func isDaytime() -> Bool {
+        let hour = Calendar.current.component(.hour, from: Date())
+        return hour >= 6 && hour < 19  // 6시~18시(오후 6시)는 낮
+    }
+    
+    private func updateBackgroundImage() {
+        let newImage: UIImage? = isDaytime() ? .imageHomeBackgroundDay : .imageHomeBackgroundNight
+        
+        UIView.transition(with: backgroundImageView,
+                          duration: 0.3,
+                          options: .transitionCrossDissolve) {
+            self.backgroundImageView.image = newImage
+            self.applyBackgroundAspect()
         }
     }
 }
