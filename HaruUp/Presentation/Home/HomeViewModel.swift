@@ -15,6 +15,7 @@ final class HomeViewModel {
         let viewDidLoad: Observable<Void>
         let viewDidAppear: Observable<Void>
         let reload: Observable<Void>
+        let profileRefresh: Observable<Void>
     }
 
     struct Output {
@@ -99,7 +100,12 @@ final class HomeViewModel {
             .bind(to: challengeDataRelay)
             .disposed(by: disposeBag)
         
-        let userInfo = loadTrigger
+        let userInfoTrigger = Observable.merge(
+            loadTrigger,
+            input.profileRefresh
+        )
+        
+        let userInfo = userInfoTrigger
             .flatMapLatest { [weak self] _ -> Observable<HomeMemberInfo> in
                 guard let self = self else { return .empty() }
                 

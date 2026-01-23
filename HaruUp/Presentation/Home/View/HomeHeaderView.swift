@@ -468,6 +468,8 @@ final class HomeHeaderView: UIView {
         currentExpLabel.setStyle(Typography.caption1, text: "\(userInfo.currentExp)")
         maxExpLabel.setStyle(Typography.caption1, text: "\(userInfo.maxExp)")
         
+        updateBubbleText() // 새로 조회하면서 말풍선도 업데이트
+        
         // 데이터가 표시되기 시작한 후 Hidden 처리 개선
         bubbleView.isHidden = false
         characterShadowImageView.isHidden = false

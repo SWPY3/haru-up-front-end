@@ -696,6 +696,9 @@ final class ProfileEditViewController: UIViewController {
             .emit(with: self, onNext: { owner, _ in
                 owner.view.endEditing(true)
                 
+                // 닉네임 변경 후 홈화면 사용자 정보 다시 가져오게 갱신
+                NotificationCenter.default.post(name: .changedProfile, object: nil)
+                
                 // 변경된 항목에 따라 토스트 메시지 다르게 표시
                 let nicknameChanged = owner.nicknameTextField.text != owner.viewModel.initialNicknameValue
                 let jobChanged = owner.viewModel.selectedJobRelay.value?.id != owner.viewModel.savedProfile.jobId

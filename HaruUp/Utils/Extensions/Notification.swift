@@ -9,4 +9,5 @@ import Foundation
 
 extension Notification.Name {
     static let missionCompleted = Notification.Name("missionCompleted")
+    static let changedProfile = Notification.Name("changedProfile")
 }
