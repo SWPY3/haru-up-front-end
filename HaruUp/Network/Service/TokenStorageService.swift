@@ -270,8 +270,14 @@ final class TokenStorageService {
     func clearForLogout() {
         clearTokens()
         clearAppleLoginInfo()
+        clearSelectedInterestId()
         print("🔓 로그아웃 완료 - 토큰만 삭제 (사용자 기록 유지)")
         print("   → 유지된 데이터: MemberId, CurationData")
+    }
+    
+    private func clearSelectedInterestId() {
+        UserStorage.shared.selectedMemberInterestId = nil
+        print("🗑️ 선택된 관심사 ID 초기화")
     }
     
     func clearForWithdraw() {
@@ -280,6 +286,7 @@ final class TokenStorageService {
         clearAppleLoginInfo()
         clearMemberInterests()
         clearProfile()
+        clearSelectedInterestId()
         print("🗑️ 탈퇴 완료 - 모든 저장 데이터 초기화")
     }
     
