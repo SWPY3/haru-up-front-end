@@ -14,6 +14,7 @@
 		4893D23F2ED9771B0018D43A /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23E2ED9771B0018D43A /* KakaoSDKUser */; };
 		4893D2452ED985650018D43A /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2442ED985650018D43A /* RxCocoa */; };
 		4893D2472ED985650018D43A /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2462ED985650018D43A /* RxSwift */; };
+		CF46F20A2F2A159800CDCCDE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = CF46F2092F2A159800CDCCDE /* FirebaseCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +53,7 @@
 				4893D2472ED985650018D43A /* RxSwift in Frameworks */,
 				4893D2452ED985650018D43A /* RxCocoa in Frameworks */,
 				4893D23F2ED9771B0018D43A /* KakaoSDKUser in Frameworks */,
+				CF46F20A2F2A159800CDCCDE /* FirebaseCore in Frameworks */,
 				48894DCB2EE180BE00782FA3 /* NidThirdPartyLogin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -63,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				4893D1EE2ED6E2AE0018D43A /* HaruUp */,
+				CF46F2082F2A159800CDCCDE /* Frameworks */,
 				4893D1ED2ED6E2AE0018D43A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -73,6 +76,13 @@
 				4893D1EC2ED6E2AE0018D43A /* HaruUp.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CF46F2082F2A159800CDCCDE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -102,6 +112,7 @@
 				4893D2462ED985650018D43A /* RxSwift */,
 				48894DCA2EE180BE00782FA3 /* NidThirdPartyLogin */,
 				480A9BDD2EF9E63F00E9B443 /* Lottie */,
+				CF46F2092F2A159800CDCCDE /* FirebaseCore */,
 			);
 			productName = HaruUp;
 			productReference = 4893D1EC2ED6E2AE0018D43A /* HaruUp.app */;
@@ -136,6 +147,7 @@
 				4893D2432ED985650018D43A /* XCRemoteSwiftPackageReference "RxSwift" */,
 				48894DC92EE180BE00782FA3 /* XCRemoteSwiftPackageReference "naveridlogin-sdk-ios-swift" */,
 				480A9BDC2EF9E63F00E9B443 /* XCRemoteSwiftPackageReference "lottie-spm" */,
+				CF46F2072F2A153000CDCCDE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4893D1ED2ED6E2AE0018D43A /* Products */;
@@ -411,6 +423,14 @@
 				minimumVersion = 6.9.1;
 			};
 		};
+		CF46F2072F2A153000CDCCDE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -448,6 +468,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4893D2432ED985650018D43A /* XCRemoteSwiftPackageReference "RxSwift" */;
 			productName = RxSwift;
+		};
+		CF46F2092F2A159800CDCCDE /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CF46F2072F2A153000CDCCDE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
