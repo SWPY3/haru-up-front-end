@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		480A9BDE2EF9E63F00E9B443 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 480A9BDD2EF9E63F00E9B443 /* Lottie */; };
+		48433DD12F2A38F9004AC7DB /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 48433DD02F2A38F9004AC7DB /* FirebaseMessaging */; };
 		48894DCB2EE180BE00782FA3 /* NidThirdPartyLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 48894DCA2EE180BE00782FA3 /* NidThirdPartyLogin */; };
 		4893D23B2ED9771B0018D43A /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23A2ED9771B0018D43A /* KakaoSDKAuth */; };
 		4893D23D2ED9771B0018D43A /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23C2ED9771B0018D43A /* KakaoSDKCommon */; };
@@ -47,6 +48,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				48433DD12F2A38F9004AC7DB /* FirebaseMessaging in Frameworks */,
 				4893D23D2ED9771B0018D43A /* KakaoSDKCommon in Frameworks */,
 				480A9BDE2EF9E63F00E9B443 /* Lottie in Frameworks */,
 				4893D23B2ED9771B0018D43A /* KakaoSDKAuth in Frameworks */,
@@ -113,6 +115,7 @@
 				48894DCA2EE180BE00782FA3 /* NidThirdPartyLogin */,
 				480A9BDD2EF9E63F00E9B443 /* Lottie */,
 				CF46F2092F2A159800CDCCDE /* FirebaseCore */,
+				48433DD02F2A38F9004AC7DB /* FirebaseMessaging */,
 			);
 			productName = HaruUp;
 			productReference = 4893D1EC2ED6E2AE0018D43A /* HaruUp.app */;
@@ -438,6 +441,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 480A9BDC2EF9E63F00E9B443 /* XCRemoteSwiftPackageReference "lottie-spm" */;
 			productName = Lottie;
+		};
+		48433DD02F2A38F9004AC7DB /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CF46F2072F2A153000CDCCDE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 		48894DCA2EE180BE00782FA3 /* NidThirdPartyLogin */ = {
 			isa = XCSwiftPackageProductDependency;
