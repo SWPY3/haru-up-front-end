@@ -127,12 +127,12 @@ final class MainTabBarView: UIView {
 
         let icon = UIImageView(image: tab.icon)
         icon.contentMode = .scaleAspectFit
-        icon.tintColor = .gray
+        icon.tintColor = .neutral300
 
         let label = UILabel()
         label.text = tab.title
-        label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .gray
+        label.font = Typography.caption3.font
+        label.textColor = .neutral300
 
         let vStack = UIStackView(arrangedSubviews: [icon, label])
         vStack.axis = .vertical
@@ -176,8 +176,8 @@ final class MainTabBarView: UIView {
             let i = t.rawValue
             let selected = (t == tab)
             icons[i].image = selected ? t.selectedIcon : t.icon
-            icons[i].tintColor = selected ? .systemBlue : .systemGray3
-            labels[i].textColor = selected ? .systemBlue : .systemGray3
+            icons[i].tintColor = selected ? .primaryBlue700 : .neutral300
+            labels[i].textColor = selected ? .primaryBlue700 : .neutral300
         }
     }
 }
