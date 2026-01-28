@@ -153,6 +153,16 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
         bindViewModel()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    
     private func setupView() {
         view.backgroundColor = .neutral10
         
@@ -179,7 +189,7 @@ class ChartRankingViewController: UIViewController, FilterModalDelegate {
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             // 타이틀
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: -5),
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             
             // i 버튼
