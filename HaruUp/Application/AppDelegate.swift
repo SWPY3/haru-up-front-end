@@ -9,9 +9,8 @@ import UIKit
 import CoreData
 import KakaoSDKCommon
 import KakaoSDKAuth
-
 import NidThirdPartyLogin
-
+import FirebaseCore
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -38,6 +37,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         KakaoSDK.initSDK(appKey: appKey)
+        
+        // Firebase 초기화
+        FirebaseApp.configure()
         
         return true
     }
