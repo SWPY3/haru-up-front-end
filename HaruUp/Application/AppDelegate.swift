@@ -136,13 +136,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 // MARK: - UNUserNotificationCenterDelegate
 extension AppDelegate: UNUserNotificationCenterDelegate {
-    
     // 앱이 Foreground 상태일 때 푸시 수신
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         let userInfo = notification.request.content.userInfo
         print("Foreground 푸시 수신: \(userInfo)")
+        
+        // 푸시 데이터 전달
+        PushNotificationService.shared.receivePushData(userInfo)
         
         // iOS 14 이상
         completionHandler([.banner, .sound, .badge])
@@ -155,6 +157,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         let userInfo = response.notification.request.content.userInfo
         print("푸시 탭: \(userInfo)")
         
+        PushNotificationService.shared.receivePushData(userInfo)
         // Coordinator를 통해 라우팅 처리
         // 예: AppCoordinator에 푸시 데이터 전달
         
@@ -171,8 +174,7 @@ extension AppDelegate: MessagingDelegate {
         
         // 서버에 FCM 토큰 전송
         if let token = fcmToken {
-            UserDefaults.standard.set(token, forKey: "fcmToken")
-            // PushNotificationService를 통해 처리
+            PushNotificationService.shared.updateFCMToken(token)
         }
     }
 }
