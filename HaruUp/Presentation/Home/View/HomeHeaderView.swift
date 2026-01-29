@@ -477,8 +477,7 @@ final class HomeHeaderView: UIView {
         let characterId = userInfo.characterId
         let characterImageName = characterId == 1 ? "haru" : "naru"
         let characterLevel = userInfo.level
-//        let characterImage = "character_\(characterImageName)_level\(characterLevel)"
-        let characterImage = "character_naru_level2"
+        let characterImage = "character_\(characterImageName)_level\(characterLevel)"
         let characterLevelName = CharacterLevel(rawValue: characterLevel)?.title ?? "도전하는"
         let characterName = characterId == 1 ? "하루" : "나루"
         let characterNameText = "\(characterLevelName) \(characterName)"

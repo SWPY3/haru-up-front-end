@@ -10,8 +10,6 @@ import RxSwift
 import Alamofire
 
 protocol MissionServiceProtocol {
-    // Home에서 미션 선택창을 띄워야하는지 여부
-    func needShowTodayMissionFlow() -> Single<Bool>
     // 미션 추천
     func requestRecommendedMissions(memberInterestId: Int) -> Single<MemberMission.MissionRecommendResponseDTO>
     // 다양한 관심사로 미션 추천
@@ -20,7 +18,6 @@ protocol MissionServiceProtocol {
     func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]) -> Single<MemberMission.RetryRecommendResponseDTO>
     // 미션 선택 완료
     func selectMissions(missionIDs: [Int]) -> Single<MemberMission.SelectMissionResponseDTO>
-    func markTodayMissionSelected() // UserDefaults 갱신
     // 미션 목록 표시
     func fetchMissionList(memberInterestId: Int, targetDate: String, status: [MemberMission.MissionStatusType]) -> Single<MemberMission.FetchMissionResponseDTO>
     // 미션 완료 및 삭제
@@ -164,23 +161,6 @@ final class MissionService: Service, MissionServiceProtocol {
     }
 }
 
-// MARK: UserDefaults - 미션 선택 여부
-extension MissionService {
-    func needShowTodayMissionFlow() -> Single<Bool> {
-        return .just(UserDefaultsManager.shared.needShowTodayMissionFlow)
-    }
-    
-    func markTodayMissionSelected() {
-        UserDefaultsManager.shared.markTodayMissionSelected()
-    }
-    
-    private static func todayString() -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        return dateFormatter.string(from: Date())
-    }
-}
-
 // MARK: 오늘 포함 7일간의 날짜 계산
 extension MissionService {
     func getDateRangeStrings() -> (today: String, sixDaysAgo: String) {
@@ -197,5 +177,11 @@ extension MissionService {
         let sixDaysAgoString = formatter.string(from: sixDaysAgoDate)
         
         return (today: todayString, sixDaysAgo: sixDaysAgoString)
+    }
+    
+    private static func todayString() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        return dateFormatter.string(from: Date())
     }
 }
