@@ -46,7 +46,7 @@ class MyPageViewController: UIViewController {
     }()
     
     private let profileImageView: UIImageView = {
-        let iv = UIImageView(image: .characterProfile) // 실제 에셋명으로 변경
+        let iv = UIImageView(image: .characterHaruProfile)
         iv.layer.cornerRadius = 40
         iv.clipsToBounds = true
         iv.translatesAutoresizingMaskIntoConstraints = false
