@@ -20,6 +20,19 @@ struct HistoryModel {
         let dailyMissions: [Int: [Mission]]
         let specialDays: [Int]
     }
+    
+    struct GrowthData {
+        let targetMonth: String
+        let attendanceCount: Int
+        
+        /// "2025-08" → "8월"
+        var monthLabel: String {
+            let components = targetMonth.split(separator: "-")
+            guard components.count == 2,
+                  let month = Int(components[1]) else { return "" }
+            return "\(month)월"
+        }
+    }
 }
 
 struct DailyMission {
@@ -81,5 +94,20 @@ extension MemberMission.HistoryDTO {
             totalMissionCount: totalMissionCount,
             totalAttendanceCount: totalAttendanceCount
         )
+    }
+}
+
+extension MemberMission.AttendanceDate {
+    func toDomain() -> HistoryModel.GrowthData {
+        return HistoryModel.GrowthData(
+            targetMonth: targetMonth,
+            attendanceCount: attendanceCount
+        )
+    }
+}
+
+extension MemberMission.GrowthDataDTO {
+    func toDomain() -> [HistoryModel.GrowthData] {
+        return attendanceDates.map { $0.toDomain() }
     }
 }

@@ -175,7 +175,6 @@ class HistoryViewController: UIViewController {
         let view = UIView()
         view.backgroundColor = .white
         view.layer.cornerRadius = 24
-        view.isHidden = true // TODO: chart API 연결 전 해당 UI 숨김
         
         return view
     }()
@@ -373,15 +372,6 @@ class HistoryViewController: UIViewController {
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
         
-        // TODO: 데이터 서버로부터 갱신 필요
-        GrowthChartViewFactory.configure(chartView, with: [
-            ("8월", 8),
-            ("9월", 15),
-            ("10월", 12),
-            ("11월", 25),
-            ("12월", 28)
-        ], highlightLast: true)
-        
         NSLayoutConstraint.activate([
             chartTitleLabel.topAnchor.constraint(equalTo: chartCardView.topAnchor, constant: 28),
             chartTitleLabel.leadingAnchor.constraint(equalTo: chartCardView.leadingAnchor, constant: 24),
@@ -440,6 +430,13 @@ class HistoryViewController: UIViewController {
         output.selectedDayMissions
             .drive(onNext: { [weak self] missions in
                 self?.updateMissionCard(with: missions)
+            })
+            .disposed(by: disposeBag)
+        
+        output.growthChart
+            .drive(onNext: { [weak self] growthData in
+                guard let self = self else { return }
+                self.updateGrowthChart(data: growthData)
             })
             .disposed(by: disposeBag)
         
@@ -720,7 +717,6 @@ class HistoryViewController: UIViewController {
         selectedDay = selectDay  // 선택한 날짜 설정
         
         pendingSelectedDay = selectDay
-        print("  - pendingSelectedDay 설정: \(selectDay)")
         
         updateMonthYearLabel()
         generateCalendarDays()
@@ -784,10 +780,6 @@ class HistoryViewController: UIViewController {
         
         let day: Int
         
-        print("🗓 selectTodayOrFirst 호출")
-        print("  - pendingSelectedDay: \(String(describing: pendingSelectedDay))")
-        print("  - currentDate: \(currentDate)")
-        
         // 월 이동으로 인한 날짜 선택이 있는 경우
         if let pending = pendingSelectedDay {
             day = pending
@@ -814,6 +806,12 @@ class HistoryViewController: UIViewController {
         
         daySelectedRelay.accept((day: day, hasCompleted: hasCompleted))
         calendarCollectionView.reloadData()
+    }
+    
+    private func updateGrowthChart(data: [HistoryModel.GrowthData]) {
+        let chartData = data.map { ($0.monthLabel, $0.attendanceCount) }
+        
+        GrowthChartViewFactory.configure(chartView, with: chartData, highlightLast: true)
     }
     
     private func showLoading() {

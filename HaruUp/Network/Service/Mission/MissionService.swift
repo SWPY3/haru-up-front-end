@@ -26,6 +26,8 @@ protocol MissionServiceProtocol {
     func fetchChallengeDate() -> Single<MemberMission.ChallengeResponseDTO>
     // 월별 미션 완료일
     func fetchMonthlyMissions(targetMonth: String) -> Single<MemberMission.HistoryResponseDTO>
+    // 월별 성장 차트
+    func fetchGrowthChart() -> Single<MemberMission.GrowthResponseDTO>
 }
 
 final class MissionService: Service, MissionServiceProtocol {
@@ -159,10 +161,30 @@ final class MissionService: Service, MissionServiceProtocol {
         
         return request(url, method: .get, header: headers)
     }
+    
+    func fetchGrowthChart() -> Single<MemberMission.GrowthResponseDTO> {
+        
+        let url: String = NetworkDefine.MissionAPI.growth.url
+        
+        var headers: HTTPHeaders = ["Accept": "application/json"]
+
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
+        
+        let date = getDateRange()
+        let startMonth = date.startMonth
+        let endMonth = date.endMonth
+        
+        let query = MemberMission.GrowthRequestDTO(startTargetMonth: startMonth, endTargetMonth: endMonth)
+
+        return request(url, method: .get, header: headers, query: query)
+    }
 }
 
-// MARK: 오늘 포함 7일간의 날짜 계산
+// MARK: 날짜 관련 Helper 함수
 extension MissionService {
+    // MARK: 오늘 포함 7일간의 날짜 계산
     func getDateRangeStrings() -> (today: String, sixDaysAgo: String) {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
@@ -183,5 +205,30 @@ extension MissionService {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         return dateFormatter.string(from: Date())
+    }
+    
+    // MARK: Growth Chart를 위한 날짜 범위
+    func getDateRange() -> (startMonth: String, endMonth: String) {
+        let calendar = Calendar.current
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM"
+        
+        // 1. 현재 날짜 및 endMonth 설정
+        let today = Date()
+        let endMonth = dateFormatter.string(from: today) // "2026-01"
+        
+        // 2. 5개월 전 계산
+        guard let fiveMonthsAgo = calendar.date(byAdding: .month, value: -5, to: today) else {
+            return ("2025-12", endMonth)
+        }
+        
+        let calculatedStart = dateFormatter.string(from: fiveMonthsAgo)
+        let minDate = "2025-12"
+        
+        // 3. 최솟값(2025-12) 비교 로직
+        // calculatedStart가 2025-12보다 이전이면 2025-12를 사용
+        let startMonth = (calculatedStart < minDate) ? minDate : calculatedStart
+        
+        return (startMonth, endMonth)
     }
 }

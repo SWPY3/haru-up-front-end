@@ -24,7 +24,8 @@ final class HistoryViewModel {
         let attendanceDays: Driver<Int>
         let completedMissions: Driver<Int>
         let dailyMissions: Driver<[DailyMission]>
-        let selectedDayMissions: Driver<[HistoryModel.Mission]>  // 수정: 상세 미션 배열
+        let selectedDayMissions: Driver<[HistoryModel.Mission]>
+        let growthChart: Driver<[HistoryModel.GrowthData]>
         let isLoading: Driver<Bool>
         let isMissionLoading: Driver<Bool>  // 추가: 상세 미션 로딩 상태
         let error: Driver<String>
@@ -47,6 +48,7 @@ final class HistoryViewModel {
         let dailyMissions = BehaviorRelay<MonthlyMissionSummary?>(value: nil)
         let selectedDayMissions = BehaviorRelay<[HistoryModel.Mission]>(value: [])
         let currentMonth = BehaviorRelay<Date>(value: Date())
+        let growthData = BehaviorRelay<[HistoryModel.GrowthData]>(value: [])
         
         // 날짜 선택 시 상세 미션 조회 (완료된 미션이 있는 경우에만)
         input.daySelected
@@ -155,12 +157,37 @@ final class HistoryViewModel {
             .map { $0?.dailyMissions ?? [] }
             .asDriver(onErrorJustReturn: [])
         
+        // 성장 차트
+        input.viewDidLoad
+            .flatMapLatest { [weak self] _ -> Observable<[HistoryModel.GrowthData]> in
+                guard let self = self else { return .empty() }
+                
+                return self.missionService.fetchGrowthChart()
+                    .asObservable()
+                    .map { response -> [HistoryModel.GrowthData] in
+                        guard response.success else {
+                            if let errorMessage = response.errorMessage {
+                                error.accept(errorMessage)
+                            }
+                            return []
+                        }
+                        return response.data.toDomain()
+                    }
+                    .catch { err in
+                        error.accept(err.localizedDescription)
+                        return .just([])
+                    }
+            }
+            .bind(to: growthData)
+            .disposed(by: disposeBag)
+        
         return Output(
             monthTitle: monthTitle,
             attendanceDays: attendanceDays,
             completedMissions: completedMissions,
             dailyMissions: dailyMissionsDriver,
             selectedDayMissions: selectedDayMissions.asDriver(onErrorJustReturn: []),
+            growthChart: growthData.asDriver(onErrorJustReturn: []),
             isLoading: isLoading.asDriver(),
             isMissionLoading: isMissionLoading.asDriver(onErrorJustReturn: false),
             error: error.asDriver(onErrorJustReturn: "")

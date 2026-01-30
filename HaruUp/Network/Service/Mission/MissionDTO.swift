@@ -231,4 +231,25 @@ enum MemberMission {
         let completedCount: Int
         let isAttendance: Bool
     }
+    
+    // MARK: 월별 성장 차트
+    struct GrowthRequestDTO: Encodable {
+        let startTargetMonth: String // yyyy-MM
+        let endTargetMonth: String   // yyyy-MM
+    }
+    
+    struct GrowthResponseDTO: Decodable {
+        let success: Bool
+        let data: GrowthDataDTO
+        let errorMessage: String?
+    }
+    
+    struct GrowthDataDTO: Decodable {
+        let attendanceDates: [AttendanceDate]
+    }
+    
+    struct AttendanceDate: Decodable {
+        let targetMonth: String // yyyy-MM
+        let attendanceCount: Int
+    }
 }
