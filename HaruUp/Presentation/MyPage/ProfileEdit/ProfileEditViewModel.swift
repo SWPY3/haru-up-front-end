@@ -390,6 +390,7 @@ final class ProfileEditViewModel {
                                 
                                 TokenStorageService.shared.saveProfile(
                                     nickname: nickname,
+                                    characterId: nil,
                                     jobId: jobId,
                                     jobName: jobName,           // 화면에 있는 이름 그대로 저장
                                     jobDetailId: jobDetailId,

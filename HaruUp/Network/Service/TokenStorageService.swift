@@ -24,6 +24,7 @@ final class TokenStorageService {
     private let memberInterestsKey = "HaruUp_MemberInterests"
     
     private let userNicknameKey = "HaruUp_UserNickname"
+    private let userCharacterIdKey = "HaruUp_CharacterId"
     private let userJobIdKey = "HaruUp_UserJobId"
     private let userJobDetailIdKey = "HaruUp_UserJobDetailId"
     // 화면 표시를 위해 이름도 저장
@@ -212,8 +213,10 @@ final class TokenStorageService {
     }
     
     // MARK: - Profile Management
-    func saveProfile(nickname: String, jobId: Int?, jobName: String?, jobDetailId: Int?, jobDetailName: String?) {
+    func saveProfile(nickname: String, characterId: Int?, jobId: Int?, jobName: String?, jobDetailId: Int?, jobDetailName: String?) {
         UserDefaults.standard.set(nickname, forKey: userNicknameKey)
+        
+        if let characterId = characterId { UserDefaults.standard.set(characterId, forKey: userCharacterIdKey) }
         
         if let jobId = jobId { UserDefaults.standard.set(jobId, forKey: userJobIdKey) }
         if let jobName = jobName { UserDefaults.standard.set(jobName, forKey: userJobNameKey) }
@@ -224,18 +227,20 @@ final class TokenStorageService {
         print("✅ 프로필 정보(닉네임/직업/세부직업) 로컬 저장 완료")
     }
     
-    func getProfile() -> (nickname: String?, jobId: Int, jobName: String?, jobDetailId: Int, jobDetailName: String?) {
+    func getProfile() -> (nickname: String?, characterId: Int, jobId: Int, jobName: String?, jobDetailId: Int, jobDetailName: String?) {
         let nickname = UserDefaults.standard.string(forKey: userNicknameKey)
+        let characterId = UserDefaults.standard.integer(forKey: userCharacterIdKey)
         let jobId = UserDefaults.standard.integer(forKey: userJobIdKey)
         let jobName = UserDefaults.standard.string(forKey: userJobNameKey)
         let jobDetailId = UserDefaults.standard.integer(forKey: userJobDetailIdKey)
         let jobDetailName = UserDefaults.standard.string(forKey: userJobDetailNameKey)
         
-        return (nickname, jobId, jobName, jobDetailId, jobDetailName)
+        return (nickname, characterId, jobId, jobName, jobDetailId, jobDetailName)
     }
     
     func clearProfile() {
         UserDefaults.standard.removeObject(forKey: userNicknameKey)
+        UserDefaults.standard.removeObject(forKey: userCharacterIdKey)
         UserDefaults.standard.removeObject(forKey: userJobIdKey)
         UserDefaults.standard.removeObject(forKey: userJobNameKey)
         UserDefaults.standard.removeObject(forKey: userJobDetailIdKey)

@@ -440,6 +440,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
                 // 1. 프로필 정보 저장 (저장 로직 추가됨)
                 TokenStorageService.shared.saveProfile(
                     nickname: profileData.nickname,
+                    characterId: profileData.characterId,
                     jobId: profileData.jobId,
                     jobName: nil,
                     jobDetailId: profileData.jobDetailId,
@@ -480,6 +481,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             )
             .validate()
             .responseDecodable(of: ProfileResponse.self) { response in
+                debugPrint(response)
                 switch response.result {
                 case .success(let profileResponse):
                     if let profileData = profileResponse.data {
@@ -507,6 +509,7 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
             // 💾 [추가] 조회 성공 시 자동으로 로컬 스토리지에 저장
             self?.tokenStorage.saveProfile(
                 nickname: profileData.nickname,
+                characterId: profileData.characterId,
                 jobId: profileData.jobId,
                 jobName: nil,
                 jobDetailId: profileData.jobDetailId,

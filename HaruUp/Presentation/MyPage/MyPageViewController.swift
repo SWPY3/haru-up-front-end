@@ -285,6 +285,11 @@ class MyPageViewController: UIViewController {
                 self.nicknameLabel.setStyle(Typography.subtitle1, text: "\(nickname)님")
                 self.nicknameLabel.textColor = .black
                 
+                // 캐릭터 이미지
+                let characterId = data.characterId ?? 1
+                let characterImage: UIImage = characterId == 1 ? .characterHaruProfile : .characterNaruProfile
+                profileImageView.image = characterImage
+                
                 // 2. 직업 상세
                 let jobDisplayText = data.jobDetail?.jobDetailName ?? data.job?.jobName ?? "직업 정보 없음"
                 self.jobLabel.setStyle(Typography.body1, text: jobDisplayText)
