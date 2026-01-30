@@ -13,6 +13,7 @@ import Charts
 struct GrowthChartSwiftUIView: View {
     let data: [GrowthChartDataPoint]
     let highlightLast: Bool
+    let scale: GrowthChartScale
     
     var body: some View {
         Chart {
@@ -85,11 +86,10 @@ struct GrowthChartSwiftUIView: View {
                 }
             }
         }
-        // TODO: 값을 받아올 때 0~40인 경우 30~40에는 해당되지 않게 적용
-        .chartYScale(domain: 0...40)
-        // Y축을 왼쪽(leading)으로 이동
+        .chartYScale(domain: 0...scale.maxValue)
         .chartYAxis {
-            AxisMarks(position: .leading, values: [0, 10, 20, 30, 40]) { value in
+            // 동적 그리드 값 적용
+            AxisMarks(position: .leading, values: scale.gridValues) { value in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
                     .foregroundStyle(Color.neutral10)
                 AxisValueLabel {

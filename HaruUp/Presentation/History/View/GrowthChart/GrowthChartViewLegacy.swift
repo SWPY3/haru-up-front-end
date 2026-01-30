@@ -12,10 +12,14 @@ class GrowthChartViewLegacy: UIView {
     
     private var data: [(month: String, value: Int)] = []
     private var highlightLast: Bool = false
+    private var scale: GrowthChartScale = GrowthChartScale(maxValue: 40, gridValues: [0, 10, 20, 30, 40], dataMaxValue: 0)
     
     func configure(with data: [(String, Int)], highlightLast: Bool = false) {
         self.data = data.map { (month: $0.0, value: $0.1) }
         self.highlightLast = highlightLast
+        
+        self.scale = GrowthChartScale.calculate(from: data)
+        
         setNeedsDisplay()
     }
     
@@ -30,7 +34,7 @@ class GrowthChartViewLegacy: UIView {
             height: rect.height - padding.top - padding.bottom
         )
         
-        let maxValue: CGFloat = 40
+        let maxValue = CGFloat(scale.maxValue)
         
         drawGridLines(in: rect, graphRect: graphRect, maxValue: maxValue)
         
@@ -48,7 +52,7 @@ class GrowthChartViewLegacy: UIView {
     }
     
     private func drawGridLines(in rect: CGRect, graphRect: CGRect, maxValue: CGFloat) {
-        let gridValues: [CGFloat] = [0, 10, 20, 30, 40]
+        let gridValues = scale.gridValues.map { CGFloat($0) }
         
         let attributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 12),
