@@ -25,6 +25,7 @@ struct HistoryModel {
 struct DailyMission {
     let targetDate: String
     let completedCount: Int
+    let isAttendance: Bool
     
     var day: Int? {
         let components = targetDate.split(separator: "-")
@@ -36,6 +37,13 @@ struct DailyMission {
     var hasCompleted: Bool {
         completedCount > 0
     }
+}
+
+// MARK: - Calendar에 표시할 데이터 (월별 통계)
+struct MonthlyMissionSummary {
+    let dailyMissions: [DailyMission]
+    let totalMissionCount: Int
+    let totalAttendanceCount: Int
 }
 
 // MARK: - Calendar 데이터 모델
@@ -58,14 +66,20 @@ struct CalendarDay {
 
 // MARK: - DTO → Domain 변환
 extension DailyMission {
-    init(from dto: MemberMission.HistoryDTO) {
+    init(from dto: MemberMission.MissionCountDTO) {
         self.targetDate = dto.targetDate
         self.completedCount = dto.completedCount
+        self.isAttendance = dto.isAttendance
     }
 }
 
-extension Array where Element == MemberMission.HistoryDTO {
-    func toDomain() -> [DailyMission] {
-        self.map { DailyMission(from: $0) }
+extension MemberMission.HistoryDTO {
+    func toDomain() -> MonthlyMissionSummary {
+        let dailyMissions = missionCounts.map { DailyMission(from: $0) }
+        return MonthlyMissionSummary(
+            dailyMissions: dailyMissions,
+            totalMissionCount: totalMissionCount,
+            totalAttendanceCount: totalAttendanceCount
+        )
     }
 }

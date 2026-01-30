@@ -216,12 +216,19 @@ enum MemberMission {
     
     struct HistoryResponseDTO: Decodable {
         let success: Bool
-        let data: [HistoryDTO]
+        let data: HistoryDTO
         let errorMessage: String?
     }
     
     struct HistoryDTO: Decodable {
+        let missionCounts: [MissionCountDTO]
+        let totalMissionCount: Int
+        let totalAttendanceCount: Int
+    }
+    
+    struct MissionCountDTO: Decodable {
         let targetDate: String
         let completedCount: Int
+        let isAttendance: Bool
     }
 }

@@ -157,7 +157,7 @@ final class MissionService: Service, MissionServiceProtocol {
             headers["Authorization"] = "Bearer \(accessToken)"
         }
         
-        return request(url, method: .post, header: headers)
+        return request(url, method: .get, header: headers)
     }
 }
 

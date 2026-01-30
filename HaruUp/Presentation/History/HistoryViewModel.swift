@@ -44,7 +44,7 @@ final class HistoryViewModel {
         let isLoading = BehaviorRelay<Bool>(value: false)
         let isMissionLoading = BehaviorRelay<Bool>(value: false)
         let error = PublishRelay<String>()
-        let dailyMissions = BehaviorRelay<[DailyMission]>(value: [])
+        let dailyMissions = BehaviorRelay<MonthlyMissionSummary?>(value: nil)
         let selectedDayMissions = BehaviorRelay<[HistoryModel.Mission]>(value: [])
         let currentMonth = BehaviorRelay<Date>(value: Date())
         
@@ -114,26 +114,27 @@ final class HistoryViewModel {
                 currentMonth.accept(date)  // currentMonth 업데이트
                 isLoading.accept(true)
             })
-            .flatMapLatest { [weak self] date -> Observable<[DailyMission]> in
+            .flatMapLatest { [weak self] date -> Observable<MonthlyMissionSummary?> in
                 guard let self = self else { return .empty() }
                 
                 let targetMonth = self.formatMonth(from: date)
                 
                 return self.missionService.fetchMonthlyMissions(targetMonth: targetMonth)
                     .asObservable()
-                    .map { response -> [DailyMission] in
+                    .map { response -> MonthlyMissionSummary? in
                         // DTO → Domain Model 변환
                         guard response.success else {
                             if let errorMessage = response.errorMessage {
                                 error.accept(errorMessage)
                             }
-                            return []
+                            return nil
                         }
+                        
                         return response.data.toDomain()
                     }
                     .catch { err in
                         error.accept(err.localizedDescription)
-                        return .just([])
+                        return .just(nil)
                     }
             }
             .do(onNext: { _ in isLoading.accept(false) })
@@ -142,23 +143,23 @@ final class HistoryViewModel {
         
         // 출석일 수
         let attendanceDays = dailyMissions
-            .map { missions in
-                missions.filter { $0.hasCompleted }.count
-            }
+            .map { $0?.totalAttendanceCount ?? 0 }
             .asDriver(onErrorJustReturn: 0)
         
         // 완료한 미션 총 개수
         let completedMissions = dailyMissions
-            .map { missions in
-                missions.reduce(0) { $0 + $1.completedCount }
-            }
+            .map { $0?.totalMissionCount ?? 0 }
             .asDriver(onErrorJustReturn: 0)
+        
+        let dailyMissionsDriver = dailyMissions
+            .map { $0?.dailyMissions ?? [] }
+            .asDriver(onErrorJustReturn: [])
         
         return Output(
             monthTitle: monthTitle,
             attendanceDays: attendanceDays,
             completedMissions: completedMissions,
-            dailyMissions: dailyMissions.asDriver(onErrorJustReturn: []),
+            dailyMissions: dailyMissionsDriver,
             selectedDayMissions: selectedDayMissions.asDriver(onErrorJustReturn: []),
             isLoading: isLoading.asDriver(),
             isMissionLoading: isMissionLoading.asDriver(onErrorJustReturn: false),
