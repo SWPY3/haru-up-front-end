@@ -23,4 +23,5 @@ struct ProfileData: Sendable, Codable {
     let intro: String?
     let jobId: Int?
     let jobDetailId: Int?
+    let characterId: Int
 }

@@ -41,6 +41,7 @@ final class HomeViewModel {
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorRelay = PublishRelay<Error>()
     private let challengeDataRelay = PublishRelay<[MemberMission.ChallengeDataDTO]>()
+    private let showMissionFlowRelay = PublishRelay<Void>()
     
     private let disposeBag = DisposeBag()
 
@@ -49,36 +50,33 @@ final class HomeViewModel {
         self.interestsService = interestsService
         self.memberService = memberService
     }
-
+    
     func transform(input: Input) -> Output {
-        // 1) 오늘 미션 플로우 필요 여부를 1번만 확인해서 공유
-        let needShow = input.viewDidAppear
+        
+        // 1) 초기 로드: viewDidAppear 시 미션 리스트 조회
+        let initialMissionResult = input.viewDidAppear
             .take(1)
-            .flatMapLatest { [weak self] _ -> Observable<Bool> in
+            .flatMapLatest { [weak self] _ -> Observable<[Mission]> in
                 guard let self else { return .empty() }
-                return self.missionService.needShowTodayMissionFlow().asObservable()
+                return self.loadSelectedMissions()
             }
             .share(replay: 1, scope: .whileConnected)
         
-        // 2) 플로우 띄우기
-        let showTodayMissionFlow = needShow
-            .filter { $0 }
+        // 2) 미션이 비어있으면 → 플로우 표시
+        initialMissionResult
+            .filter { $0.isEmpty }
             .map { _ in () }
-            .asSignal(onErrorSignalWith: .empty())
+            .bind(to: showMissionFlowRelay)
+            .disposed(by: disposeBag)
         
-        // 3) 데이터 로드 로직
-        // A: 미션 플로우가 필요 없는 경우
-        let initialLoad = needShow
-            .filter { !$0 }
-            .map { _ in () }
+        // 3) 미션이 있으면 → 바로 표시
+        initialMissionResult
+            .filter { !$0.isEmpty }
+            .bind(to: selectedMissionsRelay)
+            .disposed(by: disposeBag)
         
-        // B: 외부에서 리로드 요청이 온 경우 (미션 선택 완료 후)
-        let reloadLoad = input.reload
-
-        let loadTrigger = Observable.merge(initialLoad, reloadLoad)
-        
-        // A와 B 둘 중 하나라도 발생하면 데이터 로드
-        loadTrigger
+        // 4) 외부에서 리로드 요청이 온 경우 (미션 선택 완료 후)
+        input.reload
             .flatMapLatest { [weak self] _ -> Observable<[Mission]> in
                 guard let self else { return .empty() }
                 return self.loadSelectedMissions()
@@ -86,22 +84,29 @@ final class HomeViewModel {
             .bind(to: selectedMissionsRelay)
             .disposed(by: disposeBag)
         
-
-        loadTrigger
+        // 5) 챌린지 데이터 로드 (초기 로드 완료 후 또는 리로드 시)
+        let loadChallengeTrigger = Observable.merge(
+            initialMissionResult.map { _ in () },
+            input.reload
+        )
+        
+        loadChallengeTrigger
             .flatMapLatest { [weak self] _ -> Observable<[MemberMission.ChallengeDataDTO]> in
                 guard let self else { return .empty() }
                 return self.missionService.fetchChallengeDate().asObservable()
-                    .map { $0.data } // Response에서 data 배열만 추출
+                    .map { $0.data }
                     .catch { error in
                         print("챌린지 로드 실패: \(error)")
-                        return .just([]) // 에러 시 빈 배열 반환하여 스트림 유지
+                        return .just([])
                     }
             }
             .bind(to: challengeDataRelay)
             .disposed(by: disposeBag)
         
+        // 6) 유저 정보 로드
         let userInfoTrigger = Observable.merge(
-            loadTrigger,
+            initialMissionResult.map { _ in () },
+            input.reload,
             input.profileRefresh
         )
         
@@ -128,26 +133,23 @@ final class HomeViewModel {
                     .asObservable()
                     .catch { error in
                         print("유저 정보 로드 실패: \(error)")
-                        
                         return .just(HomeMemberInfo.empty)
                     }
             }
             .asDriver(onErrorJustReturn: HomeMemberInfo.empty)
-
+        
         let rows = selectedMissionsRelay
             .map { selected -> [TodayMissionRow] in
                 let sortedMissions = selected.sorted { lhs, rhs in
                     if lhs.isCompleted != rhs.isCompleted {
                         return !lhs.isCompleted
                     }
-                    
                     return lhs.difficulty.rawValue > rhs.difficulty.rawValue
                 }
                 
                 if sortedMissions.isEmpty {
                     return [.empty]
                 } else if sortedMissions.count < 5 {
-                    // 정렬된 미션들 뒤에 .add 버튼 붙이기
                     return sortedMissions.map { .mission($0) } + [.add]
                 } else {
                     return sortedMissions.map { .mission($0) }
@@ -168,23 +170,16 @@ final class HomeViewModel {
                 var streak = 0
                 
                 for day in sortedData {
-                    // A. 만약 조회한 데이터가 '오늘'인 경우
                     if day.targetDate == todayString {
                         if day.isCompleted {
-                            // 오늘 완료했으면 카운트 증가
                             streak += 1
                         } else {
-                            // [핵심] 오늘 아직 안 했으면, 연속 기록이 깨진 게 아니므로
-                            // 카운트는 안 하고 다음(어제)으로 넘어감
                             continue
                         }
-                    }
-                    // B. 오늘이 아닌 과거 날짜인 경우
-                    else {
+                    } else {
                         if day.isCompleted {
                             streak += 1
                         } else {
-                            // 과거에 안 한 날이 나오면 바로 연속 기록 종료
                             break
                         }
                     }
@@ -200,11 +195,11 @@ final class HomeViewModel {
                 return self.processChallengeList(data: data)
             }
             .asDriver(onErrorJustReturn: [])
-
+        
         return Output(
             userInfo: userInfo,
             rows: rows,
-            showTodayMissionFlow: showTodayMissionFlow,
+            showTodayMissionFlow: showMissionFlowRelay.asSignal(),
             isLoading: loadingRelay.asDriver(),
             error: errorRelay.asSignal(),
             challengeDay: challengeCount,

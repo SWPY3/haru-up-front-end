@@ -214,10 +214,6 @@ final class TodayMissionListViewModel {
                     }
                     .do(onNext: { [weak self] isSuccess in
                         loadingSubject.onNext(false)
-                        
-                        if isSuccess {
-                            self?.missionService.markTodayMissionSelected()
-                        }
                     }, onError: { _ in
                         loadingSubject.onNext(false)
                     })
