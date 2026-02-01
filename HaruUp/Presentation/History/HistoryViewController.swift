@@ -285,14 +285,17 @@ class HistoryViewController: UIViewController {
         contentStackView.addArrangedSubview(calendarCardView)
         
         // Stats views
-        let (attendanceView, attLabel) = createStatView(title: "출석일", value: "0", unit: "일")
+        let (attendanceView, attLabel) = createStatView(title: "미션 완료한 날", value: "0", unit: "일")
         let (missionView, missLabel) = createStatView(title: "완료한 미션", value: "0", unit: "개")
         attendanceValueLabel = attLabel
         missionValueLabel = missLabel
         statsStackView.addArrangedSubview(attendanceView)
         statsStackView.addArrangedSubview(missionView)
         
-        [prevButton, monthYearLabel, nextButton, statsStackView, calendarCollectionView].forEach {
+        let lineView = UIView()
+        lineView.backgroundColor = .neutral50
+        
+        [prevButton, monthYearLabel, nextButton, statsStackView, calendarCollectionView, lineView].forEach {
             calendarCardView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -320,7 +323,12 @@ class HistoryViewController: UIViewController {
             statsStackView.leadingAnchor.constraint(equalTo: calendarCardView.leadingAnchor, constant: 24),
             statsStackView.trailingAnchor.constraint(equalTo: calendarCardView.trailingAnchor, constant: -24),
             
-            calendarCollectionView.topAnchor.constraint(equalTo: statsStackView.bottomAnchor, constant: 34),
+            lineView.topAnchor.constraint(equalTo: statsStackView.bottomAnchor, constant: 18),
+            lineView.leadingAnchor.constraint(equalTo: calendarCardView.leadingAnchor, constant: 28),
+            lineView.trailingAnchor.constraint(equalTo: calendarCardView.trailingAnchor, constant: -28),
+            lineView.heightAnchor.constraint(equalToConstant: 1),
+            
+            calendarCollectionView.topAnchor.constraint(equalTo: lineView.bottomAnchor, constant: 16),
             calendarCollectionView.leadingAnchor.constraint(equalTo: calendarCardView.leadingAnchor, constant: 28),
             calendarCollectionView.trailingAnchor.constraint(equalTo: calendarCardView.trailingAnchor, constant: -28),
             calendarCollectionView.bottomAnchor.constraint(equalTo: calendarCardView.bottomAnchor, constant: -20),
