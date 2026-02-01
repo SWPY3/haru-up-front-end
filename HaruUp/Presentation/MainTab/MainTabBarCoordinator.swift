@@ -14,6 +14,8 @@ final class MainTabBarCoordinator: Coordinator {
     let curationData: CurationData
     let appCoordinator: AppCoordinator
     
+    private var tabBarController: MainTabBarController?
+    
     init(navigationController: UINavigationController, curationData: CurationData, appCoordinator: AppCoordinator) {
         self.navigationController = navigationController
         self.curationData = curationData
@@ -51,8 +53,17 @@ final class MainTabBarCoordinator: Coordinator {
         myPageNav.tabBarItem = UITabBarItem(title: "마이페이지", image: nil, selectedImage: nil) // 현재 이미지는 없게 표시
         
         let container = MainTabBarController(tabs: [homeNav, historyNav, chartNav, myPageNav])
+        self.tabBarController = container
         
         navigationController.setViewControllers([container], animated: true)
         navigationController.setNavigationBarHidden(true, animated: false)
+    }
+    
+    // MARK: - Push Notification Navigation Methods
+    
+    // 홈 탭으로 이동
+    func selectHomeTab() {
+        tabBarController?.selectedIndex = 0
+        print("✅ 홈 탭으로 이동")
     }
 }
