@@ -192,4 +192,22 @@ enum NetworkDefine {
             return NetworkDefine.APIEnvironment.baseURL + self.path
         }
     }
+    
+    enum NotificationAPI {
+        case registerToken
+        case testSend
+        
+        var path: String {
+            switch self {
+            case .registerToken:
+                return "api/notifications/token"
+            case .testSend:
+                return "api/notifications/test/send"
+            }
+        }
+        
+        var url: String {
+            return APIEnvironment.baseURL + self.path
+        }
+    }
 }

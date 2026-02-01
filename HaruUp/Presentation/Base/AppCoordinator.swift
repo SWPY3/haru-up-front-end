@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import RxSwift
 
 protocol Coordinator: AnyObject {
     var navigationController: UINavigationController { get }
@@ -19,9 +20,11 @@ final class AppCoordinator: Coordinator {
     
     private let tokenStorage = TokenStorageService.shared
     private var curationData = CurationData()
-
+    private let disposeBag = DisposeBag()
+    
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
+        setupPushNotificationObserver()
     }
 
     func start() {
@@ -49,6 +52,48 @@ final class AppCoordinator: Coordinator {
         }
         
         splashCoordinator.start()
+    }
+    
+    // MARK: - Push Notification Observer
+    private func setupPushNotificationObserver() {
+        PushNotificationService.shared.pushData
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] data in
+                self?.handlePushNotification(data)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    // MARK: - Push Notification Handler (추가)
+    private func handlePushNotification(_ data: [AnyHashable: Any]) {
+        print("🔔 푸시 알림 수신: \(data)")
+        
+        // 푸시 데이터에서 type 추출
+        guard let type = data["type"] as? String else {
+            print("⚠️ 푸시 타입이 없습니다")
+            return
+        }
+        
+        // 타입별 화면 이동 처리
+        switch type {
+        case "home":
+            // 홈 화면으로 이동
+            navigateToHome()
+            
+        default:
+            print("⚠️ 알 수 없는 푸시 타입: \(type)")
+        }
+    }
+    
+    private func navigateToHome() {
+        print("🏠 홈 화면으로 이동")
+        
+        // 이미 메인 화면이면 홈 탭으로 전환
+        if let mainTabCoordinator = childCoordinators.first(where: { $0 is MainTabBarCoordinator }) as? MainTabBarCoordinator {
+            mainTabCoordinator.selectHomeTab()
+        } else {
+            showMainTabFlow()
+        }
     }
     
     func showLoginFlow() {

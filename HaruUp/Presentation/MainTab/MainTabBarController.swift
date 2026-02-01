@@ -25,6 +25,20 @@ final class MainTabBarController: UIViewController {
     
     private var currentViewController: UIViewController?
     
+    // 현재 선택된 탭 추적
+    private var currentTab: MainTab = .home
+    
+    var selectedIndex: Int {
+        get {
+            return currentTab.rawValue
+        }
+        set {
+            guard newValue >= 0, newValue < tabs.count,
+                  let tab = MainTab(rawValue: newValue) else { return }
+            selectTab(tab)
+        }
+    }
+    
     init(tabs: [UIViewController]) {
         self.tabs = tabs
         super.init(nibName: nil, bundle: nil)
@@ -110,6 +124,7 @@ final class MainTabBarController: UIViewController {
         targetViewController.didMove(toParent: self)
         
         currentViewController = targetViewController
+        currentTab = tab
         mainTabBarView.setSelected(tab)
     }
     
@@ -122,5 +137,13 @@ final class MainTabBarController: UIViewController {
                 ? CGAffineTransform(translationX: 0, y: self.tabBarContentHeight)
                 : .identity
         }
+    }
+    
+    func selectTab(at index: Int) {
+        selectedIndex = index
+    }
+    
+    func selectMainTab(_ tab: MainTab) {
+        selectTab(tab)
     }
 }
