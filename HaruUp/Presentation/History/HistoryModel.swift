@@ -23,7 +23,7 @@ struct HistoryModel {
     
     struct GrowthData {
         let targetMonth: String
-        let attendanceCount: Int
+        let completedDays: Int
         
         /// "2025-08" → "8월"
         var monthLabel: String {
@@ -99,13 +99,13 @@ extension MemberMission.AttendanceDate {
     func toDomain() -> HistoryModel.GrowthData {
         return HistoryModel.GrowthData(
             targetMonth: targetMonth,
-            attendanceCount: attendanceCount
+            completedDays: completedDays
         )
     }
 }
 
 extension MemberMission.GrowthDataDTO {
     func toDomain() -> [HistoryModel.GrowthData] {
-        return attendanceDates.map { $0.toDomain() }
+        return monthlyData.map { $0.toDomain() }
     }
 }

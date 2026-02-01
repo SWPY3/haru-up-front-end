@@ -817,7 +817,7 @@ class HistoryViewController: UIViewController {
     }
     
     private func updateGrowthChart(data: [HistoryModel.GrowthData]) {
-        let chartData = data.map { ($0.monthLabel, $0.attendanceCount) }
+        let chartData = data.map { ($0.monthLabel, $0.completedDays) }
         
         let months = chartData.count
         let chartDescriptionText = "\(months)개월간 얼마나 자주 방문했는지 비교해볼 수 있어요."

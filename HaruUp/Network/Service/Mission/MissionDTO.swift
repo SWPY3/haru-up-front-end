@@ -244,11 +244,11 @@ enum MemberMission {
     }
     
     struct GrowthDataDTO: Decodable {
-        let attendanceDates: [AttendanceDate]
+        let monthlyData: [AttendanceDate]
     }
     
     struct AttendanceDate: Decodable {
         let targetMonth: String // yyyy-MM
-        let attendanceCount: Int
+        let completedDays: Int
     }
 }
