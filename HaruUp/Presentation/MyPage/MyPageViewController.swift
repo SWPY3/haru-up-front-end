@@ -46,7 +46,7 @@ class MyPageViewController: UIViewController {
     }()
     
     private let profileImageView: UIImageView = {
-        let iv = UIImageView(image: .characterProfile) // 실제 에셋명으로 변경
+        let iv = UIImageView(image: .characterHaruProfile)
         iv.layer.cornerRadius = 40
         iv.clipsToBounds = true
         iv.translatesAutoresizingMaskIntoConstraints = false
@@ -155,6 +155,11 @@ class MyPageViewController: UIViewController {
         navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -199,7 +204,7 @@ class MyPageViewController: UIViewController {
             contentView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
             
-            titleLabel.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 10),
+            titleLabel.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 20),
             titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             
             profileImageView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
@@ -279,6 +284,11 @@ class MyPageViewController: UIViewController {
                 
                 self.nicknameLabel.setStyle(Typography.subtitle1, text: "\(nickname)님")
                 self.nicknameLabel.textColor = .black
+                
+                // 캐릭터 이미지
+                let characterId = data.characterId ?? 1
+                let characterImage: UIImage = characterId == 1 ? .characterHaruProfile : .characterNaruProfile
+                profileImageView.image = characterImage
                 
                 // 2. 직업 상세
                 let jobDisplayText = data.jobDetail?.jobDetailName ?? data.job?.jobName ?? "직업 정보 없음"

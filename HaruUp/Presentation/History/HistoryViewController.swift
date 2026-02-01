@@ -257,7 +257,7 @@ class HistoryViewController: UIViewController {
         viewTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            viewTitleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 33),
+            viewTitleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             viewTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
         ])
     }

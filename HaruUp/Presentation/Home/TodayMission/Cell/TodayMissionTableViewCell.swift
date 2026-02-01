@@ -34,6 +34,8 @@ final class TodayMissionTableViewCell: UITableViewCell {
         button.setImage(.buttonCheckboxUnselected, for: .normal)
         button.setImage(.buttonCheckboxSelected, for: .selected)
         
+        button.isUserInteractionEnabled = false
+        
         return button
     }()
     

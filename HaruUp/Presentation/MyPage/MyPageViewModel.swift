@@ -105,6 +105,7 @@ final class MyPageViewModel {
         // [프로필] 로컬에서 가져오기
         let profile = tokenStorage.getProfile()
         data.nickname = profile.nickname
+        data.characterId = profile.characterId
         if profile.jobId != 0 {
             data.job = Job(id: profile.jobId, jobName: profile.jobName ?? "")
         }
@@ -156,7 +157,8 @@ final class MyPageViewModel {
             
             // 2. 프로필 정보 로컬 저장 (이름 포함)
             self.tokenStorage.saveProfile(
-                nickname: profile.nickname ?? "",
+                nickname: profile.nickname,
+                characterId: profile.characterId,
                 jobId: profile.jobId,
                 jobName: jobName,           // 찾아온 직업 이름 저장
                 jobDetailId: finalJobDetailId,
