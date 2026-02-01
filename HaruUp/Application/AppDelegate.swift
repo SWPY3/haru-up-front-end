@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import RxSwift
 import CoreData
 import KakaoSDKCommon
 import KakaoSDKAuth
@@ -167,14 +168,29 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 
 // MARK: - MessagingDelegate
 extension AppDelegate: MessagingDelegate {
-    
     // FCM 토큰 갱신
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         print("FCM 토큰: \(fcmToken ?? "")")
         
-        // 서버에 FCM 토큰 전송
-        if let token = fcmToken {
-            PushNotificationService.shared.updateFCMToken(token)
+        guard let token = fcmToken else { return }
+        PushNotificationService.shared.updateFCMToken(token)
+        
+        // 로그인 상태이고, 토큰이 변경되었을 때만 서버에 전송
+        let savedToken = UserDefaults.standard.string(forKey: "fcmTokenSentToServer")
+        
+        if savedToken != token, TokenStorageService.shared.getMemberId() != nil {
+            print("🔄 FCM 토큰 변경 감지 - 서버에 재등록")
+            PushNotificationService.shared.sendTokenToServerIfLoggedIn()
+                .subscribe(
+                    onNext: {
+                        // 성공 시 서버에 전송한 토큰 저장
+                        UserDefaults.standard.set(token, forKey: "fcmTokenSentToServer")
+                    },
+                    onError: { error in
+                        print("FCM 토큰 재등록 실패: \(error)")
+                    }
+                )
+                .disposed(by: DisposeBag())
         }
     }
 }
