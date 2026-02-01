@@ -38,7 +38,6 @@ struct HistoryModel {
 struct DailyMission {
     let targetDate: String
     let completedCount: Int
-    let isAttendance: Bool
     
     var day: Int? {
         let components = targetDate.split(separator: "-")
@@ -56,7 +55,7 @@ struct DailyMission {
 struct MonthlyMissionSummary {
     let dailyMissions: [DailyMission]
     let totalMissionCount: Int
-    let totalAttendanceCount: Int
+    let totalCompletedDays: Int
 }
 
 // MARK: - Calendar 데이터 모델
@@ -82,7 +81,6 @@ extension DailyMission {
     init(from dto: MemberMission.MissionCountDTO) {
         self.targetDate = dto.targetDate
         self.completedCount = dto.completedCount
-        self.isAttendance = dto.isAttendance
     }
 }
 
@@ -92,7 +90,7 @@ extension MemberMission.HistoryDTO {
         return MonthlyMissionSummary(
             dailyMissions: dailyMissions,
             totalMissionCount: totalMissionCount,
-            totalAttendanceCount: totalAttendanceCount
+            totalCompletedDays: totalCompletedDays
         )
     }
 }

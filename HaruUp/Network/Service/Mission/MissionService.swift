@@ -149,8 +149,6 @@ final class MissionService: Service, MissionServiceProtocol {
     
     func fetchMonthlyMissions(targetMonth: String) -> Single<MemberMission.HistoryResponseDTO> {
         
-        print("fetchMonthlyMissions")
-        
         let url: String = NetworkDefine.MissionAPI.history.url + "/\(targetMonth)"
         
         var headers: HTTPHeaders = ["Accept": "application/json"]

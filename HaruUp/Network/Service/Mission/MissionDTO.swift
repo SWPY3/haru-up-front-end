@@ -223,13 +223,12 @@ enum MemberMission {
     struct HistoryDTO: Decodable {
         let missionCounts: [MissionCountDTO]
         let totalMissionCount: Int
-        let totalAttendanceCount: Int
+        let totalCompletedDays: Int
     }
     
     struct MissionCountDTO: Decodable {
         let targetDate: String
         let completedCount: Int
-        let isAttendance: Bool
     }
     
     // MARK: 월별 성장 차트

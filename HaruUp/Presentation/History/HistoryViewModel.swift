@@ -145,7 +145,7 @@ final class HistoryViewModel {
         
         // 출석일 수
         let attendanceDays = dailyMissions
-            .map { $0?.totalAttendanceCount ?? 0 }
+            .map { $0?.totalCompletedDays ?? 0 }
             .asDriver(onErrorJustReturn: 0)
         
         // 완료한 미션 총 개수
