@@ -18,6 +18,8 @@ import UserNotifications
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
+    private let disposeBag = DisposeBag()
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         // App 최초 실행 여부
@@ -49,16 +51,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // 푸시 알림 권한 요청
         UNUserNotificationCenter.current().delegate = self
+        
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(
             options: authOptions,
             completionHandler: { granted, error in
                 print("푸시 권한 허용: \(granted)")
+                if let error = error {
+                    print("푸시 권한 에러: \(error)")
+                }
             }
         )
         
         // APNs 등록
-        application.registerForRemoteNotifications()
+        DispatchQueue.main.async {
+            application.registerForRemoteNotifications()
+        }
         
         return true
     }
@@ -66,7 +74,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // APNs 토큰 등록 성공
     func application(_ application: UIApplication,
                      didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        print("========================================")
+        print("✅✅✅ APNs 토큰 수신 성공! ✅✅✅")
+        print("========================================")
+        // 토큰을 16진수 문자열로 변환
+        let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
+        let token = tokenParts.joined()
+        print("APNs Device Token: \(token)")
+        
         Messaging.messaging().apnsToken = deviceToken
+        print("✅ APNs 토큰을 Firebase에 전달 완료")
     }
     
     // APNs 토큰 등록 실패
@@ -171,8 +188,17 @@ extension AppDelegate: MessagingDelegate {
     // FCM 토큰 갱신
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         print("FCM 토큰: \(fcmToken ?? "")")
+        print("========================================")
+        print("🔥🔥🔥 FCM 토큰 수신! 🔥🔥🔥")
+        print("========================================")
+        print(fcmToken ?? "❌ 토큰이 없습니다")
+        print("========================================")
         
-        guard let token = fcmToken else { return }
+        guard let token = fcmToken else {
+            print("⚠️ FCM 토큰이 nil입니다")
+            return
+        }
+        
         PushNotificationService.shared.updateFCMToken(token)
         
         // 로그인 상태이고, 토큰이 변경되었을 때만 서버에 전송
@@ -184,13 +210,14 @@ extension AppDelegate: MessagingDelegate {
                 .subscribe(
                     onNext: {
                         // 성공 시 서버에 전송한 토큰 저장
+                        print("✅ FCM 토큰 서버 재등록 성공")
                         UserDefaults.standard.set(token, forKey: "fcmTokenSentToServer")
                     },
                     onError: { error in
                         print("FCM 토큰 재등록 실패: \(error)")
                     }
                 )
-                .disposed(by: DisposeBag())
+                .disposed(by: self.disposeBag)
         }
     }
 }

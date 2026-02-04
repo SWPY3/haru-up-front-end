@@ -77,12 +77,38 @@ final class LoginViewModel {
                         return .just(SocialLoginResult(success: true, onboardingCompleted: false))
                     }
             }
+            .flatMap { [weak self] loginResult -> Observable<SocialLoginResult> in
+                // FCM 토큰 서버에 전송
+                guard let self = self, loginResult.success else {
+                    return .just(loginResult)
+                }
+                
+                print("📡 FCM 토큰 서버 전송 시작")
+                
+                return PushNotificationService.shared.sendTokenToServerIfLoggedIn()
+                    .map { _ in
+                        print("✅ FCM 토큰 서버 전송 완료")
+                        
+                        // 성공 시 현재 토큰을 저장
+                        if let token = PushNotificationService.shared.getCurrentToken() {
+                            UserDefaults.standard.set(token, forKey: "fcmTokenSentToServer")
+                        }
+                        
+                        return loginResult
+                    }
+                    .catch { error in
+                        // FCM 토큰 전송 실패해도 로그인은 계속 진행
+                        print("⚠️ FCM 토큰 서버 전송 실패: \(error)")
+                        return .just(loginResult)
+                    }
+            }
             .do(onNext: { [weak self] _ in
                 self?.isLoadingRelay.accept(false)
             }, onError: { [weak self] _ in
                 self?.isLoadingRelay.accept(false)
             })
     }
+    
     func transform(_ input: Input) -> Output {
         let errorRelay = PublishRelay<String>()
         let loginSuccessRelay = PublishRelay<SocialLoginResult>()
