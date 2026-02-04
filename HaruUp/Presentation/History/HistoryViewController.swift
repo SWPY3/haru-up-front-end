@@ -24,6 +24,7 @@ class HistoryViewController: UIViewController {
     // Subjects for Input
     private let viewDidLoadRelay = PublishRelay<Void>()
     private let monthChangedRelay = PublishRelay<Date>()
+    private let growthChartRefreshRelay = PublishRelay<Void>()
     private let daySelectedRelay = PublishRelay<(day: Int, hasCompleted: Bool)>()
     private let needRefreshRelay = BehaviorRelay<Bool>(value: false)
     
@@ -401,6 +402,7 @@ class HistoryViewController: UIViewController {
         let input = HistoryViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
             monthChanged: monthChangedRelay.asObservable(),
+            growthChartRefresh: growthChartRefreshRelay.asObservable(),
             daySelected: daySelectedRelay.asObservable()
         )
         
@@ -480,6 +482,7 @@ class HistoryViewController: UIViewController {
                 
                 if self.isViewLoaded && self.view.window != nil {
                     monthChangedRelay.accept(currentDate)
+                    growthChartRefreshRelay.accept(())
                 } else {
                     self.needRefreshRelay.accept(true)
                 }
@@ -493,6 +496,7 @@ class HistoryViewController: UIViewController {
             .subscribe(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 self.monthChangedRelay.accept(self.currentDate)
+                self.growthChartRefreshRelay.accept(())
                 self.needRefreshRelay.accept(false)
             })
             .disposed(by: disposeBag)

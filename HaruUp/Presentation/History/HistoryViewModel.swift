@@ -15,6 +15,7 @@ final class HistoryViewModel {
     struct Input {
         let viewDidLoad: Observable<Void>
         let monthChanged: Observable<Date>
+        let growthChartRefresh: Observable<Void>
         let daySelected: Observable<(day: Int, hasCompleted: Bool)>
     }
     
