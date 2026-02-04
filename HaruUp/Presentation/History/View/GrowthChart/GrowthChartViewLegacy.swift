@@ -17,16 +17,15 @@ class GrowthChartViewLegacy: UIView {
     func configure(with data: [(String, Int)], highlightLast: Bool = false) {
         self.data = data.map { (month: $0.0, value: $0.1) }
         self.highlightLast = highlightLast
-        
         self.scale = GrowthChartScale.calculate(from: data)
-        
         setNeedsDisplay()
     }
     
     override func draw(_ rect: CGRect) {
         guard data.count > 1 else { return }
         
-        let padding = UIEdgeInsets(top: 50, left: 35, bottom: 30, right: 20)
+        // 상단 여백 늘림 (말풍선 공간)
+        let padding = UIEdgeInsets(top: 60, left: 20, bottom: 30, right: 20)
         let graphRect = CGRect(
             x: padding.left,
             y: padding.top,
@@ -35,44 +34,15 @@ class GrowthChartViewLegacy: UIView {
         )
         
         let maxValue = CGFloat(scale.maxValue)
-        
-        drawGridLines(in: rect, graphRect: graphRect, maxValue: maxValue)
-        
         let points = calculatePoints(in: graphRect, maxValue: maxValue)
         
+        // Y축 그리드 제거 (drawGridLines 호출 안 함)
         drawGradientFill(points: points, graphRect: graphRect)
         drawCurvedLine(points: points)
         drawMonthLabels(points: points, graphRect: graphRect)
         
-        if highlightLast, let lastPoint = points.last {
-            drawDashedLine(at: lastPoint, graphRect: graphRect)
-            drawHighlightPoint(at: lastPoint)
-            drawBadge(at: lastPoint, value: data.last?.value ?? 0)
-        }
-    }
-    
-    private func drawGridLines(in rect: CGRect, graphRect: CGRect, maxValue: CGFloat) {
-        let gridValues = scale.gridValues.map { CGFloat($0) }
-        
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 12),
-            .foregroundColor: UIColor.gray
-        ]
-        
-        for value in gridValues {
-            let y = graphRect.maxY - (value / maxValue * graphRect.height)
-            
-            let linePath = UIBezierPath()
-            linePath.move(to: CGPoint(x: graphRect.minX, y: y))
-            linePath.addLine(to: CGPoint(x: graphRect.maxX, y: y))
-            UIColor.gray.withAlphaComponent(0.2).setStroke()
-            linePath.lineWidth = 1
-            linePath.stroke()
-            
-            let label = "\(Int(value))"
-            let labelSize = label.size(withAttributes: attributes)
-            label.draw(at: CGPoint(x: graphRect.minX - labelSize.width - 8, y: y - labelSize.height / 2), withAttributes: attributes)
-        }
+        // 모든 포인트에 라벨과 원 표시
+        drawAllPoints(points: points, graphRect: graphRect)
     }
     
     private func calculatePoints(in graphRect: CGRect, maxValue: CGFloat) -> [CGPoint] {
@@ -84,13 +54,14 @@ class GrowthChartViewLegacy: UIView {
     }
     
     private func drawGradientFill(points: [CGPoint], graphRect: CGRect) {
-        guard let context = UIGraphicsGetCurrentContext(), let firstPoint = points.first, let lastPoint = points.last else { return }
+        guard let context = UIGraphicsGetCurrentContext(),
+              let firstPoint = points.first,
+              let lastPoint = points.last else { return }
         
         let fillPath = UIBezierPath()
         fillPath.move(to: CGPoint(x: firstPoint.x, y: graphRect.maxY))
         
-        // Catmull-Rom 스플라인으로 부드러운 곡선
-        addCatmullRomCurve(to: fillPath, points: points)
+        addLinearPath(to: fillPath, points: points)
         
         fillPath.addLine(to: CGPoint(x: lastPoint.x, y: graphRect.maxY))
         fillPath.close()
@@ -111,7 +82,7 @@ class GrowthChartViewLegacy: UIView {
     
     private func drawCurvedLine(points: [CGPoint]) {
         let linePath = UIBezierPath()
-        addCatmullRomCurve(to: linePath, points: points, moveToFirst: true)
+        addLinearPath(to: linePath, points: points, moveToFirst: true)
         
         UIColor.systemBlue.setStroke()
         linePath.lineWidth = 2.5
@@ -119,6 +90,21 @@ class GrowthChartViewLegacy: UIView {
         linePath.lineJoinStyle = .round
         linePath.stroke()
     }
+    
+    private func addLinearPath(to path: UIBezierPath, points: [CGPoint], moveToFirst: Bool = false) {
+        guard let firstPoint = points.first else { return }
+        
+        if moveToFirst {
+            path.move(to: firstPoint)
+        } else {
+            path.addLine(to: firstPoint)
+        }
+        
+        for point in points.dropFirst() {
+            path.addLine(to: point)
+        }
+    }
+    
     
     private func addCatmullRomCurve(to path: UIBezierPath, points: [CGPoint], moveToFirst: Bool = false) {
         guard points.count > 1 else { return }
@@ -154,7 +140,7 @@ class GrowthChartViewLegacy: UIView {
     private func drawMonthLabels(points: [CGPoint], graphRect: CGRect) {
         let attributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 12),
-            .foregroundColor: UIColor.gray
+            .foregroundColor: UIColor.label
         ]
         
         for (index, point) in points.enumerated() {
@@ -164,6 +150,57 @@ class GrowthChartViewLegacy: UIView {
         }
     }
     
+    // MARK: - 모든 포인트 그리기
+    private func drawAllPoints(points: [CGPoint], graphRect: CGRect) {
+        for (index, point) in points.enumerated() {
+            let isLast = index == points.count - 1 && highlightLast
+            let value = data[index].value
+            
+            if isLast {
+                // 마지막 포인트: 점선 + 글로우 + 말풍선
+                drawDashedLine(at: point, graphRect: graphRect)
+                drawHighlightPoint(at: point)
+                drawBadge(at: point, value: value)
+            } else {
+                // 일반 포인트: 원 + 텍스트 라벨
+                drawNormalPoint(at: point)
+                drawTextLabel(at: point, value: value)
+            }
+        }
+    }
+    
+    // MARK: - 일반 포인트
+    private func drawNormalPoint(at point: CGPoint) {
+        // 흰색 원
+        let circleRect = CGRect(x: point.x - 6, y: point.y - 6, width: 12, height: 12)
+        let circlePath = UIBezierPath(ovalIn: circleRect)
+        UIColor.white.setFill()
+        circlePath.fill()
+        
+        // 파란색 내부 원
+        let innerRect = CGRect(x: point.x - 4, y: point.y - 4, width: 8, height: 8)
+        let innerPath = UIBezierPath(ovalIn: innerRect)
+        UIColor.systemBlue.setFill()
+        innerPath.fill()
+    }
+    
+    // MARK: - 텍스트 라벨 (일반 포인트용)
+    private func drawTextLabel(at point: CGPoint, value: Int) {
+        let text = "\(value)일"
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 12, weight: .medium),
+            .foregroundColor: UIColor.darkGray
+        ]
+        
+        let textSize = text.size(withAttributes: attributes)
+        let textPoint = CGPoint(
+            x: point.x - textSize.width / 2,
+            y: point.y - textSize.height - 12
+        )
+        text.draw(at: textPoint, withAttributes: attributes)
+    }
+    
+    // MARK: - 마지막 포인트 (기존 유지)
     private func drawDashedLine(at point: CGPoint, graphRect: CGRect) {
         let dashPath = UIBezierPath()
         dashPath.move(to: CGPoint(x: point.x, y: point.y))
@@ -177,7 +214,7 @@ class GrowthChartViewLegacy: UIView {
     
     private func drawHighlightPoint(at point: CGPoint) {
         // 글로우 효과
-        let glowRect = CGRect(x: point.x - 20, y: point.y - 20, width: 40, height: 40)
+        let glowRect = CGRect(x: point.x - 15, y: point.y - 15, width: 30, height: 30)
         let glowPath = UIBezierPath(ovalIn: glowRect)
         UIColor.systemBlue.withAlphaComponent(0.15).setFill()
         glowPath.fill()
@@ -187,9 +224,12 @@ class GrowthChartViewLegacy: UIView {
         let circlePath = UIBezierPath(ovalIn: circleRect)
         UIColor.white.setFill()
         circlePath.fill()
-        UIColor.systemBlue.setStroke()
-        circlePath.lineWidth = 3
-        circlePath.stroke()
+        
+        // 파란색 내부 원
+        let innerRect = CGRect(x: point.x - 5, y: point.y - 5, width: 10, height: 10)
+        let innerPath = UIBezierPath(ovalIn: innerRect)
+        UIColor.systemBlue.setFill()
+        innerPath.fill()
     }
     
     private func drawBadge(at point: CGPoint, value: Int) {
@@ -213,7 +253,7 @@ class GrowthChartViewLegacy: UIView {
             height: badgeHeight
         )
         
-        // 말풍선 그리기
+        // 말풍선
         let bubblePath = UIBezierPath(roundedRect: badgeRect, cornerRadius: badgeHeight / 2)
         UIColor.systemBlue.setFill()
         bubblePath.fill()

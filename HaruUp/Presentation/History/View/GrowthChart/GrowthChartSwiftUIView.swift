@@ -23,7 +23,7 @@ struct GrowthChartSwiftUIView: View {
                     x: .value("Month", point.month),
                     y: .value("Value", point.value)
                 )
-                .interpolationMethod(.catmullRom) // 부드러운 곡선
+                .interpolationMethod(.linear)
                 .foregroundStyle(
                     LinearGradient(
                         colors: [
@@ -42,66 +42,79 @@ struct GrowthChartSwiftUIView: View {
                     x: .value("Month", point.month),
                     y: .value("Value", point.value)
                 )
-                .interpolationMethod(.catmullRom) // 부드러운 곡선
+                .interpolationMethod(.linear)
                 .foregroundStyle(Color.primaryBlue600)
                 .lineStyle(StrokeStyle(lineWidth: 3))
             }
             
-            // 마지막 포인트 강조
-            if highlightLast, let lastPoint = data.last {
-                // 점선 (세로)
-                RuleMark(
-                    x: .value("Month", lastPoint.month),
-                    yStart: .value("Start", 0),           // 바닥 (Y축 최소값)
-                    yEnd: .value("End", lastPoint.value)  // 포인트 위치까지
-                )
-                .foregroundStyle(Color.primaryBlue500)
-                .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            // 모든 포인트 표시
+            ForEach(Array(data.enumerated()), id: \.element.id) { index, point in
+                let isLast = index == data.count - 1
                 
-                // 포인트
+                // 마지막 포인트만 점선
+                if isLast && highlightLast {
+                    RuleMark(
+                        x: .value("Month", point.month),
+                        yStart: .value("Start", 0),
+                        yEnd: .value("End", point.value)
+                    )
+                    .foregroundStyle(Color.primaryBlue500)
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                }
+                
                 PointMark(
-                    x: .value("Month", lastPoint.month),
-                    y: .value("Value", lastPoint.value)
+                    x: .value("Month", point.month),
+                    y: .value("Value", point.value)
                 )
-                .symbolSize(0) // 기본 심볼 숨김
+                .symbolSize(0)
                 .annotation(position: .overlay) {
-                    // 글로우 + 원
-                    ZStack {
-                        Circle()
-                            .fill(Color.calendarPointShadow)
-                            .frame(width: 30, height: 30)
-                        
-                        Circle()
-//                            .stroke(Color.white, lineWidth: 2)
-                            .fill(Color.white)
-                            .frame(width: 14, height: 14)
-                        
-                        Circle()
-                            .fill(Color.primaryBlue600)
-                            .frame(width: 10, height: 10)
+                    // 포인트 원
+                    if isLast && highlightLast {
+                        // 마지막 포인트: 글로우 효과 포함
+                        ZStack {
+                            Circle()
+                                .fill(Color.calendarPointShadow)
+                                .frame(width: 30, height: 30)
+                            
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 14, height: 14)
+                            
+                            Circle()
+                                .fill(Color.primaryBlue600)
+                                .frame(width: 10, height: 10)
+                        }
+                    } else {
+                        // 일반 포인트
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 12, height: 12)
+                            
+                            Circle()
+                                .fill(Color.primaryBlue600)
+                                .frame(width: 8, height: 8)
+                        }
                     }
                 }
-                .annotation(position: .top, spacing: 15) {
-                    CalendarBubbleView(value: lastPoint.value)
+                .annotation(position: .top, spacing: isLast ? 15 : 8) {
+                    // 라벨
+                    if isLast && highlightLast {
+                        // 마지막: 파란 말풍선
+                        CalendarBubbleView(value: point.value)
+                    } else {
+                        // 나머지: 텍스트만
+                        Text("\(point.value)일")
+                            .font(Font(Typography.body5.font))
+                            .foregroundStyle(Color.neutral700)
+                    }
                 }
             }
         }
         .chartYScale(domain: 0...scale.maxValue)
-        .chartYAxis {
-            // 동적 그리드 값 적용
-            AxisMarks(position: .leading, values: scale.gridValues) { value in
-                AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
-                    .foregroundStyle(Color.neutral10)
-                AxisValueLabel {
-                    if let intValue = value.as(Int.self) {
-                        Text("\(intValue)")
-                            .font(Font(Typography.yText.font))
-                            .foregroundStyle(Color.neutral500)
-                            .padding(.trailing, 13)
-                    }
-                }
-            }
-        }
+        // Y축 숨김
+        .chartYAxis(.hidden)
+        // X축 (월 라벨)
         .chartXAxis {
             AxisMarks { value in
                 AxisValueLabel {
@@ -113,14 +126,13 @@ struct GrowthChartSwiftUIView: View {
                 }
             }
         }
-        .padding(.top, 16)
+        .padding(.top, 40) // 말풍선 공간 확보
         .chartPlotStyle { plotArea in
             plotArea
                 .background(Color.clear)
         }
     }
 }
-
 // MARK: - Bubble Badge View
 @available(iOS 16.0, *)
 struct CalendarBubbleView: View {

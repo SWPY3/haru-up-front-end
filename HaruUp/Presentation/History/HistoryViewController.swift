@@ -819,9 +819,29 @@ class HistoryViewController: UIViewController {
     private func updateGrowthChart(data: [HistoryModel.GrowthData]) {
         let chartData = data.map { ($0.monthLabel, $0.completedDays) }
         
-        let months = chartData.count
-        let chartDescriptionText = "\(months)개월간 얼마나 자주 방문했는지 비교해볼 수 있어요."
-        chartDescriptionLabel.setStyle(Typography.body4, text: chartDescriptionText)
+        let currentMonthCount = chartData.last?.1 ?? 0
+        let previousMonthCount = chartData.dropLast().last?.1 ?? 0
+        
+        let difference = currentMonthCount - previousMonthCount
+        let descriptionText: String
+        let highlightedText: String
+
+        if difference > 0 {
+            // 늘어난 경우
+            descriptionText = "지난달보다 미션을 완료한 날이 \(difference)일 늘었어요."
+            highlightedText = "\(difference)"
+        } else if difference < 0 {
+            // 줄어든 경우
+            descriptionText = "지난달보다 미션을 완료한 날이 \(abs(difference))일 줄었어요."
+            highlightedText = "\(abs(difference))"
+        } else {
+            // 같은 경우
+            descriptionText = "지난달과 미션을 완료한 날이 \(currentMonthCount)일로 같아요."
+            highlightedText = "\(currentMonthCount)"
+        }
+
+        print(descriptionText) // 결과 확인
+        chartDescriptionLabel.setStyledText(Typography.description, fullText: descriptionText, highlightedText: highlightedText, highlightedColor: .cta, defaultColor: .neutral900)
         
         GrowthChartViewFactory.configure(chartView, with: chartData, highlightLast: true)
     }
