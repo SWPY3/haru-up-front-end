@@ -64,4 +64,5 @@ enum Typography {
     // Chart
     static let yText = FontStyle(font: .pretendard(size: 11, weight: .medium), lineHeight: 1.00)
     static let xText = FontStyle(font: .pretendard(size: 13, weight: .medium), lineHeight: 1.00)
+    static let description = FontStyle(font: .pretendard(size: 16, weight: .regular), lineHeight: 1.50)
 }

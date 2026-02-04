@@ -216,12 +216,39 @@ enum MemberMission {
     
     struct HistoryResponseDTO: Decodable {
         let success: Bool
-        let data: [HistoryDTO]
+        let data: HistoryDTO
         let errorMessage: String?
     }
     
     struct HistoryDTO: Decodable {
+        let missionCounts: [MissionCountDTO]
+        let totalMissionCount: Int
+        let totalCompletedDays: Int
+    }
+    
+    struct MissionCountDTO: Decodable {
         let targetDate: String
         let completedCount: Int
+    }
+    
+    // MARK: 월별 성장 차트
+    struct GrowthRequestDTO: Encodable {
+        let startTargetMonth: String // yyyy-MM
+        let endTargetMonth: String   // yyyy-MM
+    }
+    
+    struct GrowthResponseDTO: Decodable {
+        let success: Bool
+        let data: GrowthDataDTO
+        let errorMessage: String?
+    }
+    
+    struct GrowthDataDTO: Decodable {
+        let monthlyData: [AttendanceDate]
+    }
+    
+    struct AttendanceDate: Decodable {
+        let targetMonth: String // yyyy-MM
+        let completedDays: Int
     }
 }
