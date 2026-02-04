@@ -69,7 +69,7 @@ final class PushNotificationService {
         }
         
         print("서버에 FCM 토큰 전송: \(token)")
-        
+        print("memberId: \(memberId)")
         guard let memberIdInt = Int(memberId) else {
             return .error(NSError(domain: "InvalidMemberId", code: -1,
                                   userInfo: [NSLocalizedDescriptionKey: "memberId가 유효하지 않습니다"]))
