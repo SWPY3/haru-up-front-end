@@ -15,6 +15,7 @@ final class HistoryViewModel {
     struct Input {
         let viewDidLoad: Observable<Void>
         let monthChanged: Observable<Date>
+        let growthChartRefresh: Observable<Void>
         let daySelected: Observable<(day: Int, hasCompleted: Bool)>
     }
     
@@ -24,7 +25,8 @@ final class HistoryViewModel {
         let attendanceDays: Driver<Int>
         let completedMissions: Driver<Int>
         let dailyMissions: Driver<[DailyMission]>
-        let selectedDayMissions: Driver<[HistoryModel.Mission]>  // 수정: 상세 미션 배열
+        let selectedDayMissions: Driver<[HistoryModel.Mission]>
+        let growthChart: Driver<[HistoryModel.GrowthData]>
         let isLoading: Driver<Bool>
         let isMissionLoading: Driver<Bool>  // 추가: 상세 미션 로딩 상태
         let error: Driver<String>
@@ -44,9 +46,10 @@ final class HistoryViewModel {
         let isLoading = BehaviorRelay<Bool>(value: false)
         let isMissionLoading = BehaviorRelay<Bool>(value: false)
         let error = PublishRelay<String>()
-        let dailyMissions = BehaviorRelay<[DailyMission]>(value: [])
+        let dailyMissions = BehaviorRelay<MonthlyMissionSummary?>(value: nil)
         let selectedDayMissions = BehaviorRelay<[HistoryModel.Mission]>(value: [])
         let currentMonth = BehaviorRelay<Date>(value: Date())
+        let growthData = BehaviorRelay<[HistoryModel.GrowthData]>(value: [])
         
         // 날짜 선택 시 상세 미션 조회 (완료된 미션이 있는 경우에만)
         input.daySelected
@@ -114,15 +117,55 @@ final class HistoryViewModel {
                 currentMonth.accept(date)  // currentMonth 업데이트
                 isLoading.accept(true)
             })
-            .flatMapLatest { [weak self] date -> Observable<[DailyMission]> in
+            .flatMapLatest { [weak self] date -> Observable<MonthlyMissionSummary?> in
                 guard let self = self else { return .empty() }
                 
                 let targetMonth = self.formatMonth(from: date)
                 
                 return self.missionService.fetchMonthlyMissions(targetMonth: targetMonth)
                     .asObservable()
-                    .map { response -> [DailyMission] in
+                    .map { response -> MonthlyMissionSummary? in
                         // DTO → Domain Model 변환
+                        guard response.success else {
+                            if let errorMessage = response.errorMessage {
+                                error.accept(errorMessage)
+                            }
+                            return nil
+                        }
+                        
+                        return response.data.toDomain()
+                    }
+                    .catch { err in
+                        error.accept(err.localizedDescription)
+                        return .just(nil)
+                    }
+            }
+            .do(onNext: { _ in isLoading.accept(false) })
+            .bind(to: dailyMissions)
+            .disposed(by: disposeBag)
+        
+        // 출석일 수
+        let attendanceDays = dailyMissions
+            .map { $0?.totalCompletedDays ?? 0 }
+            .asDriver(onErrorJustReturn: 0)
+        
+        // 완료한 미션 총 개수
+        let completedMissions = dailyMissions
+            .map { $0?.totalMissionCount ?? 0 }
+            .asDriver(onErrorJustReturn: 0)
+        
+        let dailyMissionsDriver = dailyMissions
+            .map { $0?.dailyMissions ?? [] }
+            .asDriver(onErrorJustReturn: [])
+        
+        // 성장 차트
+        input.viewDidLoad
+            .flatMapLatest { [weak self] _ -> Observable<[HistoryModel.GrowthData]> in
+                guard let self = self else { return .empty() }
+                
+                return self.missionService.fetchGrowthChart()
+                    .asObservable()
+                    .map { response -> [HistoryModel.GrowthData] in
                         guard response.success else {
                             if let errorMessage = response.errorMessage {
                                 error.accept(errorMessage)
@@ -136,30 +179,16 @@ final class HistoryViewModel {
                         return .just([])
                     }
             }
-            .do(onNext: { _ in isLoading.accept(false) })
-            .bind(to: dailyMissions)
+            .bind(to: growthData)
             .disposed(by: disposeBag)
-        
-        // 출석일 수
-        let attendanceDays = dailyMissions
-            .map { missions in
-                missions.filter { $0.hasCompleted }.count
-            }
-            .asDriver(onErrorJustReturn: 0)
-        
-        // 완료한 미션 총 개수
-        let completedMissions = dailyMissions
-            .map { missions in
-                missions.reduce(0) { $0 + $1.completedCount }
-            }
-            .asDriver(onErrorJustReturn: 0)
         
         return Output(
             monthTitle: monthTitle,
             attendanceDays: attendanceDays,
             completedMissions: completedMissions,
-            dailyMissions: dailyMissions.asDriver(onErrorJustReturn: []),
+            dailyMissions: dailyMissionsDriver,
             selectedDayMissions: selectedDayMissions.asDriver(onErrorJustReturn: []),
+            growthChart: growthData.asDriver(onErrorJustReturn: []),
             isLoading: isLoading.asDriver(),
             isMissionLoading: isMissionLoading.asDriver(onErrorJustReturn: false),
             error: error.asDriver(onErrorJustReturn: "")

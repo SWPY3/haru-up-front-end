@@ -24,6 +24,7 @@ class HistoryViewController: UIViewController {
     // Subjects for Input
     private let viewDidLoadRelay = PublishRelay<Void>()
     private let monthChangedRelay = PublishRelay<Date>()
+    private let growthChartRefreshRelay = PublishRelay<Void>()
     private let daySelectedRelay = PublishRelay<(day: Int, hasCompleted: Bool)>()
     private let needRefreshRelay = BehaviorRelay<Bool>(value: false)
     
@@ -175,7 +176,6 @@ class HistoryViewController: UIViewController {
         let view = UIView()
         view.backgroundColor = .white
         view.layer.cornerRadius = 24
-        view.isHidden = true // TODO: chart API 연결 전 해당 UI 숨김
         
         return view
     }()
@@ -286,14 +286,17 @@ class HistoryViewController: UIViewController {
         contentStackView.addArrangedSubview(calendarCardView)
         
         // Stats views
-        let (attendanceView, attLabel) = createStatView(title: "출석일", value: "0", unit: "일")
+        let (attendanceView, attLabel) = createStatView(title: "미션 완료한 날", value: "0", unit: "일")
         let (missionView, missLabel) = createStatView(title: "완료한 미션", value: "0", unit: "개")
         attendanceValueLabel = attLabel
         missionValueLabel = missLabel
         statsStackView.addArrangedSubview(attendanceView)
         statsStackView.addArrangedSubview(missionView)
         
-        [prevButton, monthYearLabel, nextButton, statsStackView, calendarCollectionView].forEach {
+        let lineView = UIView()
+        lineView.backgroundColor = .neutral50
+        
+        [prevButton, monthYearLabel, nextButton, statsStackView, calendarCollectionView, lineView].forEach {
             calendarCardView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -321,7 +324,12 @@ class HistoryViewController: UIViewController {
             statsStackView.leadingAnchor.constraint(equalTo: calendarCardView.leadingAnchor, constant: 24),
             statsStackView.trailingAnchor.constraint(equalTo: calendarCardView.trailingAnchor, constant: -24),
             
-            calendarCollectionView.topAnchor.constraint(equalTo: statsStackView.bottomAnchor, constant: 34),
+            lineView.topAnchor.constraint(equalTo: statsStackView.bottomAnchor, constant: 18),
+            lineView.leadingAnchor.constraint(equalTo: calendarCardView.leadingAnchor, constant: 28),
+            lineView.trailingAnchor.constraint(equalTo: calendarCardView.trailingAnchor, constant: -28),
+            lineView.heightAnchor.constraint(equalToConstant: 1),
+            
+            calendarCollectionView.topAnchor.constraint(equalTo: lineView.bottomAnchor, constant: 16),
             calendarCollectionView.leadingAnchor.constraint(equalTo: calendarCardView.leadingAnchor, constant: 28),
             calendarCollectionView.trailingAnchor.constraint(equalTo: calendarCardView.trailingAnchor, constant: -28),
             calendarCollectionView.bottomAnchor.constraint(equalTo: calendarCardView.bottomAnchor, constant: -20),
@@ -373,15 +381,6 @@ class HistoryViewController: UIViewController {
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
         
-        // TODO: 데이터 서버로부터 갱신 필요
-        GrowthChartViewFactory.configure(chartView, with: [
-            ("8월", 8),
-            ("9월", 15),
-            ("10월", 12),
-            ("11월", 25),
-            ("12월", 28)
-        ], highlightLast: true)
-        
         NSLayoutConstraint.activate([
             chartTitleLabel.topAnchor.constraint(equalTo: chartCardView.topAnchor, constant: 28),
             chartTitleLabel.leadingAnchor.constraint(equalTo: chartCardView.leadingAnchor, constant: 24),
@@ -403,6 +402,7 @@ class HistoryViewController: UIViewController {
         let input = HistoryViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
             monthChanged: monthChangedRelay.asObservable(),
+            growthChartRefresh: growthChartRefreshRelay.asObservable(),
             daySelected: daySelectedRelay.asObservable()
         )
         
@@ -443,6 +443,13 @@ class HistoryViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
+        output.growthChart
+            .drive(onNext: { [weak self] growthData in
+                guard let self = self else { return }
+                self.updateGrowthChart(data: growthData)
+            })
+            .disposed(by: disposeBag)
+        
         // 상세 미션 로딩 상태
         output.isMissionLoading
             .drive(onNext: { [weak self] isLoading in
@@ -475,6 +482,7 @@ class HistoryViewController: UIViewController {
                 
                 if self.isViewLoaded && self.view.window != nil {
                     monthChangedRelay.accept(currentDate)
+                    growthChartRefreshRelay.accept(())
                 } else {
                     self.needRefreshRelay.accept(true)
                 }
@@ -488,6 +496,7 @@ class HistoryViewController: UIViewController {
             .subscribe(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 self.monthChangedRelay.accept(self.currentDate)
+                self.growthChartRefreshRelay.accept(())
                 self.needRefreshRelay.accept(false)
             })
             .disposed(by: disposeBag)
@@ -720,7 +729,6 @@ class HistoryViewController: UIViewController {
         selectedDay = selectDay  // 선택한 날짜 설정
         
         pendingSelectedDay = selectDay
-        print("  - pendingSelectedDay 설정: \(selectDay)")
         
         updateMonthYearLabel()
         generateCalendarDays()
@@ -784,10 +792,6 @@ class HistoryViewController: UIViewController {
         
         let day: Int
         
-        print("🗓 selectTodayOrFirst 호출")
-        print("  - pendingSelectedDay: \(String(describing: pendingSelectedDay))")
-        print("  - currentDate: \(currentDate)")
-        
         // 월 이동으로 인한 날짜 선택이 있는 경우
         if let pending = pendingSelectedDay {
             day = pending
@@ -814,6 +818,36 @@ class HistoryViewController: UIViewController {
         
         daySelectedRelay.accept((day: day, hasCompleted: hasCompleted))
         calendarCollectionView.reloadData()
+    }
+    
+    private func updateGrowthChart(data: [HistoryModel.GrowthData]) {
+        let chartData = data.map { ($0.monthLabel, $0.completedDays) }
+        
+        let currentMonthCount = chartData.last?.1 ?? 0
+        let previousMonthCount = chartData.dropLast().last?.1 ?? 0
+        
+        let difference = currentMonthCount - previousMonthCount
+        let descriptionText: String
+        let highlightedText: String
+
+        if difference > 0 {
+            // 늘어난 경우
+            descriptionText = "지난달보다 미션을 완료한 날이 \(difference)일 늘었어요."
+            highlightedText = "\(difference)"
+        } else if difference < 0 {
+            // 줄어든 경우
+            descriptionText = "지난달보다 미션을 완료한 날이 \(abs(difference))일 줄었어요."
+            highlightedText = "\(abs(difference))"
+        } else {
+            // 같은 경우
+            descriptionText = "지난달과 미션을 완료한 날이 \(currentMonthCount)일로 같아요."
+            highlightedText = "\(currentMonthCount)"
+        }
+
+        print(descriptionText) // 결과 확인
+        chartDescriptionLabel.setStyledText(Typography.description, fullText: descriptionText, highlightedText: highlightedText, highlightedColor: .cta, defaultColor: .neutral900)
+        
+        GrowthChartViewFactory.configure(chartView, with: chartData, highlightLast: true)
     }
     
     private func showLoading() {

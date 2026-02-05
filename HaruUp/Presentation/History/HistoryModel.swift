@@ -20,6 +20,19 @@ struct HistoryModel {
         let dailyMissions: [Int: [Mission]]
         let specialDays: [Int]
     }
+    
+    struct GrowthData {
+        let targetMonth: String
+        let completedDays: Int
+        
+        /// "2025-08" → "8월"
+        var monthLabel: String {
+            let components = targetMonth.split(separator: "-")
+            guard components.count == 2,
+                  let month = Int(components[1]) else { return "" }
+            return "\(month)월"
+        }
+    }
 }
 
 struct DailyMission {
@@ -36,6 +49,13 @@ struct DailyMission {
     var hasCompleted: Bool {
         completedCount > 0
     }
+}
+
+// MARK: - Calendar에 표시할 데이터 (월별 통계)
+struct MonthlyMissionSummary {
+    let dailyMissions: [DailyMission]
+    let totalMissionCount: Int
+    let totalCompletedDays: Int
 }
 
 // MARK: - Calendar 데이터 모델
@@ -58,14 +78,34 @@ struct CalendarDay {
 
 // MARK: - DTO → Domain 변환
 extension DailyMission {
-    init(from dto: MemberMission.HistoryDTO) {
+    init(from dto: MemberMission.MissionCountDTO) {
         self.targetDate = dto.targetDate
         self.completedCount = dto.completedCount
     }
 }
 
-extension Array where Element == MemberMission.HistoryDTO {
-    func toDomain() -> [DailyMission] {
-        self.map { DailyMission(from: $0) }
+extension MemberMission.HistoryDTO {
+    func toDomain() -> MonthlyMissionSummary {
+        let dailyMissions = missionCounts.map { DailyMission(from: $0) }
+        return MonthlyMissionSummary(
+            dailyMissions: dailyMissions,
+            totalMissionCount: totalMissionCount,
+            totalCompletedDays: totalCompletedDays
+        )
+    }
+}
+
+extension MemberMission.AttendanceDate {
+    func toDomain() -> HistoryModel.GrowthData {
+        return HistoryModel.GrowthData(
+            targetMonth: targetMonth,
+            completedDays: completedDays
+        )
+    }
+}
+
+extension MemberMission.GrowthDataDTO {
+    func toDomain() -> [HistoryModel.GrowthData] {
+        return monthlyData.map { $0.toDomain() }
     }
 }

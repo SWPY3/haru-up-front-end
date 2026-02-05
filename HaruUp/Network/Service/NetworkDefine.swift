@@ -47,6 +47,7 @@ enum NetworkDefine {
         case status                /// 미션 성공 및 실패
         case challenge             /// 미션 달성 여부
         case history               /// 월별 미션 수행 현황 조회
+        case growth                /// 월별 성장 차트 조회
         
         var path: String {
             switch self {
@@ -65,6 +66,8 @@ enum NetworkDefine {
             case .challenge:
                 return "api/member/mission/completion-status"
             case .history:
+                return "api/member/mission/continue/mission/month"
+            case .growth:
                 return "api/member/mission/continue/mission/month"
             }
         }
