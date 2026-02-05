@@ -14,6 +14,7 @@ class GrowthChartView: UIView {
     private var hostingController: UIHostingController<GrowthChartSwiftUIView>?
     private var data: [GrowthChartDataPoint] = []
     private var highlightLast: Bool = false
+    private var scale: GrowthChartScale = GrowthChartScale(maxValue: 40, gridValues: [0, 10, 20, 30, 40], dataMaxValue: 0)
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -33,6 +34,8 @@ class GrowthChartView: UIView {
         self.data = data.map { GrowthChartDataPoint(month: $0.0, value: $0.1) }
         self.highlightLast = highlightLast
         
+        self.scale = GrowthChartScale.calculate(from: data)
+        
         updateChart()
     }
     
@@ -41,8 +44,11 @@ class GrowthChartView: UIView {
         hostingController?.view.removeFromSuperview()
         hostingController = nil
         
-        // 새 SwiftUI 뷰 생성
-        let chartView = GrowthChartSwiftUIView(data: data, highlightLast: highlightLast)
+        let chartView = GrowthChartSwiftUIView(
+            data: data,
+            highlightLast: highlightLast,
+            scale: scale
+        )
         let hosting = UIHostingController(rootView: chartView)
         hosting.view.backgroundColor = .clear
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
