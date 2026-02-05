@@ -191,7 +191,7 @@ extension AppDelegate: MessagingDelegate {
         print("========================================")
         print("🔥🔥🔥 FCM 토큰 수신! 🔥🔥🔥")
         print("========================================")
-        print(fcmToken ?? "❌ 토큰이 없습니다")
+//        print(fcmToken ?? "❌ 토큰이 없습니다")
         print("========================================")
         
         guard let token = fcmToken else {
