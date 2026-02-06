@@ -382,8 +382,8 @@ final class HomeHeaderView: UIView {
     }
     
     private func configureCharacterInfo() {
-        stackView.setCustomSpacing(27, after: characterImageView)
-        
+        stackView.setCustomSpacing(27, after: characterContainer)
+
         stackView.addArrangedSubview(characterInfoStackView)
         
         [levelNameContainer, expContainer].forEach {
