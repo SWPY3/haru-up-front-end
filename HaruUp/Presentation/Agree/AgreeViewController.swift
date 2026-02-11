@@ -30,12 +30,12 @@ class AgreeViewController: UIViewController {
         let label = UILabel()
         label.setStyle(Typography.title2, text: "하루업 이용을 위해\n이용약관 동의가 필요해요")
         label.numberOfLines = 0
-        label.textColor = .neutral800
+        label.textColor = .black
         return label
     }()
     
     // 전체 동의 뷰
-    private let allAgreeRow = AgreementCell(title: "모두 동의합니다", font:Typography.subtitle2.font, hasArrow: false)
+    private let allAgreeRow = AgreementCell(title: "모두 동의합니다", font:Typography.subtitle2.font, color: .neutral1000, hasArrow: false)
     
     // 구분선
     private let separatorView: UIView = {
@@ -46,9 +46,9 @@ class AgreeViewController: UIViewController {
     
     
     // 개별 항목 뷰들
-    private let term1Row = AgreementCell(title: "[필수] 서비스 이용약관에 동의합니다", font: Typography.body4.font, hasArrow: true)
-    private let term2Row = AgreementCell(title: "[필수] 개인정보 수집 및 이용에 동의합니다",font: Typography.body4.font, hasArrow: true)
-    private let term3Row = AgreementCell(title: "[필수] 만 14세 이상입니다", font: Typography.body4.font, hasArrow: false)
+    private let term1Row = AgreementCell(title: "[필수] 서비스 이용약관에 동의합니다", font: Typography.body4.font, color: .neutral1000, hasArrow: true)
+    private let term2Row = AgreementCell(title: "[필수] 개인정보 수집 및 이용에 동의합니다",font: Typography.body4.font, color: .neutral1000, hasArrow: true)
+    private let term3Row = AgreementCell(title: "[필수] 만 14세 이상입니다", font: Typography.body4.font, color: .neutral1000, hasArrow: false)
     
     private let confirmButton: UIButton = {
         let button = UIButton()

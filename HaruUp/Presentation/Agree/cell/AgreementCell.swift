@@ -29,7 +29,7 @@ final class AgreementCell: UIView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .neutral700
+        
         return label
     }()
     
@@ -41,11 +41,12 @@ final class AgreementCell: UIView {
         return button
     }()
     
-    init(title: String, font: UIFont, hasArrow: Bool = true) {
+    init(title: String, font: UIFont, color: UIColor, hasArrow: Bool = true) {
         super.init(frame: .zero)
         setupLayout(hasArrow: hasArrow)
         titleLabel.text = title
         titleLabel.font = font
+        titleLabel.textColor = color
         bind()
     }
     
