@@ -11,6 +11,11 @@ import RxCocoa
 
 class NotificationSettingViewController: UIViewController {
     private let disposeBag = DisposeBag()
+    private let viewModel = NotificationSettingViewModel()
+    
+    private let viewWillAppearSubject = PublishSubject<Void>()
+    private let switchToggledSubject = PublishSubject<Bool>()
+    private let appDidBecomeActiveSubject = PublishSubject<Void>()
     
     private let customNavBar: UIView = {
         let view = UIView()
@@ -79,12 +84,18 @@ class NotificationSettingViewController: UIViewController {
         setupUI()
         setupConstraints()
         bind()
-        
-        notificationSwitch.addTarget(self, action: #selector(didTapSwitch(_:)), for: .valueChanged)
+        bindViewModel()
+        setupNotificationObserver()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        viewWillAppearSubject.onNext(())
         
         var parent = self.parent
         while parent != nil {
@@ -154,7 +165,7 @@ class NotificationSettingViewController: UIViewController {
             textStackView.topAnchor.constraint(equalTo: notificationContainerView.topAnchor, constant: 18),
             textStackView.bottomAnchor.constraint(equalTo: notificationContainerView.bottomAnchor, constant: -18),
             textStackView.leadingAnchor.constraint(equalTo: notificationContainerView.leadingAnchor, constant: 20),
-
+            
             textStackView.trailingAnchor.constraint(lessThanOrEqualTo: notificationSwitch.leadingAnchor, constant: -20)
         ])
     }
@@ -165,10 +176,80 @@ class NotificationSettingViewController: UIViewController {
                 owner.navigationController?.popViewController(animated: true)
             })
             .disposed(by: disposeBag)
+        
+//        notificationSwitch.rx.isOn
+//            .skip(1)  // 초기값 무시
+//            .bind(to: switchToggledSubject)
+//            .disposed(by: disposeBag)
+        
+        // 스위치 탭 시 원래 상태로 되돌리고 설정 앱으로 이동
+        notificationSwitch.rx.controlEvent(.valueChanged)
+            .withLatestFrom(notificationSwitch.rx.isOn)
+            .do(onNext: { [weak self] currentValue in
+                // 즉시 원래 상태로 되돌림
+                self?.notificationSwitch.setOn(!currentValue, animated: true)
+            })
+            .bind(to: switchToggledSubject)
+            .disposed(by: disposeBag)
     }
     
-    @objc private func didTapSwitch(_ sender: UISwitch) {
-        print("알림 설정 변경됨: \(sender.isOn)")
-        // 여기에 서버 통신 혹은 로컬 저장 로직 추가
+    private func bindViewModel() {
+        let viewAppearTrigger = Observable.merge(
+                viewWillAppearSubject.asObservable(),
+                appDidBecomeActiveSubject.asObservable()
+            )
+        
+        let input = NotificationSettingViewModel.Input(
+            viewWillAppear: viewAppearTrigger,
+            switchToggled: switchToggledSubject.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        // 초기 스위치 상태 설정
+        output.initialSwitchState
+            .drive(notificationSwitch.rx.isOn)
+            .disposed(by: disposeBag)
+        
+        // 설정 저장 완료 (필요시 피드백 제공)
+//        output.settingSaved
+//            .drive(with: self, onNext: { owner, isEnabled in
+//                print("알림 설정 변경됨: \(isEnabled)")
+//                // 필요하면 여기서 토스트 메시지 표시
+//            })
+//            .disposed(by: disposeBag)
+        
+        // 설정 앱 열기
+        output.shouldOpenSettings
+            .drive(with: self, onNext: { owner, _ in
+                owner.openAppSettings()
+            })
+            .disposed(by: disposeBag)
     }
+    
+    private func openAppSettings() {
+        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString),
+              UIApplication.shared.canOpenURL(settingsUrl) else {
+            print("⚠️ 설정 앱을 열 수 없습니다")
+            return
+        }
+        
+        UIApplication.shared.open(settingsUrl, options: [:]) { success in
+            if success {
+                print("✅ iOS 설정 앱으로 이동 성공")
+            } else {
+                print("❌ iOS 설정 앱 열기 실패")
+            }
+        }
+    }
+    
+    private func setupNotificationObserver() {
+        // 앱이 포그라운드로 돌아올 때 알림 권한 상태 체크
+        NotificationCenter.default.rx
+            .notification(UIApplication.didBecomeActiveNotification)
+            .map { _ in () }
+            .bind(to: appDidBecomeActiveSubject)
+            .disposed(by: disposeBag)
+    }
+    
 }

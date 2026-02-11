@@ -25,6 +25,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // App 최초 실행 여부
         TokenStorageService.shared.checkFirstLaunch()
         
+        if UserDefaults.standard.object(forKey: "isPushNotificationEnabled") == nil {
+            UserDefaults.standard.set(true, forKey: "isPushNotificationEnabled")
+            print("✅ 알림 설정 기본값 설정: true")
+        }
+        
         // Naver 로그인 초기화
         NidOAuth.shared.initialize(
             appName: NaverLoginConfig.appName,
@@ -164,8 +169,20 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         // 푸시 데이터 전달
         PushNotificationService.shared.receivePushData(userInfo)
         
-        // iOS 14 이상
-        completionHandler([.banner, .sound, .badge])
+        let isEnabled = UserDefaults.standard.bool(forKey: "isPushNotificationEnabled")
+        
+        if isEnabled {
+            // 알림 ON: 표시
+            print("✅ 알림 표시 ON")
+            completionHandler([.banner, .sound, .badge])
+        } else {
+            // 알림 OFF: 표시하지 않음
+            print("알림 표시 OFF - 데이터만 수신")
+            completionHandler([])
+        }
+        
+//        // iOS 14 이상
+//        completionHandler([.banner, .sound, .badge])
     }
     
     // 푸시 알림 탭했을 때
