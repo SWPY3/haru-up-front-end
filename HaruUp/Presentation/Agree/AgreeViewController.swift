@@ -64,9 +64,13 @@ class AgreeViewController: UIViewController {
     private lazy var termsStackView: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [allAgreeRow, separatorView, term1Row, term2Row, term3Row])
         stack.axis = .vertical
-        stack.spacing = 8
+        stack.spacing = 4
         stack.alignment = .fill
         stack.distribution = .fill
+        
+        stack.setCustomSpacing(10, after: allAgreeRow)
+        stack.setCustomSpacing(10, after: separatorView)
+        
         return stack
     }()
     
@@ -95,7 +99,7 @@ class AgreeViewController: UIViewController {
         super.viewWillDisappear(animated)
         // 다음 화면에서도 커스텀 네비게이션을 쓴다면 false로 유지해도 됩니다.
         // navigationController?.setNavigationBarHidden(false, animated: animated)
-        }
+    }
     
     private func setupLayout() {
         [backButton, titleLabel, termsStackView, confirmButton].forEach {
