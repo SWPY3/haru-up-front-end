@@ -29,7 +29,7 @@ final class AgreementCell: UIView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        
+        label.isUserInteractionEnabled = true // Label도 터치 가능하게 구현
         return label
     }()
     
@@ -55,13 +55,18 @@ final class AgreementCell: UIView {
     // 외부에서 체크 상태를 변경하기 위한 함수
     func setChecked(_ isChecked: Bool) {
         checkButton.isSelected = isChecked
-//        checkButton.tintColor = isChecked ? .systemBlue : .gray // 선택시 색상 변경
     }
     
     private func bind() {
-        checkButton.rx.tap
-            .bind(to: checkButtonTap)
-            .disposed(by: disposeBag)
+        let labelTapGesture = UITapGestureRecognizer()
+        titleLabel.addGestureRecognizer(labelTapGesture)
+        
+        Observable.merge(
+            checkButton.rx.tap.asObservable(),
+            labelTapGesture.rx.event.map { _ in () }
+        )
+        .bind(to: checkButtonTap)
+        .disposed(by: disposeBag)
         
         arrowButton.rx.tap
             .bind(to: arrowButtonTap)
