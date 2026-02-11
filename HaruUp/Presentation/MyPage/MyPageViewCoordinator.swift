@@ -62,6 +62,7 @@ final class MyPageViewCoordinator: Coordinator {
         )
         
         let vc = ProfileEditViewController(viewModel: vm)
+        navigationController.setNavigationBarHidden(true, animated: true)
         // 3. Coordinator에서 push
         navigationController.pushViewController(vc, animated: true)
     }
@@ -73,6 +74,7 @@ final class MyPageViewCoordinator: Coordinator {
         let vm = InterestEditViewModel()
         
         let vc = InterestEditViewController(viewModel: vm)
+        navigationController.setNavigationBarHidden(true, animated: true)
         // Coordinator에서 push
         navigationController.pushViewController(vc, animated: true)
     }
@@ -83,6 +85,7 @@ final class MyPageViewCoordinator: Coordinator {
         let notifiVM = NotificationSettingViewModel()
         
         let notifiVC = NotificationSettingViewController()
+        navigationController.setNavigationBarHidden(true, animated: true)
         navigationController.pushViewController(notifiVC, animated: true)
     }
 }

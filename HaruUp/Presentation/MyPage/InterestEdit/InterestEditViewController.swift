@@ -244,6 +244,8 @@ final class InterestEditViewController: UIViewController {
             }
             parent = parent?.parent
         }
+        
+        navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
