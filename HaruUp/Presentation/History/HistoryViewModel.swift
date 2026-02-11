@@ -159,7 +159,16 @@ final class HistoryViewModel {
             .asDriver(onErrorJustReturn: [])
         
         // 성장 차트
-        input.viewDidLoad
+        let growthChartTrigger = Observable.merge(
+            input.viewDidLoad.map { _ in () },
+            input.growthChartRefresh.asObservable()
+        )
+        
+        growthChartTrigger
+            .do(onNext: { _ in
+                print("Trigger 동작")
+                isLoading.accept(true)
+            })
             .flatMapLatest { [weak self] _ -> Observable<[HistoryModel.GrowthData]> in
                 guard let self = self else { return .empty() }
                 
