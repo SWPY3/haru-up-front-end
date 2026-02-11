@@ -228,6 +228,8 @@ final class ProfileEditViewController: UIViewController {
             parent = parent?.parent
         }
         
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+        
         nicknameTextField.becomeFirstResponder()
     }
     
