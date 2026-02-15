@@ -28,7 +28,7 @@ final class ProfileEditViewModel {
         let initialNickname: Driver<String>          // 초기 닉네임 (진입 시 1회)
         let isCompleteEnabled: Driver<Bool>          // 완료 버튼 활성화 여부
         let validationResult: Signal<NicknameValidationResult> // 검증 결과 (경고 메시지 표시용)
-        let updateSuccess: Signal<Void>              // 최종 수정 성공 이벤트
+        let updateSuccess: Signal<Bool>              // 최종 수정 성공 이벤트
         
         // Job 관련 Output
         let jobList: Driver<[DropdownDisplayable]>          // 직업 리스트
@@ -46,9 +46,9 @@ final class ProfileEditViewModel {
     
     // UI 상태 관리
     private let nicknameRelay: BehaviorRelay<String>
-    let initialNicknameValue: String
+    var initialNicknameValue: String
     
-    let savedProfile: (nickname: String?, jobId: Int, jobDetailId: Int)
+    var savedProfile: (nickname: String?, jobId: Int, jobDetailId: Int)
     
     // Job 상태관리
     let selectedJobRelay = BehaviorRelay<Job?>(value: nil)
@@ -108,7 +108,7 @@ final class ProfileEditViewModel {
     
     func transform(input: Input) -> Output {
         let validationResultRelay = PublishRelay<NicknameValidationResult>()
-        let updateSuccessRelay = PublishRelay<Void>()
+        let updateSuccessRelay = PublishRelay<Bool>()
         
         // 1. 초기 닉네임 Driver
         let initialNicknameDriver = Driver.just(initialNicknameValue)
@@ -256,34 +256,23 @@ final class ProfileEditViewModel {
             }
             .subscribe(onNext: { [weak self] success in
                 if success {
-//                    if let self = self {
-//                        // 1. 현재 화면의 최신 값 가져오기
-//                        let newNickname = self.nicknameRelay.value
-//                        let newJob = self.selectedJobRelay.value
-//                        let newDetail = self.selectedDetailJobRelay.value
-//                        
-//                        // 2. [기존] CurationData 업데이트 (이름 포함된 데이터)
-//                        var currentData = TokenStorageService.shared.getCurationData() ?? CurationData()
-//                        currentData.nickname = newNickname
-//                        currentData.job = newJob
-//                        currentData.jobDetail = newDetail
-//                        TokenStorageService.shared.saveCurationData(currentData)
-//                        
-//                        // 3. [추가/중요] 프로필 개별 키(ID) 업데이트 🔥
-//                        // 이걸 안 하면 재진입 시 옛날 ID를 불러옵니다.
-//                        // 이미지 ID는 기존 것 유지
-//                        let currentImgId = TokenStorageService.shared.getProfile().imgId
-//                        
-//                        TokenStorageService.shared.saveProfile(
-//                            nickname: newNickname,
-//                            imgId: currentImgId,
-//                            jobId: newJob?.id,          // 직업 ID 저장
-//                            jobDetailId: newDetail?.id  // 세부 직업 ID 저장
-//                        )
-//                        
-//                        print("✅ [ProfileEditVM] 저장 완료: \(newNickname), JobID: \(newJob?.id ?? 0), JobDetailID: \(newDetail?.id ?? 0)")
-//                    }
-                    updateSuccessRelay.accept(())
+                    guard let self = self else { return }
+                    // 1. 현재 성공한 최신 값들을 가져옵니다.
+                    let newNickname = self.nicknameRelay.value.trimmingCharacters(in: .whitespaces)
+                    let isNicknameActuallyChanged = (newNickname != self.initialNicknameValue)
+                    
+                    let newJob = self.selectedJobRelay.value
+                    let newDetail = self.selectedDetailJobRelay.value
+                    
+                    self.initialNicknameValue = newNickname
+                    self.savedProfile = (
+                        nickname: newNickname,
+                        jobId: newJob?.id ?? 0,
+                        jobDetailId: newDetail?.id ?? 0
+                    )
+                    
+                    // 2. 데이터 동기화가 끝난 후 성공 이벤트를 컨트롤러에 전달
+                    updateSuccessRelay.accept(isNicknameActuallyChanged)
                 }
             })
             .disposed(by: disposeBag)

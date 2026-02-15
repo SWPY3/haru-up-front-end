@@ -370,7 +370,7 @@ final class InterestEditViewController: UIViewController {
             completeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             completeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             completeButton.heightAnchor.constraint(equalToConstant: 56),
-            completeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10)
+            completeButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
         ])
     }
     
