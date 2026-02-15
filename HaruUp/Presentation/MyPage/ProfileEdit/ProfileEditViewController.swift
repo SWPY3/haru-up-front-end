@@ -219,6 +219,9 @@ final class ProfileEditViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        navigationController?.interactivePopGestureRecognizer?.delegate = self
+        
         var parent = self.parent
         while parent != nil {
             if let tabBar = parent as? MainTabBarController {
@@ -240,6 +243,9 @@ final class ProfileEditViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        navigationController?.interactivePopGestureRecognizer?.delegate = nil
         
         var parent = self.parent
         while parent != nil {
@@ -889,6 +895,14 @@ final class ProfileEditViewController: UIViewController {
 
 // MARK: - Keyboard Handling Extension
 extension ProfileEditViewController: UIGestureRecognizerDelegate {
+    // 스와이프 제스처를 허용할지 결정하는 메서드
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        // interactivePopGestureRecognizer인 경우 false를 반환하여 스와이프를 막음
+        if gestureRecognizer == navigationController?.interactivePopGestureRecognizer {
+            return false
+        }
+        return true
+    }
     
     private func setupKeyboardHandling() {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
