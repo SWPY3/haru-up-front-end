@@ -94,6 +94,8 @@ class NotificationSettingViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        navigationController?.interactivePopGestureRecognizer?.delegate = nil
         
         viewWillAppearSubject.onNext(())
         
@@ -111,6 +113,8 @@ class NotificationSettingViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         
         var parent = self.parent
         while parent != nil {

@@ -63,6 +63,9 @@ final class MyPageViewCoordinator: Coordinator {
         
         let vc = ProfileEditViewController(viewModel: vm)
         navigationController.setNavigationBarHidden(true, animated: true)
+        
+        navigationController.interactivePopGestureRecognizer?.isEnabled = false
+        
         // 3. Coordinator에서 push
         navigationController.pushViewController(vc, animated: true)
     }
@@ -75,6 +78,9 @@ final class MyPageViewCoordinator: Coordinator {
         
         let vc = InterestEditViewController(viewModel: vm)
         navigationController.setNavigationBarHidden(true, animated: true)
+        
+        navigationController.interactivePopGestureRecognizer?.isEnabled = false
+        
         // Coordinator에서 push
         navigationController.pushViewController(vc, animated: true)
     }
@@ -86,6 +92,7 @@ final class MyPageViewCoordinator: Coordinator {
         
         let notifiVC = NotificationSettingViewController()
         navigationController.setNavigationBarHidden(true, animated: true)
+        navigationController.interactivePopGestureRecognizer?.isEnabled = true
         navigationController.pushViewController(notifiVC, animated: true)
     }
 }
