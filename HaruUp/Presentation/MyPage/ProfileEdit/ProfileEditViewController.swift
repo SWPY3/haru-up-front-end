@@ -296,7 +296,8 @@ final class ProfileEditViewController: UIViewController {
     }
     
     private func setupConstraints() {
-        completeButtonBottomConstraint = completeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10)
+//        completeButtonBottomConstraint = completeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 0)
+        completeButtonBottomConstraint = completeButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
         
         NSLayoutConstraint.activate([
             // 1. 좌우는 화면 꽉 채우기
@@ -695,31 +696,23 @@ final class ProfileEditViewController: UIViewController {
         
         // 4. 최종 성공 처리 (토스트 -> 화면 종료)
         output.updateSuccess
-            .emit(with: self, onNext: { owner, _ in
+            .emit(with: self, onNext: { owner, isNicknameChanged in
                 owner.view.endEditing(true)
                 
                 // 닉네임 변경 후 홈화면 사용자 정보 다시 가져오게 갱신
                 NotificationCenter.default.post(name: .changedProfile, object: nil)
                 
-                // 변경된 항목에 따라 토스트 메시지 다르게 표시
-                let nicknameChanged = owner.nicknameTextField.text != owner.viewModel.initialNicknameValue
-                let jobChanged = owner.viewModel.selectedJobRelay.value?.id != owner.viewModel.savedProfile.jobId
-                let detailJobChanged = owner.viewModel.selectedDetailJobRelay.value?.id != owner.viewModel.savedProfile.jobDetailId
-                
-                var message = " 프로필 수정이 완료되었어요"
-                if nicknameChanged && (jobChanged || detailJobChanged) {
-                    message = " 닉네임 및 직업 정보가 변경되었어요"
-                } else if nicknameChanged {
-                    message = " 닉네임 변경이 완료되었어요"
-                } else if jobChanged || detailJobChanged {
-                    message = " 직업 정보가 변경되었어요"
+                // 토스트 메시지 표시
+                if isNicknameChanged {
+                    owner.showToast(message: " 닉네임 변경이 완료되었어요")
+                } else {
+                    owner.showToast(message: " 직업 정보가 변경되었어요")
                 }
                 
-                owner.showToast(message: message)
-//                아래의 화면 이동(pop) 코드를 삭제하여 화면에 머물게 함
-//                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-//                    owner.navigationController?.popViewController(animated: true)
-//                }
+                // 완료 버튼 즉시 비활성화
+                // Rx 이벤트 전달 속도 차이를 방지하기 위해 UI에서 즉시 꺼버리기
+                owner.completeButton.isEnabled = false
+                owner.completeButton.backgroundColor = .neutral200
             })
             .disposed(by: disposeBag)
         
@@ -906,7 +899,7 @@ extension ProfileEditViewController: UIGestureRecognizerDelegate {
         guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
               let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
         
-        completeButtonBottomConstraint?.constant = -(keyboardFrame.height - view.safeAreaInsets.bottom + 10)
+        completeButtonBottomConstraint?.constant = -keyboardFrame.height - 10
         
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
@@ -916,7 +909,7 @@ extension ProfileEditViewController: UIGestureRecognizerDelegate {
     @objc private func keyboardWillHide(_ notification: Notification) {
         guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
         
-        completeButtonBottomConstraint?.constant = -5
+        completeButtonBottomConstraint?.constant = -60
         
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
