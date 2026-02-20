@@ -14,11 +14,13 @@ import NidThirdPartyLogin
 import FirebaseCore
 import FirebaseMessaging
 import UserNotifications
+import AmplitudeSwift
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
     private let disposeBag = DisposeBag()
+    static var amplitude: Amplitude?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
@@ -72,6 +74,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         DispatchQueue.main.async {
             application.registerForRemoteNotifications()
         }
+        
+        // Amplitude
+        guard let amplitudeKey = Bundle.main.object(forInfoDictionaryKey: "AMPLITUDE_API_KEY") as? String else { return true }
+        
+        AppDelegate.amplitude = Amplitude(configuration: Configuration(
+            apiKey: amplitudeKey,
+            autocapture: .all
+        ))
         
         return true
     }

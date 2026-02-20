@@ -224,12 +224,18 @@ class TodayMissionListViewController: UIViewController {
                 return nil
             }
         
+        let trackedRefreshTap = refreshFooterView.refreshButton.rx.tap
+            .do(onNext: { _ in
+                AnalyticsManager.shared.track(event: .refreshMissionListTapped)
+            })
+            .asObservable()
+        
         let input = TodayMissionListViewModel.Input(
             viewDidLoad: viewDidLoadSubject.asObservable(),
             refreshTap: refreshButton.rx.tap.asObservable(),
             completeTap: selectedButtonView.button.rx.tap.asObservable(),
             missionSelected: missionSelected,
-            retryRecommend: refreshFooterView.refreshButton.rx.tap.asObservable()
+            retryRecommend: trackedRefreshTap
         )
         
         let output = viewModel.transform(input: input)
