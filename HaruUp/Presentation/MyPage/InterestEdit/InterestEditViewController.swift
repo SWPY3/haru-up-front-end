@@ -58,21 +58,52 @@ final class InterestEditViewController: UIViewController {
         return imgView
     }()
     
+//    private lazy var interestSelectButton: UIButton = {
+//        let btn = UIButton()
+//        let interests = TokenStorageService.shared.getMemberInterests()?.first
+//        let path = interests?.directFullPath ?? []
+//        let initialTitle = (path.indices.contains(0) ? path[0] : nil) ?? "관심사 선택"
+//        let titleColor: UIColor = (path.indices.contains(0)) ? .cta : .neutral800
+//        btn.setAttributedTitle(
+//            NSAttributedString(
+//                string: initialTitle,
+//                attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]
+//            ),
+//            for: .normal
+//        )
+//        btn.contentHorizontalAlignment = .left
+//        btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
+//        btn.backgroundColor = .white
+//        btn.layer.cornerRadius = 16
+//        btn.layer.borderWidth = 1
+//        btn.layer.borderColor = UIColor.neutral200.cgColor
+//        btn.translatesAutoresizingMaskIntoConstraints = false
+//        
+//        btn.addSubview(interestArrowImageView)
+//        NSLayoutConstraint.activate([
+//            interestArrowImageView.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
+//            interestArrowImageView.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -16)
+//        ])
+//        return btn
+//    }()
+    
     private lazy var interestSelectButton: UIButton = {
-        let btn = UIButton()
+        var config = UIButton.Configuration.plain()
+        
         let interests = TokenStorageService.shared.getMemberInterests()?.first
         let path = interests?.directFullPath ?? []
         let initialTitle = (path.indices.contains(0) ? path[0] : nil) ?? "관심사 선택"
         let titleColor: UIColor = (path.indices.contains(0)) ? .cta : .neutral800
-        btn.setAttributedTitle(
-            NSAttributedString(
-                string: initialTitle,
-                attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]
-            ),
-            for: .normal
-        )
+        
+        var titleAttr = AttributedString(initialTitle)
+        titleAttr.font = Typography.body1.font
+        titleAttr.foregroundColor = titleColor
+        config.attributedTitle = titleAttr
+        
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0)
+        
+        let btn = UIButton(configuration: config)
         btn.contentHorizontalAlignment = .left
-        btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         btn.backgroundColor = .white
         btn.layer.cornerRadius = 16
         btn.layer.borderWidth = 1
@@ -104,22 +135,22 @@ final class InterestEditViewController: UIViewController {
     }()
     
     private lazy var detailInterestSelectButton: UIButton = {
-        let btn = UIButton()
+        var config = UIButton.Configuration.plain()
+        
         let interests = TokenStorageService.shared.getMemberInterests()?.first
         let path = interests?.directFullPath ?? []
-        
         // Path의 1번째 인덱스가 세부 관심사
         let initialTitle = (path.indices.contains(1) ? path[1] : nil) ?? "세부 관심사 선택"
         let titleColor: UIColor = (path.indices.contains(1)) ? .cta : .neutral800
-        btn.setAttributedTitle(
-            NSAttributedString(
-                string: initialTitle,
-                attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]
-            ),
-            for: .normal
-        )
+        
+        var titleAttr = AttributedString(initialTitle)
+        titleAttr.font = Typography.body1.font
+        titleAttr.foregroundColor = titleColor
+        config.attributedTitle = titleAttr
+        
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0)
+        let btn = UIButton(configuration: config)
         btn.contentHorizontalAlignment = .left
-        btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         btn.backgroundColor = .white
         btn.layer.cornerRadius = 16
         btn.layer.borderWidth = 1
@@ -152,22 +183,23 @@ final class InterestEditViewController: UIViewController {
     }()
     
     private lazy var goalSelectButton: UIButton = {
-        let btn = UIButton()
+        var config = UIButton.Configuration.plain()
+        
+        
         let interests = TokenStorageService.shared.getMemberInterests()?.first
         let path = interests?.directFullPath ?? []
-        
         // Path의 2번째 인덱스가 목표
         let initialTitle = (path.indices.contains(2) ? path[2] : nil) ?? "목표 선택"
         let titleColor: UIColor = (path.indices.contains(2)) ? .cta : .neutral800
-        btn.setAttributedTitle(
-            NSAttributedString(
-                string: initialTitle,
-                attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]
-            ),
-            for: .normal
-        )
+        
+        var titleAttr = AttributedString(initialTitle)
+        titleAttr.font = Typography.body1.font
+        titleAttr.foregroundColor = titleColor
+        config.attributedTitle = titleAttr
+        
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0)
+        let btn = UIButton(configuration: config)
         btn.contentHorizontalAlignment = .left
-        btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         btn.backgroundColor = .white
         btn.layer.cornerRadius = 16
         btn.layer.borderWidth = 1

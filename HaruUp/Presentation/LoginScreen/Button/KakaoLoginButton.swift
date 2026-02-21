@@ -19,23 +19,27 @@ final class KakaoLoginButton: UIButton {
     }
     
     private func setupButton() {
+        var config = UIButton.Configuration.plain()
+        var titleAttr = AttributedString("카카오로 로그인")
+        titleAttr.font = .systemFont(ofSize: 19, weight: .semibold)
+        titleAttr.foregroundColor = .black
+        config.attributedTitle = titleAttr
+        
+        let logoImage = UIImage(named: "kakao_logo")?.resized(to: CGSize(width: 20, height: 20))
+        config.image = logoImage
+        config.imagePlacement = .leading // 이미지 위치 (왼쪽)
+        config.imagePadding = 8
+        
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        
+        self.configuration = config
+        
         backgroundColor = .kakaoBackground
-        setTitleColor(.black, for: .normal)
-        
-        setTitle("카카오로 로그인", for: .normal)
-        titleLabel?.font = .systemFont(ofSize: 19, weight: .semibold)
-        
-        var logoImage = UIImage(named: "kakao_logo")
-        logoImage = logoImage?.resized(to: CGSize(width: 20, height: 20))
-        
-        setImage(logoImage, for: .normal)
-        imageView?.contentMode = .scaleAspectFit
-        
-        semanticContentAttribute = .forceLeftToRight
-        contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
-        
         layer.cornerRadius = 16
         clipsToBounds = true
+        
+        contentHorizontalAlignment = .center
+        semanticContentAttribute = .forceLeftToRight
+        
     }
 }

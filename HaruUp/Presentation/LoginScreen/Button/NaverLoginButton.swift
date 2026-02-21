@@ -19,23 +19,27 @@ final class NaverLoginButton: UIButton {
     }
     
     private func setupButton() {
+        var config = UIButton.Configuration.plain()
+        
+        var titleAttr = AttributedString("네이버로 로그인")
+        titleAttr.font = .systemFont(ofSize: 19, weight: .semibold)
+        titleAttr.foregroundColor = UIColor(named: "appWhite") // 수정한 에셋 이름 적용
+        config.attributedTitle = titleAttr
+        
+        let logoImage = UIImage(named: "naver_logo")?.resized(to: CGSize(width: 20, height: 20))
+        config.image = logoImage
+        config.imagePlacement = .leading
+        config.imagePadding = 8
+        
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        self.configuration = config
+        
         backgroundColor = .naverBackground
-        setTitleColor(.white, for: .normal)
-        
-        setTitle("네이버로 로그인", for: .normal)
-        titleLabel?.font = .systemFont(ofSize: 19, weight: .semibold)
-        
-        var logoImage = UIImage(named: "naver_logo")
-        logoImage = logoImage?.resized(to: CGSize(width: 20, height: 20))
-        
-        setImage(logoImage, for: .normal)
-        imageView?.contentMode = .scaleAspectFit
-        
-        semanticContentAttribute = .forceLeftToRight
-        contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
-        
         layer.cornerRadius = 16
         clipsToBounds = true
+        
+        contentHorizontalAlignment = .center
+        semanticContentAttribute = .forceLeftToRight
+
     }
 }

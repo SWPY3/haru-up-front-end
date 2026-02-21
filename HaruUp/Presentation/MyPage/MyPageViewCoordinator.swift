@@ -88,7 +88,7 @@ final class MyPageViewCoordinator: Coordinator {
     func showNotificationSetting() {
         print("=== 알림 설정 진입 ===")
         
-        let notifiVM = NotificationSettingViewModel()
+//        let notifiVM = NotificationSettingViewModel()
         
         let notifiVC = NotificationSettingViewController()
         navigationController.setNavigationBarHidden(true, animated: true)

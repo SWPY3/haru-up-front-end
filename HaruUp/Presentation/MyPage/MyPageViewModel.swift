@@ -100,7 +100,7 @@ final class MyPageViewModel {
     
     // MARK: - 로직 1: 로컬 스토리지 -> UI 반영
     private func updateUIFromLocalStorage() {
-        var data = CurationData() // 빈 객체 시작
+        let data = CurationData() // 빈 객체 시작
         
         // [프로필] 로컬에서 가져오기
         let profile = tokenStorage.getProfile()
