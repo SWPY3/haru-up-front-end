@@ -257,5 +257,4 @@ class NotificationSettingViewController: UIViewController {
             .bind(to: appDidBecomeActiveSubject)
             .disposed(by: disposeBag)
     }
-    
 }
