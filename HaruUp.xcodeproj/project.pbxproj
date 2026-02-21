@@ -16,6 +16,7 @@
 		4893D2452ED985650018D43A /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2442ED985650018D43A /* RxCocoa */; };
 		4893D2472ED985650018D43A /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2462ED985650018D43A /* RxSwift */; };
 		CF46F20A2F2A159800CDCCDE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = CF46F2092F2A159800CDCCDE /* FirebaseCore */; };
+		CFC7F0942F47FD0800BCF147 /* AmplitudeSwift in Frameworks */ = {isa = PBXBuildFile; productRef = CFC7F0932F47FD0800BCF147 /* AmplitudeSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +57,7 @@
 				4893D2452ED985650018D43A /* RxCocoa in Frameworks */,
 				4893D23F2ED9771B0018D43A /* KakaoSDKUser in Frameworks */,
 				CF46F20A2F2A159800CDCCDE /* FirebaseCore in Frameworks */,
+				CFC7F0942F47FD0800BCF147 /* AmplitudeSwift in Frameworks */,
 				48894DCB2EE180BE00782FA3 /* NidThirdPartyLogin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -116,6 +118,7 @@
 				480A9BDD2EF9E63F00E9B443 /* Lottie */,
 				CF46F2092F2A159800CDCCDE /* FirebaseCore */,
 				48433DD02F2A38F9004AC7DB /* FirebaseMessaging */,
+				CFC7F0932F47FD0800BCF147 /* AmplitudeSwift */,
 			);
 			productName = HaruUp;
 			productReference = 4893D1EC2ED6E2AE0018D43A /* HaruUp.app */;
@@ -151,6 +154,7 @@
 				48894DC92EE180BE00782FA3 /* XCRemoteSwiftPackageReference "naveridlogin-sdk-ios-swift" */,
 				480A9BDC2EF9E63F00E9B443 /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				CF46F2072F2A153000CDCCDE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				CFC7F0922F47FD0800BCF147 /* XCRemoteSwiftPackageReference "Amplitude-Swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4893D1ED2ED6E2AE0018D43A /* Products */;
@@ -190,11 +194,9 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = HaruUp/HaruUp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 5G6N83PM9C;
+				DEVELOPMENT_TEAM = PV4N83CM46;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HaruUp/Application/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -210,7 +212,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.swyp.HaruUp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "하다현";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
@@ -439,6 +440,14 @@
 				minimumVersion = 12.8.0;
 			};
 		};
+		CFC7F0922F47FD0800BCF147 /* XCRemoteSwiftPackageReference "Amplitude-Swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/amplitude/Amplitude-Swift.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -486,6 +495,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CF46F2072F2A153000CDCCDE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		CFC7F0932F47FD0800BCF147 /* AmplitudeSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CFC7F0922F47FD0800BCF147 /* XCRemoteSwiftPackageReference "Amplitude-Swift" */;
+			productName = AmplitudeSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
