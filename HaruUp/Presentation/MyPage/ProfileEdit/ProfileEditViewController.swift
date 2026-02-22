@@ -107,13 +107,21 @@ final class ProfileEditViewController: UIViewController {
     
     // 직업 선택 버튼
     private lazy var jobSelectButton: UIButton = {
-        let btn = UIButton()
+        var config = UIButton.Configuration.plain()
+    
         let profile = TokenStorageService.shared.getProfile()
         let initialTitle = profile.jobName ?? "직업선택"
         let titleColor: UIColor = profile.jobName != nil ? .cta : .neutral800
-        btn.setAttributedTitle(NSAttributedString(string: initialTitle, attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]), for: .normal)
+        
+        var titleAttr = AttributedString(initialTitle)
+        titleAttr.font = Typography.body1.font
+        titleAttr.foregroundColor = titleColor
+        config.attributedTitle = titleAttr
+        
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0)
+        
+        let btn = UIButton(configuration: config)
         btn.contentHorizontalAlignment = .left
-        btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         btn.backgroundColor = .white
         btn.layer.cornerRadius = 16
         btn.layer.borderWidth = 1
@@ -143,15 +151,23 @@ final class ProfileEditViewController: UIViewController {
         return imgView
     }()
     
-    // 디자이너 (Unselected State Mock)
+    
     private lazy var detailJobSelectButton: UIButton = {
-        let btn = UIButton()
+        var config = UIButton.Configuration.plain()
+
         let profile = TokenStorageService.shared.getProfile()
         let initialTitle = profile.jobDetailName ?? "세부 직무 선택"
         let titleColor: UIColor = profile.jobDetailName != nil ? .cta : .neutral800
-        btn.setAttributedTitle(NSAttributedString(string: initialTitle, attributes: [.font: Typography.body1.font, .foregroundColor: titleColor]), for: .normal)
+        
+        var titleAttr = AttributedString(initialTitle)
+        titleAttr.font = Typography.body1.font
+        titleAttr.foregroundColor = titleColor
+        config.attributedTitle = titleAttr
+        
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0)
+        
+        let btn = UIButton(configuration: config)
         btn.contentHorizontalAlignment = .left
-        btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         btn.backgroundColor = .white
         btn.layer.cornerRadius = 16
         btn.layer.borderWidth = 1
