@@ -529,7 +529,7 @@ class GoalInputSelectViewController: UIViewController {
                 return !text.isEmpty
             }
             .distinctUntilChanged()
-            .subscribe(onNext: { [weak self] hasText in
+            .subscribe(onNext: { _ in
                 
             })
             .disposed(by: disposeBag)
