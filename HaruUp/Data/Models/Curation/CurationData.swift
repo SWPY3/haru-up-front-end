@@ -78,14 +78,14 @@ extension CurationData {
     func toCurationRequest() -> CurationRequest? {
         // 디버깅: 어떤 값이 없는지 확인
         print("=== CurationData 디버깅 ===")
-        print("characterId: \(characterId)")
-        print("nickname: \(nickname)")
-        print("job: \(job?.id)")
-        print("jobDetail: \(jobDetail?.id)")
-        print("goal: \(goal?.name)")
-        print("interest: \(interest?.name)")
-        print("interestDetail: \(interestDetail?.name)")
-        print("interestDetailID: \(interestDetail?.id)")
+        print("characterId: \(characterId ?? -999)")
+        print("nickname: \(nickname ?? "없음")")
+        print("job: \(job?.id ?? -999)")
+        print("jobDetail: \(jobDetail?.id ?? -999)")
+        print("goal: \(goal?.name ?? "없음")")
+        print("interest: \(interest?.name ?? "없음")")
+        print("interestDetail: \(interestDetail?.name ?? "없음")")
+        print("interestDetailID: \(interestDetail?.id ?? -999)")
         
         guard let characterId = characterId else {
             print("❌ characterId가 없습니다")

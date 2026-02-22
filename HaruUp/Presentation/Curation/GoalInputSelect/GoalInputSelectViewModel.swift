@@ -151,7 +151,7 @@ final class GoalInputSelectViewModel {
             // isValidGoalRelay에서 응답을 기다림
             let disposable = self.isValidGoalRelay
                 .take(1)
-                .subscribe(onNext: { isValid in
+                .subscribe(with: self, onNext: { owner, isValid in
                     if isValid {
                         observer.onNext(.success)
                     } else {
