@@ -123,6 +123,8 @@ final class TodayMissionRefreshFooterView: UIView {
         infoButton.rx.tap
             .asDriver()
             .drive(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.MissionList.infoIconTapped)
+                
                 self?.toggleTooltip()
             })
             .disposed(by: disposeBag)

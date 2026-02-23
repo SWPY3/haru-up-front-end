@@ -172,6 +172,9 @@ class TodayMissionIntroViewController: UIViewController {
     
     private func bind() {
         nextButton.rx.tap
+            .do(onNext: {
+                AnalyticsManager.shared.track(event: AppEvent.MissionStart.startTapped)
+            })
             .bind { [weak self] in
                 guard let self else { return }
                 print("미션 목록 화면으로 이동")

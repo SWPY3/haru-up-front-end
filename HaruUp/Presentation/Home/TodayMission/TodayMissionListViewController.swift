@@ -142,7 +142,7 @@ class TodayMissionListViewController: UIViewController {
         topContainerView.addSubview(closeButton)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         
-        closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
+//        closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
         
         NSLayoutConstraint.activate([
             topContainerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -226,9 +226,8 @@ class TodayMissionListViewController: UIViewController {
         
         let trackedRefreshTap = refreshFooterView.refreshButton.rx.tap
             .do(onNext: { _ in
-                AnalyticsManager.shared.track(event: .refreshMissionListTapped)
-            })
-            .asObservable()
+                AnalyticsManager.shared.track(event: AppEvent.MissionList.refreshTapped)
+            }).asObservable()
         
         let input = TodayMissionListViewModel.Input(
             viewDidLoad: viewDidLoadSubject.asObservable(),
@@ -356,11 +355,41 @@ class TodayMissionListViewController: UIViewController {
                 self?.selectedButtonView.updateSelectionCount(count)
             })
             .disposed(by: disposeBag)
+        
+        // MARK: Amplitude 적용
+        closeButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.MissionList.closeTapped)
+                self?.onComplete?()
+            })
+        
+        selectedButtonView.button.rx.tap
+            .withLatestFrom(Observable.combineLatest(output.missions, output.selectedIDs))
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { missions, selectedIDs in
+                // 1) 전체 미션 중 선택된 ID를 가진 미션만 필터링
+                let selectedMissions = missions.filter { selectedIDs.contains($0.memberMissionId) }
+                
+                // 2) 완료 버튼 클릭 자체에 대한 로깅 (선택사항, 필요 없다면 제거)
+                AnalyticsManager.shared.track(event: AppEvent.MissionList.completeTapped)
+                
+                // 3) 선택된 미션들을 순회하며 개별 난이도 로깅 발송
+                for mission in selectedMissions {
+                    let properties: [String: Any] = [
+                        "difficulty": mission.difficulty
+                    ]
+                    AnalyticsManager.shared.track(
+                        event: AppEvent.MissionList.selectedMissionDifficulty,
+                        properties: properties
+                    )
+                }
+            })
+            .disposed(by: disposeBag)
     }
     
-    @objc private func closeButtonTapped() {
-        onComplete?()
-    }
+//    @objc private func closeButtonTapped() {
+//        onComplete?()
+//    }
 }
 
 extension TodayMissionListViewController: UITableViewDelegate {

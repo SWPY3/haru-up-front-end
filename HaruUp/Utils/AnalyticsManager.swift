@@ -8,16 +8,30 @@
 import Foundation
 import AmplitudeSwift
 
-enum AppEvent: String {
-    case refreshMissionListTapped = "Refresh Mission List Tapped"
+enum AppEvent {
+    
+    // MARK: - 미션 시작 화면 (Mission Start)
+    enum MissionStart: String {
+        case startTapped = "[MissionStart] Start Recommendation Tapped"
+    }
+    
+    // MARK: - 미션 추천 목록 화면 (Mission List)
+    enum MissionList: String {
+        case closeTapped = "[MissionList] Close Tapped"
+        case refreshTapped = "[MissionList] Refresh Tapped"
+        case infoIconTapped = "[MissionList] Info Icon Tapped"
+        case completeTapped = "[MissionList] Complete Tapped"
+        case selectedMissionDifficulty = "[MissionList] Selected Mission Difficulty"
+    }
 }
 
 class AnalyticsManager {
     static let shared = AnalyticsManager()
     private init() {}
-
-    // 이벤트와 세부 속성(Properties)을 함께 전송하는 메서드
-    func track(event: AppEvent, properties: [String: Any]? = nil) {
+    
+    // RawRepresentable을 사용하여 String을 rawValue로 갖는 어떤 enum이든 받을 수 있게 만듦
+    func track<T: RawRepresentable>(event: T, properties: [String: Any]? = nil) where T.RawValue == String {
+        // 실제 Amplitude 전송 코드
         AppDelegate.amplitude?.track(eventType: event.rawValue, eventProperties: properties)
     }
 }
