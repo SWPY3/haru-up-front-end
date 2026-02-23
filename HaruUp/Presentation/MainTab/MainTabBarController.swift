@@ -104,6 +104,8 @@ final class MainTabBarController: UIViewController {
             return
         }
         
+        trackTabSelection(tab)
+        
         if let currentVC = currentViewController {
             currentVC.willMove(toParent: nil)
             currentVC.view.removeFromSuperview()
@@ -126,6 +128,26 @@ final class MainTabBarController: UIViewController {
         currentViewController = targetViewController
         currentTab = tab
         mainTabBarView.setSelected(tab)
+    }
+    
+    // MARK: Amplitude 트래킹
+    private func trackTabSelection(_ tab: MainTab) {
+        let event: AppEvent.Tab
+        
+        switch tab {
+        case .home:
+            event = .homeTapped
+        case .history:
+            event = .recordTapped
+        case .chart:
+            event = .chartTapped
+        case .mypage:
+            event = .myPageTapped
+        default:
+            return
+        }
+        
+        AnalyticsManager.shared.track(event: event)
     }
     
     func setTabBarHidden(_ hidden: Bool, animated: Bool) {

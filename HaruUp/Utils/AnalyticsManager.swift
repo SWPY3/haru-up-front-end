@@ -12,16 +12,25 @@ enum AppEvent {
     
     // MARK: - 미션 시작 화면 (Mission Start)
     enum MissionStart: String {
-        case startTapped = "[MissionStart] Start Recommendation Tapped"
+        case startTapped = "[MissionStart] Start Recommendation Tapped" // 미션 추천 시작 버튼
     }
     
     // MARK: - 미션 추천 목록 화면 (Mission List)
     enum MissionList: String {
-        case closeTapped = "[MissionList] Close Tapped"
-        case refreshTapped = "[MissionList] Refresh Tapped"
-        case infoIconTapped = "[MissionList] Info Icon Tapped"
-        case completeTapped = "[MissionList] Complete Tapped"
-        case selectedMissionDifficulty = "[MissionList] Selected Mission Difficulty"
+        case closeTapped = "[MissionList] Close Tapped"             // 종료 버튼
+        case refreshTapped = "[MissionList] Refresh Tapped"         // 다른 추천 버튼
+        case infoIconTapped = "[MissionList] Info Icon Tapped"      // 다른 추천 info Icon
+        case completeTapped = "[MissionList] Complete Tapped"       // 미션 선택 완료 버튼
+        case selectedMissionDifficulty = "[MissionList] Selected Mission Difficulty" // 선택한 난이도들
+    }
+    
+    // MARK: - 탭 바 (Tab Bar)
+    enum Tab: String {
+        case homeTapped = "[Tab] Home Tapped"
+        case recordTapped = "[Tab] Record Tapped"
+        case chartTapped = "[Tab] Chart Tapped"
+        case myPageTapped = "[Tab] MyPage Tapped"
+    }
     }
 }
 
