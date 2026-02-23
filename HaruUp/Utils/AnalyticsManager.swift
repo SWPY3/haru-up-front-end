@@ -31,6 +31,19 @@ enum AppEvent {
         case chartTapped = "[Tab] Chart Tapped"
         case myPageTapped = "[Tab] MyPage Tapped"
     }
+    
+    // MARK: - 홈 화면 (Home)
+    enum Home: String {
+        case streakButtonTapped = "[Home] Streak Button Tapped"         // 연속 달성일 버튼
+        case characterTapped = "[Home] Character Tapped"               // 캐릭터
+        case speechBubbleTapped = "[Home] Speech Bubble Tapped"         // 말풍선
+        case todayMissionInfoTapped = "[Home] Today Mission Info Tapped" // 오늘의 미션 info
+        case addMissionTapped = "[Home] Add Mission Tapped"             // 미션 추가하기
+        case missionResultTapped = "[Home] Mission Result Tapped"       // 미션 수행 결과 버튼
+        case completeMissionTapped = "[Home] Complete Mission Tapped"   // (바텀시트) 미션 완료
+        case deleteMissionTapped = "[Home] Delete Mission Tapped"       // (바텀시트) 미션 삭제
+        case confirmDeleteTapped = "[Home] Confirm Delete Tapped"       // (삭제 바텀시트) 최종 삭제
+        case cancelDeleteTapped = "[Home] Cancel Delete Tapped"         // (삭제 바텀시트) 취소
     }
 }
 

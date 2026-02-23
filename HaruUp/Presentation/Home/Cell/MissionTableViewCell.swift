@@ -130,6 +130,7 @@ final class MissionTableViewCell: UITableViewCell {
     }
     
     @objc private func settingButtonTap() {
+        AnalyticsManager.shared.track(event: AppEvent.Home.missionResultTapped)
         onTapSetting?()
     }
     

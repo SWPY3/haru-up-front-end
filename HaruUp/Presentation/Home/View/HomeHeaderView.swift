@@ -445,18 +445,24 @@ final class HomeHeaderView: UIView {
     
     // MARK: Actions
     private func setActions() {
-        characterImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapCharacter)))
-        bubbleView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapCharacter)))
+        characterImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapCharacter(_:))))
+        bubbleView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapCharacter(_:))))
         achievementStackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapAchievement)))
     }
     
-    @objc private func didTapCharacter() {
-        print("didTapCharacter")
+    @objc private func didTapCharacter(_ gesture: UITapGestureRecognizer) {
+        if gesture.view == characterImageView {
+            AnalyticsManager.shared.track(event: AppEvent.Home.characterTapped)
+        } else if gesture.view == bubbleView {
+            AnalyticsManager.shared.track(event: AppEvent.Home.speechBubbleTapped)
+        }
+        
         updateBubbleText()
     }
     
     @objc private func didTapAchievement() {
-        print("didTapAchievement")
+        AnalyticsManager.shared.track(event: AppEvent.Home.streakButtonTapped)
+        
         onTapChallenge?()
     }
     
