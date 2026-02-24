@@ -48,10 +48,30 @@ enum AppEvent {
     
     // MARK: - 나의 기록 화면 (Record)
     enum Record: String {
-        case pageViewed = "[Record] Page Viewed"               // 화면 진입
         case prevMonthTapped = "[Record] Prev Month Tapped"    // 이전 달 이동
         case nextMonthTapped = "[Record] Next Month Tapped"    // 다음 달 이동
         case dateCellSelected = "[Record] Date Cell Selected"  // 날짜 셀 선택
+    }
+    
+    // MARK: - 마이 페이지 화면 (MyPage)
+    enum MyPage: String {
+        case editProfileTapped = "[MyPage] Edit Profile Tapped"                // 프로필 편집
+        case editInterestsTapped = "[MyPage] Edit Interests Tapped"            // 관심사 수정
+        case leaveFeedbackTapped = "[MyPage] Leave Feedback Tapped"            // 의견 남기기
+        case contactUsTapped = "[MyPage] Contact Us Tapped"                    // 문의하기
+        case notificationSettingsTapped = "[MyPage] Notification Settings Tapped" // 알림 설정
+        case termsOfServiceTapped = "[MyPage] Terms of Service Tapped"         // 서비스 이용약관
+        case privacyPolicyTapped = "[MyPage] Privacy Policy Tapped"            // 개인정보 처리방침
+        
+        // 로그아웃 플로우
+        case logoutTapped = "[MyPage] Logout Tapped"                           // 로그아웃 버튼 (팝업 띄우기 전)
+        case logoutConfirmTapped = "[MyPage] Logout Confirm Tapped"            // 팝업 - 예(로그아웃 진행)
+        case logoutCancelTapped = "[MyPage] Logout Cancel Tapped"              // 팝업 - 아니오(취소)
+        
+        // 회원 탈퇴 플로우
+        case withdrawTapped = "[MyPage] Withdraw Tapped"                       // 회원 탈퇴 버튼 (팝업 띄우기 전)
+        case withdrawConfirmTapped = "[MyPage] Withdraw Confirm Tapped"        // 팝업 - 탈퇴하기 진행
+        case withdrawCancelTapped = "[MyPage] Withdraw Cancel Tapped"          // 팝업 - 취소
     }
 }
 

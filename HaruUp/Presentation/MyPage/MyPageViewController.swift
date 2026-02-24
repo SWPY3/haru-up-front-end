@@ -321,6 +321,8 @@ class MyPageViewController: UIViewController {
         // 로그아웃 Alert 표시
         output.showLogoutAlert
             .emit(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.MyPage.logoutTapped)
+                
                 self?.showLogoutConfirmationAlert()
             })
             .disposed(by: disposeBag)
@@ -328,6 +330,8 @@ class MyPageViewController: UIViewController {
         // 탈퇴 첫 번째 Alert 표시
         output.showWithdrawFirstAlert
             .emit(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.MyPage.withdrawTapped)
+                
                 self?.showWithdrawFirstConfirmationAlert()
             })
             .disposed(by: disposeBag)
@@ -362,6 +366,7 @@ class MyPageViewController: UIViewController {
         
         editProfileButton.rx.tap
             .subscribe(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.MyPage.editProfileTapped)
                 self?.onEditProfile?() // 코디네이터에게 알림
             })
             .disposed(by: disposeBag)
@@ -369,6 +374,8 @@ class MyPageViewController: UIViewController {
         // 의견남기기 이동 (Google Forms)
         feedbackBtn.rx.tap
             .subscribe(onNext: { _ in
+                AnalyticsManager.shared.track(event: AppEvent.MyPage.leaveFeedbackTapped)
+                
                 guard let url = URL(string: "https://forms.gle/qC5jrp4FL89CcdoA6") else { return }
                 if UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
@@ -379,6 +386,8 @@ class MyPageViewController: UIViewController {
         // 문의하기 이동 (Google Forms)
         inquiryBtn.rx.tap
             .subscribe(onNext: { _ in
+                AnalyticsManager.shared.track(event: AppEvent.MyPage.contactUsTapped)
+                
                 guard let url = URL(string: "https://forms.gle/MP4LuXLJDd13vo5W9") else { return }
                 if UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
@@ -389,6 +398,8 @@ class MyPageViewController: UIViewController {
         // 이용약관 이동
         termsButton.rx.tap
             .subscribe(onNext: { _ in
+                AnalyticsManager.shared.track(event: AppEvent.MyPage.termsOfServiceTapped)
+                
                 guard let url = URL(string: "https://melodic-roar-3e1.notion.site/2e0849f596f380eabc6de523ab0d9bd9") else { return }
                 if UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
@@ -399,6 +410,8 @@ class MyPageViewController: UIViewController {
         // 개인정보 처리방침 이동
         privacyPolicyButton.rx.tap
             .subscribe(onNext: { _ in
+                AnalyticsManager.shared.track(event: AppEvent.MyPage.privacyPolicyTapped)
+                
                 guard let url = URL(string: "https://melodic-roar-3e1.notion.site/2e0849f596f380969043ee98e361c7bf") else { return }
                 if UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
@@ -406,13 +419,16 @@ class MyPageViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        
         editInterestBtn.rx.tap
-            .subscribe(onNext: { [weak self] in self?.onEditInterest?() })
+            .subscribe(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.MyPage.editInterestsTapped)
+                self?.onEditInterest?()
+            })
             .disposed(by: disposeBag)
         
         notificationSettingButton.rx.tap
             .subscribe(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.MyPage.notificationSettingsTapped)
                 self?.onNotificationSetting?() // 코디네이터에게 알림
             })
             .disposed(by: disposeBag)
@@ -430,7 +446,13 @@ class MyPageViewController: UIViewController {
         )
         
         alert.onConfirm = { [weak self] in
+            AnalyticsManager.shared.track(event: AppEvent.MyPage.logoutConfirmTapped)
+            
             self?.handleLogout()
+        }
+        
+        alert.onCancel = {
+            AnalyticsManager.shared.track(event: AppEvent.MyPage.logoutCancelTapped)
         }
         
         present(alert, animated: true)
@@ -447,9 +469,17 @@ class MyPageViewController: UIViewController {
             confirmColor: .primaryBlue700,
             cancelColor: .neutral700
         )
+        
         alert.onConfirm = { [weak self] in
+            AnalyticsManager.shared.track(event: AppEvent.MyPage.withdrawConfirmTapped)
+            
             self?.handleWithdraw()
         }
+        
+        alert.onCancel = {
+            AnalyticsManager.shared.track(event: AppEvent.MyPage.withdrawCancelTapped)
+        }
+        
         present(alert, animated: true)
     }
     
