@@ -45,6 +45,14 @@ enum AppEvent {
         case confirmDeleteTapped = "[Home] Confirm Delete Tapped"       // (삭제 바텀시트) 최종 삭제
         case cancelDeleteTapped = "[Home] Cancel Delete Tapped"         // (삭제 바텀시트) 취소
     }
+    
+    // MARK: - 나의 기록 화면 (Record)
+    enum Record: String {
+        case pageViewed = "[Record] Page Viewed"               // 화면 진입
+        case prevMonthTapped = "[Record] Prev Month Tapped"    // 이전 달 이동
+        case nextMonthTapped = "[Record] Next Month Tapped"    // 다음 달 이동
+        case dateCellSelected = "[Record] Date Cell Selected"  // 날짜 셀 선택
+    }
 }
 
 class AnalyticsManager {
