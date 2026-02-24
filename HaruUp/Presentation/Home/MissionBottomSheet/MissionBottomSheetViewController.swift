@@ -196,9 +196,19 @@ final class MissionBottomSheetViewController: UIViewController {
     }
     
     private func bind() {
+        let trackedCompleteTap = completeButton.rx.tap
+            .do(onNext: { _ in
+                AnalyticsManager.shared.track(event: AppEvent.Home.completeMissionTapped)
+            }).asObservable()
+        
+        let trackedDeleteTap = missionDeleteView.deleteButton.rx.tap
+            .do(onNext: { _ in
+                AnalyticsManager.shared.track(event: AppEvent.Home.confirmDeleteTapped)
+            }).asObservable()
+        
         let input = MissionBottomSheetViewModel.Input(
-            completeTap: completeButton.rx.tap.asObservable(),
-            deleteTap: missionDeleteView.deleteButton.rx.tap.asObservable()
+            completeTap: trackedCompleteTap,
+            deleteTap: trackedDeleteTap
         )
         
         let output = viewModel.transform(input: input)
@@ -304,6 +314,8 @@ final class MissionBottomSheetViewController: UIViewController {
     
     @objc private func showDeleteView() {
         view.layoutIfNeeded()
+        
+        AnalyticsManager.shared.track(event: AppEvent.Home.deleteMissionTapped)
 
         bottomSheetViewBottomConstraint?.constant = bottomSheetHeight   // 내려가기
         deleteViewBottomConstraint?.constant = 0                        // 올라오기
@@ -316,6 +328,8 @@ final class MissionBottomSheetViewController: UIViewController {
     @objc private func hideDeleteView() {
         view.layoutIfNeeded()
 
+        AnalyticsManager.shared.track(event: AppEvent.Home.cancelDeleteTapped)
+        
         deleteViewBottomConstraint?.constant = deleteSheetHeight
         bottomSheetViewBottomConstraint?.constant = 0
 

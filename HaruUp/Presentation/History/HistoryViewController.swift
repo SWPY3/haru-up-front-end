@@ -510,6 +510,8 @@ class HistoryViewController: UIViewController {
     
     @objc private func prevMonthTapped() {
         if let newDate = Calendar.current.date(byAdding: .month, value: -1, to: currentDate) {
+            AnalyticsManager.shared.track(event: AppEvent.Record.prevMonthTapped)
+            
             currentDate = newDate
             updateMonthYearLabel()
             selectedDay = 1
@@ -523,6 +525,8 @@ class HistoryViewController: UIViewController {
     
     @objc private func nextMonthTapped() {
         if let newDate = Calendar.current.date(byAdding: .month, value: 1, to: currentDate) {
+            AnalyticsManager.shared.track(event: AppEvent.Record.nextMonthTapped)
+            
             currentDate = newDate
             updateMonthYearLabel()
             selectedDay = 1
@@ -936,6 +940,8 @@ extension HistoryViewController: UICollectionViewDataSource, UICollectionViewDel
             // 이전 달 또는 다음 달로 이동 (선택한 날짜도 함께 전달)
             moveToMonth(year: calendarDay.year, month: calendarDay.month, selectDay: calendarDay.day)
         }
+        
+        AnalyticsManager.shared.track(event: AppEvent.Record.dateCellSelected)
     }
     
     // MARK: - Helper

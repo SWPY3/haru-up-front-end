@@ -111,6 +111,7 @@ final class EmptyMissionCell: UITableViewCell {
     }
     
     @objc private func didTapAddButton() {
+        AnalyticsManager.shared.track(event: AppEvent.Home.addMissionTapped)
         onTapAdd?()
     }
 }
