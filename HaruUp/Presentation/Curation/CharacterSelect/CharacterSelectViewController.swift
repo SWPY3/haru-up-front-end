@@ -273,12 +273,12 @@ class CharacterSelectViewController: UIViewController {
         
         let character = characters[index - 1]
         
-        guard let charImage = UIImage(named: character.image) else {
+        guard UIImage(named: character.image) != nil else {
             print("❌ 캐릭터 이미지 로드 실패: \(character.image)")
             return
         }
         
-        guard let textImage = UIImage(named: character.textImage) else {
+        guard UIImage(named: character.textImage) != nil else {
             print("❌ 말풍선 이미지 로드 실패: \(character.textImage)")
             return
         }

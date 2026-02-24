@@ -198,7 +198,7 @@ class HomeViewController: UIViewController {
                         let currentIDs = self?.viewModel.currentMissionIDs
                         
                         // 2. 외부(Coordinator)로 네비게이션 요청
-                        print("미션 추천 화면 이동 요청: 이미 선택된 ID \(currentIDs)")
+                        print("미션 추천 화면 이동 요청: 이미 선택된 ID \(currentIDs ?? [])")
                         self?.onShowAddMission?(currentIDs ?? [])
                     }
                     

@@ -165,7 +165,7 @@ class FilterModalViewController: UIViewController {
         var selectedTags: [String] = []
         
         // contentStackView 내의 모든 TagLayoutView를 순회하며 선택된 버튼 찾기
-        for case let sectionView as UIView in contentStackView.arrangedSubviews {
+        for case let sectionView in contentStackView.arrangedSubviews {
             for case let tagLayoutView as TagLayoutView in sectionView.subviews {
                 selectedTags.append(contentsOf: tagLayoutView.getSelectedTags())
             }

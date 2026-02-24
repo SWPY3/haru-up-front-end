@@ -373,7 +373,7 @@ class MyPageViewController: UIViewController {
         
         // 의견남기기 이동 (Google Forms)
         feedbackBtn.rx.tap
-            .subscribe(onNext: { _ in
+            .subscribe(with: self, onNext: { owner, _ in
                 AnalyticsManager.shared.track(event: AppEvent.MyPage.leaveFeedbackTapped)
                 
                 guard let url = URL(string: "https://forms.gle/qC5jrp4FL89CcdoA6") else { return }
@@ -385,9 +385,9 @@ class MyPageViewController: UIViewController {
         
         // 문의하기 이동 (Google Forms)
         inquiryBtn.rx.tap
-            .subscribe(onNext: { _ in
+            .subscribe(with: self, onNext: { owner, _ in
                 AnalyticsManager.shared.track(event: AppEvent.MyPage.contactUsTapped)
-                
+            
                 guard let url = URL(string: "https://forms.gle/MP4LuXLJDd13vo5W9") else { return }
                 if UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
@@ -397,7 +397,7 @@ class MyPageViewController: UIViewController {
         
         // 이용약관 이동
         termsButton.rx.tap
-            .subscribe(onNext: { _ in
+            .subscribe(with: self, onNext: { owner, _ in
                 AnalyticsManager.shared.track(event: AppEvent.MyPage.termsOfServiceTapped)
                 
                 guard let url = URL(string: "https://melodic-roar-3e1.notion.site/2e0849f596f380eabc6de523ab0d9bd9") else { return }
@@ -409,7 +409,7 @@ class MyPageViewController: UIViewController {
         
         // 개인정보 처리방침 이동
         privacyPolicyButton.rx.tap
-            .subscribe(onNext: { _ in
+            .subscribe(with: self, onNext: { owner, _ in
                 AnalyticsManager.shared.track(event: AppEvent.MyPage.privacyPolicyTapped)
                 
                 guard let url = URL(string: "https://melodic-roar-3e1.notion.site/2e0849f596f380969043ee98e361c7bf") else { return }

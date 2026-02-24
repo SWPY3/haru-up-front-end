@@ -242,9 +242,8 @@ extension AppDelegate: MessagingDelegate {
                     },
                     onError: { error in
                         print("FCM 토큰 재등록 실패: \(error)")
-                    }
-                )
-                .disposed(by: self.disposeBag)
+                    })
+                .disposed(by: disposeBag)
         }
     }
 }
