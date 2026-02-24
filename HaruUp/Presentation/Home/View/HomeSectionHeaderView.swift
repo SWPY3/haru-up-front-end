@@ -109,6 +109,7 @@ final class HomeSectionHeaderView: UIView {
         infoButton.rx.tap
             .asDriver()
             .drive(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.Home.todayMissionInfoTapped)
                 self?.toggleTooltip()
             })
             .disposed(by: disposeBag)

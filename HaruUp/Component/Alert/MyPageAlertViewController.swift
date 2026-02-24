@@ -13,8 +13,14 @@ class MyPageAlertViewController: UIViewController {
         case success      // 확인 (1버튼)
     }
     
+    enum ConfirmationType {
+        case logout
+        case withdraw
+    }
+    
     private let alertType: AlertType
     var onConfirm: (() -> Void)?
+    var onCancel: (() -> Void)?
     
     // MARK: - UI Components
     private let dimView: UIView = {
@@ -203,7 +209,11 @@ class MyPageAlertViewController: UIViewController {
         singleConfirmButton.addTarget(self, action: #selector(confirmAction), for: .touchUpInside)
     }
     
-    @objc private func dismissAlert() { dismiss(animated: true) }
+    @objc private func dismissAlert() {
+        dismiss(animated: true) { [weak self] in
+            self?.onCancel?()
+        }
+    }
     
     @objc private func confirmAction() {
         dismiss(animated: true) { [weak self] in

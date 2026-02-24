@@ -9,11 +9,11 @@ import Foundation
 
 enum NetworkDefine {
     enum APIEnvironment {
-        #if DEBUG
-        static let baseURL = "http://223.130.141.179:8082/"
-        #else
+//        #if DEBUG
+//        static let baseURL = "http://223.130.141.179:8082/"
+//        #else
         static let baseURL = "https://haru.jinuk.dev/"
-        #endif
+//        #endif
     }
     
     enum AuthAPI {
