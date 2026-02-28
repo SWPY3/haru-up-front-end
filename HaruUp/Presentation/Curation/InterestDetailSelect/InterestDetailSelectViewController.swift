@@ -83,6 +83,13 @@ class InterestDetailSelectViewController: UIViewController {
         return sv
     }()
     
+    private let scrollView: UIScrollView = {
+        let sv = UIScrollView()
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.showsVerticalScrollIndicator = false
+        return sv
+    }()
+
     private let interestDetailButtonsStackView: UIStackView = {
         let sv = UIStackView()
         sv.translatesAutoresizingMaskIntoConstraints = false
@@ -135,7 +142,8 @@ class InterestDetailSelectViewController: UIViewController {
         
         view.addSubview(backButton)
         view.addSubview(stackView)
-        view.addSubview(interestDetailButtonsStackView)
+        view.addSubview(scrollView)
+        scrollView.addSubview(interestDetailButtonsStackView)
         view.addSubview(listBlurView)
         view.addSubview(nextButton)
         view.addSubview(activityIndicator)
@@ -177,14 +185,27 @@ class InterestDetailSelectViewController: UIViewController {
             paddingRight: 20
         )
         
-        interestDetailButtonsStackView.anchor(
+        scrollView.anchor(
             top: stackView.bottomAnchor,
             left: view.leftAnchor,
+            bottom: nextButton.topAnchor,
             right: view.rightAnchor,
             paddingTop: 56,
+            paddingBottom: 8
+        )
+
+        interestDetailButtonsStackView.anchor(
+            top: scrollView.contentLayoutGuide.topAnchor,
+            left: scrollView.contentLayoutGuide.leftAnchor,
+            bottom: scrollView.contentLayoutGuide.bottomAnchor,
+            right: scrollView.contentLayoutGuide.rightAnchor,
             paddingLeft: 20,
             paddingRight: 20
         )
+        interestDetailButtonsStackView.widthAnchor.constraint(
+            equalTo: scrollView.frameLayoutGuide.widthAnchor,
+            constant: -40
+        ).isActive = true
         
         listBlurView.anchor(
             left: view.leftAnchor,
