@@ -142,40 +142,6 @@ HaruUp/
 
 ---
 
-## 🚀 시작하기
-
-### 요구 사항
-
-- Xcode 16.0 이상
-- iOS 16.4 이상 시뮬레이터 또는 실기기
-- Apple Developer 계정 (푸시 알림 테스트 시 실기기 필요)
-
-### 설치 및 실행
-
-```bash
-# 1. 저장소 클론
-git clone https://github.com/your-org/HaruUp.git
-cd HaruUp
-
-# 2. Xcode에서 프로젝트 열기
-open HaruUp.xcodeproj
-```
-
-Xcode가 열리면 SPM 패키지가 자동으로 다운로드됩니다.
-
-### API 키 설정
-
-> ⚠️ 보안상 API 키는 저장소에 포함되지 않습니다.
-> 아래 파일들을 별도로 추가해야 합니다.
-
-| 파일 | 설명 |
-|------|------|
-| `HaruUp/GoogleService-Info.plist` | Firebase 설정 파일 |
-| `HaruUp/Application/Info.plist` → `KAKAO_NATIVE_APP_KEY` | 카카오 네이티브 앱 키 |
-| `HaruUp/Application/Info.plist` → `AMPLITUDE_API_KEY` | Amplitude API 키 |
-
----
-
 ## 📄 라이선스
 
 이 프로젝트는 SWYP 팀의 소유입니다.
