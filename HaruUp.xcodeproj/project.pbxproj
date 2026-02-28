@@ -192,7 +192,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5G6N83PM9C;
+				DEVELOPMENT_TEAM = PV4N83CM46;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HaruUp/Application/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
