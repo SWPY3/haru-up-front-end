@@ -29,22 +29,22 @@ final class CharacterSelectCoordinator: Coordinator {
     func showNicknameSelectFlow(selectedCharacter: Int) {
         curationData.characterId = selectedCharacter
         print("📦 저장된 데이터 - 캐릭터: \(selectedCharacter)")
-        
-        let nicknameSelectCoordinator = NicknameSelectCoordinator(
+
+        let curationChatCoordinator = CurationChatCoordinator(
             navigationController: navigationController,
             curationData: curationData
         )
-        
-        nicknameSelectCoordinator.onFinish = { [weak self, weak nicknameSelectCoordinator] curationData in
-            if let coordinator = nicknameSelectCoordinator,
+
+        curationChatCoordinator.onFinish = { [weak self, weak curationChatCoordinator] curationData in
+            if let coordinator = curationChatCoordinator,
                let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
                 self?.childCoordinators.remove(at: index)
             }
-            
+
             self?.onFinish?(curationData)
         }
-        
-        childCoordinators.append(nicknameSelectCoordinator)
-        nicknameSelectCoordinator.start()
+
+        childCoordinators.append(curationChatCoordinator)
+        curationChatCoordinator.start()
     }
 }
