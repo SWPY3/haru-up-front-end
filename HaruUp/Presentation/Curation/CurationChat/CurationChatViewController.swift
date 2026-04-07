@@ -17,29 +17,18 @@ final class CurationChatViewController: UIViewController {
     private let disposeBag = DisposeBag()
 
     private let sendSubject = PublishSubject<String>()
-    private let startSubject = PublishSubject<Void>()
+    private let viewDidAppearSubject = PublishSubject<Void>()
+    private let suggestionSubject = PublishSubject<String>()
+    private let editSubject = PublishSubject<UUID>()
 
     private var characterImageName: String = "haru_level1"
-    private var messages: [ChatMessage] = []
-    private var hasStarted = false
+    private var displayItems: [ChatDisplayItem] = []
 
     // MARK: - UI Components
 
-    private let progressBar: UIProgressView = {
-        let pv = UIProgressView(progressViewStyle: .default)
-        pv.progressTintColor = .cta
-        pv.trackTintColor = .neutral100
-        pv.progress = 0
-        pv.translatesAutoresizingMaskIntoConstraints = false
-        return pv
-    }()
-
     private let closeButton: UIButton = {
         let btn = UIButton()
-        btn.setImage(UIImage(systemName: "xmark")?.withConfiguration(
-            UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        ), for: .normal)
-        btn.tintColor = .neutral800
+        btn.setImage(.iconXmark, for: .normal)
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
@@ -48,92 +37,52 @@ final class CurationChatViewController: UIViewController {
         let tv = UITableView()
         tv.separatorStyle = .none
         tv.allowsSelection = false
-        tv.backgroundColor = .white
+        tv.backgroundColor = .clear
         tv.keyboardDismissMode = .interactive
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
-    }()
-
-    // 시작 화면 컨테이너
-    private let startContainerView: UIView = {
-        let v = UIView()
-        v.backgroundColor = .white
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
-    }()
-
-    private let startCharacterImageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.translatesAutoresizingMaskIntoConstraints = false
-        return iv
-    }()
-
-    private let startGreetingLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.textAlignment = .center
-        label.textColor = .neutral800
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
-    private let startButton: UIButton = {
-        let btn = UIButton()
-        btn.setTitle("시작하기", for: .normal)
-        btn.titleLabel?.font = Typography.subtitle2.font
-        btn.setTitleColor(.white, for: .normal)
-        btn.backgroundColor = .cta
-        btn.layer.cornerRadius = 16
-        btn.clipsToBounds = true
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
     }()
 
     // 입력 영역
     private let inputContainerView: UIView = {
         let v = UIView()
         v.backgroundColor = .white
+        v.layer.cornerRadius = 16
+        v.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        v.clipsToBounds = true
         v.translatesAutoresizingMaskIntoConstraints = false
+        
         return v
     }()
 
     private let inputSeparator: UIView = {
         let v = UIView()
-        v.backgroundColor = .neutral100
+        v.backgroundColor = .neutral50
+        v.layer.cornerRadius = 16
+        v.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        v.clipsToBounds = true
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
 
-    private let inputTextField: UITextField = {
-        let tf = UITextField()
-        tf.placeholder = "답변..."
-        tf.font = Typography.body1.font
-        tf.borderStyle = .none
-        tf.backgroundColor = .neutral50
-        tf.layer.cornerRadius = 20
-        tf.clipsToBounds = true
-        tf.returnKeyType = .send
-
-        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
-        tf.leftView = paddingView
-        tf.leftViewMode = .always
-        let rightPadding = UIView(frame: CGRect(x: 0, y: 0, width: 48, height: 0))
-        tf.rightView = rightPadding
-        tf.rightViewMode = .always
-
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        return tf
+    private let inputTextView: UITextView = {
+        let tv = UITextView()
+        tv.textColor = .neutral300
+        tv.text = "답변을 입력해주세요"
+        tv.font = Typography.body1.font
+        tv.backgroundColor = .clear
+        tv.layer.cornerRadius = 20
+        tv.clipsToBounds = true
+        tv.returnKeyType = .send
+//        tv.textContainerInset = UIEdgeInsets(top: 10, left: 12, bottom: 10, right: 44)
+        tv.translatesAutoresizingMaskIntoConstraints = false
+        return tv
     }()
 
     private let sendButton: UIButton = {
         let btn = UIButton()
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        btn.setImage(UIImage(systemName: "arrow.up")?.withConfiguration(config), for: .normal)
-        btn.tintColor = .white
-        btn.backgroundColor = .cta
-        btn.layer.cornerRadius = 16
-        btn.clipsToBounds = true
+        btn.setImage(.iconButtonGray, for: .normal) // btn.setImage(.iconButtonBlue, for: .normal)
+        
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
@@ -155,7 +104,7 @@ final class CurationChatViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .neutral10
         navigationController?.setNavigationBarHidden(true, animated: false)
 
         setupUI()
@@ -164,193 +113,129 @@ final class CurationChatViewController: UIViewController {
         setupKeyboardObservers()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        viewDidAppearSubject.onNext(())
+    }
+
     // MARK: - Setup UI
 
     private func setupUI() {
-        // 상단 바 (X 버튼 + 프로그레스 바)
+        // 상단 X 버튼
         view.addSubview(closeButton)
-        view.addSubview(progressBar)
-
-        closeButton.anchor(
-            top: view.safeAreaLayoutGuide.topAnchor,
-            left: view.leftAnchor,
-            paddingTop: 8,
-            paddingLeft: 16,
-            width: 32,
-            height: 32
-        )
-
-        progressBar.anchor(
-            left: closeButton.rightAnchor,
-            right: view.rightAnchor,
-            paddingLeft: 12,
-            paddingRight: 16,
-            height: 4
-        )
-        progressBar.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor).isActive = true
-
-        // 시작 화면
-        view.addSubview(startContainerView)
-        startContainerView.anchor(
-            top: closeButton.bottomAnchor,
-            left: view.leftAnchor,
-            bottom: view.bottomAnchor,
-            right: view.rightAnchor,
-            paddingTop: 8
-        )
-
-        startContainerView.addSubview(startGreetingLabel)
-        startContainerView.addSubview(startCharacterImageView)
-        startContainerView.addSubview(startButton)
-
-        startGreetingLabel.anchor(
-            left: startContainerView.leftAnchor,
-            right: startContainerView.rightAnchor,
-            paddingLeft: 40,
-            paddingRight: 40
-        )
-        startGreetingLabel.centerYAnchor.constraint(
-            equalTo: startContainerView.centerYAnchor, constant: -100
-        ).isActive = true
-
-        startCharacterImageView.anchor(
-            top: startGreetingLabel.bottomAnchor,
-            paddingTop: 24,
-            width: 140,
-            height: 140
-        )
-        startCharacterImageView.centerXAnchor.constraint(
-            equalTo: startContainerView.centerXAnchor
-        ).isActive = true
-
-        startButton.anchor(
-            left: startContainerView.leftAnchor,
-            bottom: startContainerView.safeAreaLayoutGuide.bottomAnchor,
-            right: startContainerView.rightAnchor,
-            paddingLeft: 20,
-            paddingBottom: 10,
-            paddingRight: 20,
-            height: 56
-        )
-
-        // 채팅 영역
-        view.addSubview(tableView)
-        tableView.anchor(
-            top: closeButton.bottomAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingTop: 8
-        )
-        tableView.isHidden = true
+        NSLayoutConstraint.activate([
+            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            closeButton.widthAnchor.constraint(equalToConstant: 32),
+            closeButton.heightAnchor.constraint(equalToConstant: 32)
+        ])
 
         // 입력 영역
         view.addSubview(inputContainerView)
-        inputContainerView.anchor(
-            top: tableView.bottomAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor
-        )
+        NSLayoutConstraint.activate([
+            inputContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            inputContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
 
         let bottomConstraint = inputContainerView.bottomAnchor.constraint(
-            equalTo: view.safeAreaLayoutGuide.bottomAnchor
+            equalTo: view.bottomAnchor
         )
         bottomConstraint.isActive = true
         inputContainerBottomConstraint = bottomConstraint
 
         inputContainerView.addSubview(inputSeparator)
-        inputContainerView.addSubview(inputTextField)
+        inputContainerView.addSubview(inputTextView)
         inputContainerView.addSubview(sendButton)
 
-        inputSeparator.anchor(
-            top: inputContainerView.topAnchor,
-            left: inputContainerView.leftAnchor,
-            right: inputContainerView.rightAnchor,
-            height: 1
-        )
+        inputTextView.delegate = self
 
-        inputTextField.anchor(
-            top: inputSeparator.bottomAnchor,
-            left: inputContainerView.leftAnchor,
-            bottom: inputContainerView.bottomAnchor,
-            right: inputContainerView.rightAnchor,
-            paddingTop: 8,
-            paddingLeft: 16,
-            paddingBottom: 8,
-            paddingRight: 16,
-            height: 40
-        )
+        NSLayoutConstraint.activate([
+            inputSeparator.topAnchor.constraint(equalTo: inputContainerView.topAnchor),
+            inputSeparator.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor),
+            inputSeparator.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor),
+            inputSeparator.heightAnchor.constraint(equalToConstant: 1)
+        ])
+        
+        NSLayoutConstraint.activate([
+            sendButton.topAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: 20),
+            sendButton.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor, constant: -20),
+            sendButton.widthAnchor.constraint(equalToConstant: 32),
+            sendButton.heightAnchor.constraint(equalToConstant: 32)
+        ])
 
-        sendButton.anchor(
-            right: inputTextField.rightAnchor,
-            paddingRight: 4,
-            width: 32,
-            height: 32
-        )
-        sendButton.centerYAnchor.constraint(equalTo: inputTextField.centerYAnchor).isActive = true
+        NSLayoutConstraint.activate([
+            inputTextView.topAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: 20),
+            inputTextView.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: 20),
+            inputTextView.bottomAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: -8),
+            inputTextView.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -20),
+            inputTextView.heightAnchor.constraint(equalToConstant: 140)
+        ])
 
-        inputContainerView.isHidden = true
+        // 채팅 테이블뷰
+        view.addSubview(tableView)
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: inputContainerView.topAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
     }
 
     private func setupTableView() {
         tableView.register(BotMessageCell.self, forCellReuseIdentifier: BotMessageCell.identifier)
         tableView.register(UserMessageCell.self, forCellReuseIdentifier: UserMessageCell.identifier)
+        tableView.register(SuggestionChipsCell.self, forCellReuseIdentifier: SuggestionChipsCell.identifier)
         tableView.dataSource = self
+    }
+
+    private func setupAvatarHeader(imageName: String) {
+        let headerView = UIView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 64))
+        headerView.backgroundColor = .clear
+
+        let avatarImageView = UIImageView()
+        avatarImageView.image = UIImage(named: imageName)
+        avatarImageView.contentMode = .scaleAspectFit
+        avatarImageView.layer.cornerRadius = 24
+        avatarImageView.clipsToBounds = true
+        avatarImageView.backgroundColor = .primaryBlue50
+        avatarImageView.translatesAutoresizingMaskIntoConstraints = false
+
+        headerView.addSubview(avatarImageView)
+        NSLayoutConstraint.activate([
+            avatarImageView.topAnchor.constraint(equalTo: headerView.topAnchor, constant: 8),
+            avatarImageView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
+            avatarImageView.widthAnchor.constraint(equalToConstant: 48),
+            avatarImageView.heightAnchor.constraint(equalToConstant: 48)
+        ])
+
+        tableView.tableHeaderView = headerView
     }
 
     // MARK: - Bind ViewModel
 
     private func bindViewModel() {
         let input = CurationChatViewModel.Input(
-            startButtonTapped: startSubject.asObservable(),
-            sendButtonTapped: sendSubject.asObservable()
+            viewDidAppear: viewDidAppearSubject.asObservable(),
+            sendButtonTapped: sendSubject.asObservable(),
+            suggestionTapped: suggestionSubject.asObservable(),
+            editAnswerTapped: editSubject.asObservable()
         )
         let output = viewModel.transform(input: input)
 
-        // 캐릭터 정보 바인딩
-        output.characterName
-            .drive(onNext: { [weak self] name in
-                self?.startGreetingLabel.setStyle(
-                    Typography.body1,
-                    text: "안녕하세요! 저는 \(name)예요.\n여러분에게 가장 적합한 커리큘럼을 설계하기 위해 몇 가지 간단한 질문을 드릴게요."
-                )
-            })
-            .disposed(by: disposeBag)
-
+        // 캐릭터 이미지 → 헤더 아바타 설정
         output.characterImageName
             .drive(onNext: { [weak self] imageName in
                 self?.characterImageName = imageName
-                self?.startCharacterImageView.image = UIImage(named: imageName)
+                self?.setupAvatarHeader(imageName: imageName)
             })
             .disposed(by: disposeBag)
 
-        // 시작 버튼
-        startButton.rx.tap
-            .subscribe(onNext: { [weak self] in
-                self?.hasStarted = true
-                self?.startContainerView.isHidden = true
-                self?.tableView.isHidden = false
-                self?.inputContainerView.isHidden = false
-                self?.startSubject.onNext(())
-            })
-            .disposed(by: disposeBag)
-
-        // 메시지 업데이트
-        output.messages
-            .drive(onNext: { [weak self] msgs in
-                self?.messages = msgs
+        // displayItems 업데이트
+        output.displayItems
+            .drive(onNext: { [weak self] items in
+                self?.displayItems = items
                 self?.tableView.reloadData()
                 self?.scrollToBottom()
-            })
-            .disposed(by: disposeBag)
-
-        // 프로그레스 바 업데이트
-        output.currentQuestionIndex
-            .drive(onNext: { [weak self] index in
-                guard index >= 0 else { return }
-                let progress = Float(index + 1) / 6.0
-                UIView.animate(withDuration: 0.3) {
-                    self?.progressBar.setProgress(progress, animated: true)
-                }
             })
             .disposed(by: disposeBag)
 
@@ -358,22 +243,26 @@ final class CurationChatViewController: UIViewController {
         output.isCompleted
             .drive(onNext: { [weak self] completed in
                 if completed {
-                    self?.inputTextField.isEnabled = false
+                    self?.inputTextView.isEditable = false
                     self?.sendButton.isEnabled = false
-                    self?.inputTextField.placeholder = "완료되었습니다"
+                    self?.inputTextView.text = "완료되었습니다"
+                    self?.inputTextView.textColor = .lightGray
                 }
+            })
+            .disposed(by: disposeBag)
+
+        // 프리필 텍스트 (칩 탭 또는 수정하기)
+        output.prefillText
+            .filter { !$0.isEmpty }
+            .drive(onNext: { [weak self] text in
+                self?.inputTextView.text = text
+                self?.inputTextView.textColor = .black
+                self?.inputTextView.becomeFirstResponder()
             })
             .disposed(by: disposeBag)
 
         // 전송 버튼
         sendButton.rx.tap
-            .subscribe(onNext: { [weak self] in
-                self?.sendMessage()
-            })
-            .disposed(by: disposeBag)
-
-        // 리턴 키로 전송
-        inputTextField.rx.controlEvent(.editingDidEndOnExit)
             .subscribe(onNext: { [weak self] in
                 self?.sendMessage()
             })
@@ -388,16 +277,21 @@ final class CurationChatViewController: UIViewController {
     }
 
     private func sendMessage() {
-        guard let text = inputTextField.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        let text = inputTextView.text ?? ""
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              text != "답변을 입력해주세요" else {
             return
         }
-        sendSubject.onNext(text)
-        inputTextField.text = ""
+        sendSubject.onNext(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        inputTextView.text = "답변을 입력해주세요"
+        inputTextView.textColor = .lightGray
+        sendButton.setImage(.iconButtonGray, for: .normal)
+        inputTextView.resignFirstResponder()
     }
 
     private func scrollToBottom() {
-        guard !messages.isEmpty else { return }
-        let indexPath = IndexPath(row: messages.count - 1, section: 0)
+        guard !displayItems.isEmpty else { return }
+        let indexPath = IndexPath(row: displayItems.count - 1, section: 0)
         tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
     }
 
@@ -454,182 +348,80 @@ final class CurationChatViewController: UIViewController {
 }
 
 // MARK: - UITableViewDataSource
-
 extension CurationChatViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return messages.count
+        return displayItems.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let message = messages[indexPath.row]
+        let item = displayItems[indexPath.row]
 
-        switch message.type {
-        case .bot:
+        switch item {
+        case .botMessage(let message):
             guard let cell = tableView.dequeueReusableCell(
                 withIdentifier: BotMessageCell.identifier, for: indexPath
             ) as? BotMessageCell else {
                 return UITableViewCell()
             }
-            cell.configure(text: message.text, characterImageName: characterImageName)
+            cell.configure(
+                text: message.text,
+                highlightedText: message.highlightedText,
+                subtitleText: message.subtitleText
+            )
             return cell
 
-        case .user:
+        case .userMessage(let message):
             guard let cell = tableView.dequeueReusableCell(
                 withIdentifier: UserMessageCell.identifier, for: indexPath
             ) as? UserMessageCell else {
                 return UITableViewCell()
             }
-            cell.configure(text: message.text)
+            cell.configure(text: message.text) { [weak self] in
+                self?.editSubject.onNext(message.id)
+            }
+            return cell
+
+        case .suggestionChips(let suggestions):
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: SuggestionChipsCell.identifier, for: indexPath
+            ) as? SuggestionChipsCell else {
+                return UITableViewCell()
+            }
+            cell.configure(suggestions: suggestions) { [weak self] text in
+                self?.suggestionSubject.onNext(text)
+            }
             return cell
         }
     }
 }
 
-// MARK: - Bot Message Cell
-
-final class BotMessageCell: UITableViewCell {
-    static let identifier = "BotMessageCell"
-
-    private let avatarImageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.layer.cornerRadius = 20
-        iv.clipsToBounds = true
-        iv.backgroundColor = .primaryBlue50
-        iv.translatesAutoresizingMaskIntoConstraints = false
-        return iv
-    }()
-
-    private let bubbleView: UIView = {
-        let v = UIView()
-        v.backgroundColor = .neutral50
-        v.layer.cornerRadius = 16
-        v.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMaxXMaxYCorner, .layerMinXMaxYCorner]
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
-    }()
-
-    private let messageLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.textColor = .neutral800
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        selectionStyle = .none
-        backgroundColor = .clear
-
-        contentView.addSubview(avatarImageView)
-        contentView.addSubview(bubbleView)
-        bubbleView.addSubview(messageLabel)
-
-        avatarImageView.anchor(
-            top: contentView.topAnchor,
-            left: contentView.leftAnchor,
-            paddingTop: 8,
-            paddingLeft: 16,
-            width: 40,
-            height: 40
-        )
-
-        bubbleView.anchor(
-            top: contentView.topAnchor,
-            left: avatarImageView.rightAnchor,
-            bottom: contentView.bottomAnchor,
-            paddingTop: 8,
-            paddingLeft: 8,
-            paddingBottom: 4
-        )
-        bubbleView.widthAnchor.constraint(
-            lessThanOrEqualTo: contentView.widthAnchor, multiplier: 0.7
-        ).isActive = true
-
-        messageLabel.anchor(
-            top: bubbleView.topAnchor,
-            left: bubbleView.leftAnchor,
-            bottom: bubbleView.bottomAnchor,
-            right: bubbleView.rightAnchor,
-            paddingTop: 12,
-            paddingLeft: 14,
-            paddingBottom: 12,
-            paddingRight: 14
-        )
+// MARK: - UITextViewDelegate
+extension CurationChatViewController: UITextViewDelegate {
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        if textView.textColor == .neutral300 {
+            textView.text = nil
+            textView.textColor = .appBlack
+        }
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if textView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            textView.text = "답변을 입력해주세요"
+            textView.textColor = .neutral300
+            sendButton.setImage(.iconButtonGray, for: .normal)
+        }
     }
 
-    func configure(text: String, characterImageName: String) {
-        messageLabel.setStyle(Typography.body4, text: text)
-        messageLabel.textColor = .neutral800
-        avatarImageView.image = UIImage(named: characterImageName)
-    }
-}
-
-// MARK: - User Message Cell
-
-final class UserMessageCell: UITableViewCell {
-    static let identifier = "UserMessageCell"
-
-    private let bubbleView: UIView = {
-        let v = UIView()
-        v.backgroundColor = .cta
-        v.layer.cornerRadius = 16
-        v.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMaxYCorner, .layerMinXMaxYCorner]
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
-    }()
-
-    private let messageLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.textColor = .white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        selectionStyle = .none
-        backgroundColor = .clear
-
-        contentView.addSubview(bubbleView)
-        bubbleView.addSubview(messageLabel)
-
-        bubbleView.anchor(
-            top: contentView.topAnchor,
-            bottom: contentView.bottomAnchor,
-            right: contentView.rightAnchor,
-            paddingTop: 8,
-            paddingBottom: 4,
-            paddingRight: 16
-        )
-        bubbleView.widthAnchor.constraint(
-            lessThanOrEqualTo: contentView.widthAnchor, multiplier: 0.7
-        ).isActive = true
-
-        messageLabel.anchor(
-            top: bubbleView.topAnchor,
-            left: bubbleView.leftAnchor,
-            bottom: bubbleView.bottomAnchor,
-            right: bubbleView.rightAnchor,
-            paddingTop: 12,
-            paddingLeft: 14,
-            paddingBottom: 12,
-            paddingRight: 14
-        )
+    func textViewDidChange(_ textView: UITextView) {
+        let hasText = !textView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        sendButton.setImage(hasText ? .iconButtonBlue : .iconButtonGray, for: .normal)
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    func configure(text: String) {
-        messageLabel.setStyle(Typography.body4, text: text)
-        messageLabel.textColor = .white
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        if text == "\n" {
+            sendMessage()
+            return false
+        }
+        return true
     }
 }
