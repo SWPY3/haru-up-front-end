@@ -30,7 +30,7 @@ final class CharacterSelectCompleteCoordinator: Coordinator {
     }
     
     
-    func showNicknameSelectFlow(selectedCharacter: Int) {
+    func showCurationChatFlow(selectedCharacter: Int) {
         curationData.characterId = selectedCharacter
         print("📦 저장된 데이터 - 캐릭터: \(selectedCharacter)")
 

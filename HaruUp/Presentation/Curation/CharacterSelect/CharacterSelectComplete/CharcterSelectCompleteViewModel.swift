@@ -42,7 +42,7 @@ final class CharacterSelectCompleteViewModel {
                     self.stepRelay.accept(.guide)
                 } else {
                     // 시작하기 버튼 클릭 시 다음 Flow로 이동
-                    self.coordinator?.showNicknameSelectFlow(selectedCharacter: self.characterId)
+                    self.coordinator?.showCurationChatFlow(selectedCharacter: self.characterId)
                 }
             })
             .disposed(by: disposeBag)

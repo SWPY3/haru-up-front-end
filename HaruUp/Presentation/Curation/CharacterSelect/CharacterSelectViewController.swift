@@ -38,13 +38,6 @@ class CharacterSelectViewController: UIViewController {
         return label
     }()
     
-//    private let characterTextImageView: UIImageView = {
-//        let iv = UIImageView()
-//        iv.image = UIImage(named: "text_character_haru.png")
-//        iv.contentMode = .scaleAspectFit
-//        return iv
-//    }()
-    
     private let characterImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = UIImage(named: "haru_level1.png")
@@ -118,7 +111,7 @@ class CharacterSelectViewController: UIViewController {
     private func setupUI() {
         view.insertSubview(backgroundImageView, at: 0)
         
-        [titleLabel, /*characterTextImageView,*/ characterImageView, characterShadowImageView, characterNameLabel, leftArrowButton, rightArrowButton, nextButton].forEach {
+        [titleLabel, characterImageView, characterShadowImageView, characterNameLabel, leftArrowButton, rightArrowButton, nextButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
@@ -139,16 +132,6 @@ class CharacterSelectViewController: UIViewController {
             paddingLeft: 20,
             paddingRight: 20
         )
-        
-//        characterTextImageView.anchor(
-//            top: titleLabel.bottomAnchor,
-//            left: view.leftAnchor,
-//            right: view.rightAnchor,
-//            paddingTop: 80,
-//            paddingLeft: 40,
-//            paddingRight: 40,
-//            height: 100
-//        )
         
         characterImageView.centerX(inView: view)
         characterImageView.anchor(
