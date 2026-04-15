@@ -83,20 +83,19 @@ class CharacterSelectCompleteViewController: UIViewController {
             view.addSubview($0)
         }
         
-        // 제약 조건 설정 (기존 CharacterSelectVC의 anchor 방식 활용)
         backgroundImageView.anchor(top: view.topAnchor, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor)
         
         speechBubbleView.centerX(inView: view)
-        speechBubbleView.anchor(top: view.safeAreaLayoutGuide.topAnchor, paddingTop: 160, width: 310, height: 114)
+        speechBubbleView.anchor(top: view.safeAreaLayoutGuide.topAnchor, paddingTop: 180, width: 310, height: 114)
         
         
         characterAnimationView.centerX(inView: view)
-        characterAnimationView.anchor(top: speechBubbleView.bottomAnchor, paddingTop: 20, width: 220, height: 220)
+        characterAnimationView.anchor(top: speechBubbleView.bottomAnchor, paddingTop: 20, width: 260, height: 260)
         
         characterShadowImageView.centerX(inView: characterAnimationView)
         characterShadowImageView.anchor(
-            bottom: characterAnimationView.topAnchor,
-            paddingBottom: 5
+            bottom: characterAnimationView.bottomAnchor,
+            paddingBottom: 30
             
         )
         

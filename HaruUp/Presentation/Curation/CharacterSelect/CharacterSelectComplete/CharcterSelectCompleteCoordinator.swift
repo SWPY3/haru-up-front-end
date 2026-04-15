@@ -22,10 +22,11 @@ final class CharacterSelectCompleteCoordinator: Coordinator {
     }
     
     func start() {
-        let characterSelectCompleteVM = CharacterSelectCompleteViewModel(coordinator: self)
+        let characterId = curationData.characterId ?? 1
+        let characterSelectCompleteVM = CharacterSelectCompleteViewModel(coordinator: self, characterId: characterId)
         let characterSelectCompleteVC = CharacterSelectCompleteViewController(viewModel: characterSelectCompleteVM)
-        navigationController.pushViewController(characterSelectCompleteVC, animated: true)
         
+        navigationController.pushViewController(characterSelectCompleteVC, animated: true)
     }
     
     
