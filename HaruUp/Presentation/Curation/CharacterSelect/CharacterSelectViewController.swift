@@ -26,7 +26,6 @@ class CharacterSelectViewController: UIViewController {
         let iv = UIImageView()
         iv.image = UIImage(named: "background_gradation.png")
         iv.contentMode = .scaleAspectFill
-        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -36,7 +35,6 @@ class CharacterSelectViewController: UIViewController {
         label.textAlignment = .center
         label.numberOfLines = 0
         label.textColor = .black
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -44,7 +42,6 @@ class CharacterSelectViewController: UIViewController {
         let iv = UIImageView()
         iv.image = UIImage(named: "text_character_haru.png")
         iv.contentMode = .scaleAspectFit
-        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -53,7 +50,6 @@ class CharacterSelectViewController: UIViewController {
         iv.image = UIImage(named: "haru_level1.png")
         iv.contentMode = .scaleAspectFit
         iv.isUserInteractionEnabled = true
-        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -61,7 +57,6 @@ class CharacterSelectViewController: UIViewController {
        let iv = UIImageView()
         iv.image = UIImage(named: "character_shadow2.png")
         iv.contentMode = .scaleAspectFit
-        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -70,7 +65,6 @@ class CharacterSelectViewController: UIViewController {
         label.setStyle(Typography.title3, text: "하루")
         label.textAlignment = .center
         label.textColor = .black
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -78,14 +72,12 @@ class CharacterSelectViewController: UIViewController {
         let btn = UIButton()
         btn.setImage(UIImage(named: "chevron_left.png"), for: .normal)
         btn.isEnabled = false
-        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
     
     private let rightArrowButton: UIButton = {
         let btn = UIButton()
         btn.setImage(UIImage(named: "chevron_right.png"), for: .normal)
-        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
     
@@ -96,8 +88,6 @@ class CharacterSelectViewController: UIViewController {
         btn.backgroundColor = .cta
         btn.layer.cornerRadius = 16
         btn.clipsToBounds = true
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        
         return btn
     }()
     
@@ -127,15 +117,12 @@ class CharacterSelectViewController: UIViewController {
     // MARK: - Helpers
     private func setupUI() {
         view.insertSubview(backgroundImageView, at: 0)
+        
+        [titleLabel, characterTextImageView, characterImageView, characterShadowImageView, characterNameLabel, leftArrowButton, rightArrowButton, nextButton].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
+        }
     
-        view.addSubview(titleLabel)
-        view.addSubview(characterTextImageView)
-        view.addSubview(characterImageView)
-        view.addSubview(characterShadowImageView)
-        view.addSubview(characterNameLabel)
-        view.addSubview(leftArrowButton)
-        view.addSubview(rightArrowButton)
-        view.addSubview(nextButton)
         
         backgroundImageView.anchor(
             top: view.topAnchor,
