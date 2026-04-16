@@ -83,7 +83,7 @@ final class CurationChatViewController: UIViewController {
 
     private let sendButton: UIButton = {
         let btn = UIButton()
-        btn.setImage(.iconButtonGray, for: .normal) // btn.setImage(.iconButtonBlue, for: .normal)
+        btn.setImage(.iconButtonGray, for: .normal)
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
@@ -92,7 +92,6 @@ final class CurationChatViewController: UIViewController {
     private var inputTextViewHeightConstraint: NSLayoutConstraint?
     
     // MARK: - Init
-
     init(viewModel: CurationChatViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -103,7 +102,6 @@ final class CurationChatViewController: UIViewController {
     }
 
     // MARK: - Lifecycle
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .neutral10
@@ -281,7 +279,6 @@ final class CurationChatViewController: UIViewController {
         // 닫기 버튼
         closeButton.rx.tap
             .subscribe(onNext: { [weak self] in
-//               self?.navigationController?.popViewController(animated: true)
                 self?.showExitModal()
             })
             .disposed(by: disposeBag)
@@ -355,7 +352,6 @@ final class CurationChatViewController: UIViewController {
               let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval
         else { return }
 
-//        let keyboardHeight = keyboardFrame.height - view.safeAreaInsets.bottom
         let keyboardHeight = keyboardFrame.height
         
         // 1. 바닥 위치 조정
