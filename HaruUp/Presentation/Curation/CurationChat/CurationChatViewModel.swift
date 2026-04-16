@@ -64,7 +64,6 @@ final class CurationChatViewModel {
         let viewDidAppear: Observable<Void>
         let sendButtonTapped: Observable<String>
         let suggestionTapped: Observable<String>
-        let editAnswerTapped: Observable<UUID>
     }
 
     struct Output {
@@ -164,13 +163,6 @@ final class CurationChatViewModel {
             })
             .disposed(by: disposeBag)
 
-        // 수정하기 탭
-        input.editAnswerTapped
-            .subscribe(onNext: { [weak self] messageId in
-                self?.handleEditAnswer(messageId: messageId)
-            })
-            .disposed(by: disposeBag)
-
         // 완료 시 다음 화면으로 이동
         isCompletedRelay
             .filter { $0 }
@@ -239,30 +231,6 @@ final class CurationChatViewModel {
                 self.isCompletedRelay.accept(true)
             }
         }
-    }
-
-    private func handleEditAnswer(messageId: UUID) {
-        var msgs = messagesRelay.value
-
-        guard let targetIndex = msgs.firstIndex(where: { $0.id == messageId }) else { return }
-
-        // 해당 유저 메시지의 답변 텍스트를 프리필
-        let oldText = msgs[targetIndex].text
-        prefillTextRelay.accept(oldText)
-
-        // 유저 메시지 이후의 모든 메시지 제거 (유저 메시지 포함)
-        msgs.removeSubrange(targetIndex...)
-        messagesRelay.accept(msgs)
-
-        // 해당 답변 이후의 answers 제거
-        // 유저 메시지의 인덱스를 기반으로 answers에서의 위치 계산
-        let userMessageCountBefore = msgs.filter { $0.type == .user }.count
-        if answers.count > userMessageCountBefore {
-            answers.removeSubrange(userMessageCountBefore...)
-        }
-
-        // 질문 인덱스를 되돌림
-        currentQuestionIndexRelay.accept(userMessageCountBefore)
     }
 
     private func showNextQuestion() {

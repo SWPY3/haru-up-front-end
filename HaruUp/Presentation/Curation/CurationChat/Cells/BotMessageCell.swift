@@ -57,7 +57,7 @@ final class BotMessageCell: UITableViewCell {
             paddingLeft: 16
         )
         bubbleView.widthAnchor.constraint(
-            lessThanOrEqualTo: contentView.widthAnchor, multiplier: 0.75
+            lessThanOrEqualTo: contentView.widthAnchor, multiplier: 0.8
         ).isActive = true
 
         messageLabel.anchor(
@@ -97,13 +97,13 @@ final class BotMessageCell: UITableViewCell {
                 Typography.body4,
                 fullText: text,
                 highlightedText: highlighted,
-                highlightedColor: .neutral800,
+                highlightedColor: .black,
                 defaultColor: .neutral800,
                 highlightedFont: Typography.body2.font
             )
         } else {
             messageLabel.setStyle(Typography.body4, text: text)
-            messageLabel.textColor = .neutral800
+            messageLabel.textColor = .black
         }
 
         if let subtitle = subtitleText {

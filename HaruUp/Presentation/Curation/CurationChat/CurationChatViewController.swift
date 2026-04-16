@@ -218,7 +218,6 @@ final class CurationChatViewController: UIViewController {
             viewDidAppear: viewDidAppearSubject.asObservable(),
             sendButtonTapped: sendSubject.asObservable(),
             suggestionTapped: suggestionSubject.asObservable(),
-            editAnswerTapped: editSubject.asObservable()
         )
         let output = viewModel.transform(input: input)
 
@@ -376,9 +375,7 @@ extension CurationChatViewController: UITableViewDataSource {
             ) as? UserMessageCell else {
                 return UITableViewCell()
             }
-            cell.configure(text: message.text) { [weak self] in
-                self?.editSubject.onNext(message.id)
-            }
+            cell.configure(text: message.text, onEdit: nil)
             return cell
 
         case .suggestionChips(let suggestions):
