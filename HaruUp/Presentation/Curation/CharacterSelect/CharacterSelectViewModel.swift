@@ -46,8 +46,8 @@ final class CharacterSelectViewModel {
                 }
                 
                 print("✅ 캐릭터 선택 완료 - 인덱스: \(character)")
-                self?.coordinator?.showNicknameSelectFlow(selectedCharacter: character)
-                print("🔵 NicknameCoordinator 호출됨")
+                self?.coordinator?.showCharacterSelectCompleteFlow(selectedCharacter: character)
+                print("🔵 CharacterSelectCompleteCoordinator 호출됨")
             })
             .disposed(by: disposeBag)
         

@@ -26,25 +26,26 @@ final class CharacterSelectCoordinator: Coordinator {
         navigationController.pushViewController(characterSelectVC, animated: true)
     }
     
-    func showNicknameSelectFlow(selectedCharacter: Int) {
+    func showCharacterSelectCompleteFlow(selectedCharacter: Int) {
         curationData.characterId = selectedCharacter
         print("📦 저장된 데이터 - 캐릭터: \(selectedCharacter)")
-        
-        let nicknameSelectCoordinator = NicknameSelectCoordinator(
-            navigationController: navigationController,
-            curationData: curationData
+
+        let characterSelectCompleteCoordinator = CharacterSelectCompleteCoordinator(
+            navigationController: navigationController, curationData: curationData
         )
-        
-        nicknameSelectCoordinator.onFinish = { [weak self, weak nicknameSelectCoordinator] curationData in
-            if let coordinator = nicknameSelectCoordinator,
+
+        characterSelectCompleteCoordinator.onFinish = { [weak self, weak characterSelectCompleteCoordinator] curationData in
+            if let coordinator = characterSelectCompleteCoordinator,
                let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
                 self?.childCoordinators.remove(at: index)
             }
-            
+
             self?.onFinish?(curationData)
         }
-        
-        childCoordinators.append(nicknameSelectCoordinator)
-        nicknameSelectCoordinator.start()
+
+        childCoordinators.append(characterSelectCompleteCoordinator)
+        characterSelectCompleteCoordinator.start()
     }
+    
+
 }

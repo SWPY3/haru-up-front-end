@@ -17,16 +17,15 @@ class CharacterSelectViewController: UIViewController {
     
     private let currentCharacterIndex = BehaviorRelay<Int>(value: 1)
     
-    private let characters: [(name: String, image: String, textImage: String)] = [
-        (name: "하루", image: "haru_level1", textImage: "text_box_character_haru"),
-        (name: "나루", image: "naru_level1", textImage: "text_box_character_naru")
+    private let characters: [(name: String, image: String)] = [
+        (name: "하루", image: "haru_level1"),
+        (name: "나루", image: "naru_level1")
     ]
     
     private let backgroundImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = UIImage(named: "background_gradation.png")
         iv.contentMode = .scaleAspectFill
-        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -36,16 +35,7 @@ class CharacterSelectViewController: UIViewController {
         label.textAlignment = .center
         label.numberOfLines = 0
         label.textColor = .black
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
-    }()
-    
-    private let characterTextImageView: UIImageView = {
-        let iv = UIImageView()
-        iv.image = UIImage(named: "text_character_haru.png")
-        iv.contentMode = .scaleAspectFit
-        iv.translatesAutoresizingMaskIntoConstraints = false
-        return iv
     }()
     
     private let characterImageView: UIImageView = {
@@ -53,7 +43,6 @@ class CharacterSelectViewController: UIViewController {
         iv.image = UIImage(named: "haru_level1.png")
         iv.contentMode = .scaleAspectFit
         iv.isUserInteractionEnabled = true
-        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -61,7 +50,6 @@ class CharacterSelectViewController: UIViewController {
        let iv = UIImageView()
         iv.image = UIImage(named: "character_shadow2.png")
         iv.contentMode = .scaleAspectFit
-        iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
@@ -70,7 +58,6 @@ class CharacterSelectViewController: UIViewController {
         label.setStyle(Typography.title3, text: "하루")
         label.textAlignment = .center
         label.textColor = .black
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -78,14 +65,12 @@ class CharacterSelectViewController: UIViewController {
         let btn = UIButton()
         btn.setImage(UIImage(named: "chevron_left.png"), for: .normal)
         btn.isEnabled = false
-        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
     
     private let rightArrowButton: UIButton = {
         let btn = UIButton()
         btn.setImage(UIImage(named: "chevron_right.png"), for: .normal)
-        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
     
@@ -96,8 +81,6 @@ class CharacterSelectViewController: UIViewController {
         btn.backgroundColor = .cta
         btn.layer.cornerRadius = 16
         btn.clipsToBounds = true
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        
         return btn
     }()
     
@@ -127,15 +110,12 @@ class CharacterSelectViewController: UIViewController {
     // MARK: - Helpers
     private func setupUI() {
         view.insertSubview(backgroundImageView, at: 0)
+        
+        [titleLabel, characterImageView, characterShadowImageView, characterNameLabel, leftArrowButton, rightArrowButton, nextButton].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
+        }
     
-        view.addSubview(titleLabel)
-        view.addSubview(characterTextImageView)
-        view.addSubview(characterImageView)
-        view.addSubview(characterShadowImageView)
-        view.addSubview(characterNameLabel)
-        view.addSubview(leftArrowButton)
-        view.addSubview(rightArrowButton)
-        view.addSubview(nextButton)
         
         backgroundImageView.anchor(
             top: view.topAnchor,
@@ -148,24 +128,15 @@ class CharacterSelectViewController: UIViewController {
             top: view.safeAreaLayoutGuide.topAnchor,
             left: view.leftAnchor,
             right: view.rightAnchor,
-            paddingTop: 80,
+            paddingTop: 100,
             paddingLeft: 20,
             paddingRight: 20
         )
         
-        characterTextImageView.anchor(
-            top: titleLabel.bottomAnchor,
-            left: view.leftAnchor,
-            right: view.rightAnchor,
-            paddingTop: 80,
-            paddingLeft: 40,
-            paddingRight: 40,
-            height: 100
-        )
-        
         characterImageView.centerX(inView: view)
         characterImageView.anchor(
-            top: characterTextImageView.bottomAnchor,
+            top: titleLabel.bottomAnchor,
+            paddingTop: 150,
             width: 180,
             height: 180
         )
@@ -278,22 +249,11 @@ class CharacterSelectViewController: UIViewController {
             return
         }
         
-        guard UIImage(named: character.textImage) != nil else {
-            print("❌ 말풍선 이미지 로드 실패: \(character.textImage)")
-            return
-        }
-        
         // 페이드 애니메이션으로 자연스럽게 전환
         UIView.transition(with: characterImageView,
                           duration: 0.3,
                           options: .transitionCrossDissolve) { [weak self] in
             self?.characterImageView.image = UIImage(named: character.image)
-        }
-        
-        UIView.transition(with: characterTextImageView,
-                          duration: 0.3,
-                          options: .transitionCrossDissolve) { [weak self] in
-            self?.characterTextImageView.image = UIImage(named: character.textImage)
         }
         
         characterNameLabel.text = character.name
