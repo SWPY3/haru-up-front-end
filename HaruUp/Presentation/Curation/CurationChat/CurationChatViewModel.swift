@@ -86,7 +86,7 @@ final class CurationChatViewModel {
     private let questions: [ChatQuestion] = [
         ChatQuestion(
             text: "어떤 목표를 이루고 싶으신가요?\n도전하고 싶은 목표를 선택하거나 직접 입력해주세요.",
-            suggestions: ["🏋 운동 습관 만들기", "📗 오픽 AL 취득", "🏃 체중 5kg 감량", "💰 주식 투자 시작"],
+            suggestions: ["🏋 운동 습관 만들기", "📗 오픽 AL 취득", "💰 주식 투자 시작", "🏃 체중 5kg 감량", "🚭 금연하기"],
             subtitleText: nil
         ),
         ChatQuestion(

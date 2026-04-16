@@ -13,7 +13,7 @@ final class ChipCollectionCell: UICollectionViewCell {
 
     private let chipLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .neutral800
+        label.textColor = .neutral1000
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -22,10 +22,10 @@ final class ChipCollectionCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
 
-        contentView.backgroundColor = .neutral50
-        contentView.layer.cornerRadius = 16
+        contentView.backgroundColor = .neutral100
+        contentView.layer.cornerRadius = 20
         contentView.layer.borderWidth = 1
-        contentView.layer.borderColor = UIColor.neutral200.cgColor
+        contentView.layer.borderColor = UIColor.neutral100.cgColor
         contentView.clipsToBounds = true
 
         contentView.addSubview(chipLabel)
@@ -46,7 +46,7 @@ final class ChipCollectionCell: UICollectionViewCell {
     }
 
     func configure(text: String) {
-        chipLabel.setStyle(Typography.body5, text: text)
-        chipLabel.textColor = .neutral800
+        chipLabel.setStyle(Typography.body4, text: text)
+        chipLabel.textColor = .neutral1000
     }
 }
