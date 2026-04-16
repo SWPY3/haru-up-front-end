@@ -74,7 +74,9 @@ final class CurationChatViewController: UIViewController {
         tv.layer.cornerRadius = 20
         tv.clipsToBounds = true
         tv.returnKeyType = .send
-//        tv.textContainerInset = UIEdgeInsets(top: 10, left: 12, bottom: 10, right: 44)
+        
+        tv.isScrollEnabled = true
+        tv.textContainerInset = UIEdgeInsets(top: 10, left: 12, bottom: 10, right: 44)
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
     }()
@@ -88,7 +90,8 @@ final class CurationChatViewController: UIViewController {
     }()
 
     private var inputContainerBottomConstraint: NSLayoutConstraint?
-
+    private var inputTextViewHeightConstraint: NSLayoutConstraint?
+    
     // MARK: - Init
 
     init(viewModel: CurationChatViewModel) {
@@ -121,6 +124,8 @@ final class CurationChatViewController: UIViewController {
     // MARK: - Setup UI
 
     private func setupUI() {
+        inputTextViewHeightConstraint = inputTextView.heightAnchor.constraint(equalToConstant: 140)
+        inputTextViewHeightConstraint?.isActive = true
         // 상단 X 버튼
         view.addSubview(closeButton)
         NSLayoutConstraint.activate([
@@ -168,7 +173,7 @@ final class CurationChatViewController: UIViewController {
             inputTextView.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: 20),
             inputTextView.bottomAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: -8),
             inputTextView.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -20),
-            inputTextView.heightAnchor.constraint(equalToConstant: 140)
+//            inputTextView.heightAnchor.constraint(equalToConstant: 140)
         ])
 
         // 채팅 테이블뷰
@@ -254,9 +259,14 @@ final class CurationChatViewController: UIViewController {
         output.prefillText
             .filter { !$0.isEmpty }
             .drive(onNext: { [weak self] text in
+                guard let textView = self?.inputTextView else { return }
+                
                 self?.inputTextView.text = text
                 self?.inputTextView.textColor = .black
                 self?.inputTextView.becomeFirstResponder()
+                
+                self?.sendButton.setImage(.iconButtonBlue, for: .normal)
+                self?.textViewDidChange(textView)
             })
             .disposed(by: disposeBag)
 
@@ -330,8 +340,14 @@ final class CurationChatViewController: UIViewController {
               let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval
         else { return }
 
-        let keyboardHeight = keyboardFrame.height - view.safeAreaInsets.bottom
+//        let keyboardHeight = keyboardFrame.height - view.safeAreaInsets.bottom
+        let keyboardHeight = keyboardFrame.height
+        
+        // 1. 바닥 위치 조정
         inputContainerBottomConstraint?.constant = -keyboardHeight
+        
+        // 2. 텍스트뷰 높이 조정 
+        inputTextViewHeightConstraint?.constant = 80
 
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
@@ -343,9 +359,12 @@ final class CurationChatViewController: UIViewController {
     @objc private func keyboardWillHide(_ notification: Notification) {
         guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval
         else { return }
-
+        
+        // 1. 바닥 위치 복구
         inputContainerBottomConstraint?.constant = 0
-
+        // 2. 텍스트뷰 높이 복구 (100 -> 140)
+        inputTextViewHeightConstraint?.constant = 140
+        
         UIView.animate(withDuration: duration) {
             self.view.layoutIfNeeded()
         }
@@ -422,6 +441,9 @@ extension CurationChatViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         let hasText = !textView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         sendButton.setImage(hasText ? .iconButtonBlue : .iconButtonGray, for: .normal)
+        
+        let range = NSMakeRange(textView.text.count - 1, 1)
+        textView.scrollRangeToVisible(range)
     }
 
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
