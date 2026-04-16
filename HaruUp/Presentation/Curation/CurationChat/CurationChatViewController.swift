@@ -124,7 +124,7 @@ final class CurationChatViewController: UIViewController {
         // 상단 X 버튼
         view.addSubview(closeButton)
         NSLayoutConstraint.activate([
-            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             closeButton.widthAnchor.constraint(equalToConstant: 32),
             closeButton.heightAnchor.constraint(equalToConstant: 32)
@@ -174,7 +174,7 @@ final class CurationChatViewController: UIViewController {
         // 채팅 테이블뷰
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8),
+            tableView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 20),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.bottomAnchor.constraint(equalTo: inputContainerView.topAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
@@ -262,6 +262,8 @@ final class CurationChatViewController: UIViewController {
 
         // 전송 버튼
         sendButton.rx.tap
+            // 전송 버튼 중복 클릭 방지 (0.6초 이내 연타 무시)
+            .throttle(.milliseconds(600), latest: false, scheduler: MainScheduler.instance)
             .subscribe(onNext: { [weak self] in
                 self?.sendMessage()
             })
@@ -281,11 +283,19 @@ final class CurationChatViewController: UIViewController {
               text != "답변을 입력해주세요" else {
             return
         }
+        
+        sendButton.isEnabled = false
+        
         sendSubject.onNext(text.trimmingCharacters(in: .whitespacesAndNewlines))
         inputTextView.text = "답변을 입력해주세요"
         inputTextView.textColor = .lightGray
         sendButton.setImage(.iconButtonGray, for: .normal)
         inputTextView.resignFirstResponder()
+        
+        // 잠시 후 버튼 다시 활성화 (필요 시)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.sendButton.isEnabled = true
+        }
     }
 
     private func scrollToBottom() {
