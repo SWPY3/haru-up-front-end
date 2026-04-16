@@ -200,9 +200,17 @@ final class CurationChatViewModel {
             prefillText: prefillTextRelay.asDriver(onErrorJustReturn: "")
         )
     }
+    
+    // 처음부터 다시 시작하기 로직
+    func restartChat() {
+        messagesRelay.accept([])
+        answers = []
+        currentQuestionIndexRelay.accept(-1)
+        isCompletedRelay.accept(false)
+        showNextQuestion()
+        }
 
     // MARK: - Private
-
     private func handleUserAnswer(_ answer: String) {
         let trimmed = answer.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }

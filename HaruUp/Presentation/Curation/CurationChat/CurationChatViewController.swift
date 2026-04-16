@@ -84,7 +84,6 @@ final class CurationChatViewController: UIViewController {
     private let sendButton: UIButton = {
         let btn = UIButton()
         btn.setImage(.iconButtonGray, for: .normal) // btn.setImage(.iconButtonBlue, for: .normal)
-        
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
@@ -282,7 +281,8 @@ final class CurationChatViewController: UIViewController {
         // 닫기 버튼
         closeButton.rx.tap
             .subscribe(onNext: { [weak self] in
-                self?.navigationController?.popViewController(animated: true)
+//               self?.navigationController?.popViewController(animated: true)
+                self?.showExitModal()
             })
             .disposed(by: disposeBag)
     }
@@ -298,7 +298,8 @@ final class CurationChatViewController: UIViewController {
         
         sendSubject.onNext(text.trimmingCharacters(in: .whitespacesAndNewlines))
         inputTextView.text = "답변을 입력해주세요"
-        inputTextView.textColor = .lightGray
+        inputTextView.textColor = .neutral300
+        
         sendButton.setImage(.iconButtonGray, for: .normal)
         inputTextView.resignFirstResponder()
         
@@ -306,6 +307,20 @@ final class CurationChatViewController: UIViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             self?.sendButton.isEnabled = true
         }
+    }
+    
+    private func showExitModal() {
+        let modalVC = ExitConfirmModalViewController()
+        modalVC.modalPresentationStyle = .overFullScreen
+        modalVC.modalTransitionStyle = .crossDissolve
+        modalVC.onRestartTapped = { [weak self] in
+            self?.viewModel.restartChat()
+            self?.inputTextView.text = "답변을 입력해주세요"
+            self?.inputTextView.textColor = .neutral300
+            self?.sendButton.setImage(.iconButtonGray, for: .normal)
+            self?.view.endEditing(true)
+        }
+        present(modalVC, animated: true)
     }
 
     private func scrollToBottom() {

@@ -39,7 +39,7 @@ class ExitConfirmModalViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.subtitle1, text: "처음부터 다시 시작할까요?/n지금까지 작성한 답변은 저장되지 않아요.")
+        label.setStyle(Typography.subtitle1, text: "처음부터 다시 시작할까요?\n지금까지 작성한 답변은 저장되지 않아요.")
         label.textAlignment = .center
         label.numberOfLines = 0
         label.textColor = .black
@@ -81,7 +81,6 @@ class ExitConfirmModalViewController: UIViewController {
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
         
-        // 1. DimView: 전체 화면 채우기 (배경 흐리게)
         NSLayoutConstraint.activate([
             dimView.topAnchor.constraint(equalTo: view.topAnchor),
             dimView.leftAnchor.constraint(equalTo: view.leftAnchor),
@@ -89,31 +88,27 @@ class ExitConfirmModalViewController: UIViewController {
             dimView.rightAnchor.constraint(equalTo: view.rightAnchor)
         ])
         
-        // 2. ContainerView: 하단 시트 높이 및 위치 설정
         NSLayoutConstraint.activate([
             containerView.leftAnchor.constraint(equalTo: view.leftAnchor),
             containerView.rightAnchor.constraint(equalTo: view.rightAnchor),
             containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            containerView.heightAnchor.constraint(equalToConstant: 450)
+            containerView.heightAnchor.constraint(equalToConstant: 430)
         ])
         
-        // 3. HaruImageView: 상단 캐릭터 이미지
         NSLayoutConstraint.activate([
             characterImageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 40),
             characterImageView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            characterImageView.widthAnchor.constraint(equalToConstant: 160),
-            characterImageView.heightAnchor.constraint(equalToConstant: 160)
+            characterImageView.widthAnchor.constraint(equalToConstant: 110),
+            characterImageView.heightAnchor.constraint(equalToConstant: 110)
         ])
         
-        // 4. TitleLabel: 중앙 정렬된 두 줄 텍스트
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: characterImageView.bottomAnchor, constant: 24),
+            titleLabel.topAnchor.constraint(equalTo: characterImageView.bottomAnchor, constant: 10),
             titleLabel.leftAnchor.constraint(equalTo: containerView.leftAnchor, constant: 30),
             titleLabel.rightAnchor.constraint(equalTo: containerView.rightAnchor, constant: -30),
             titleLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor)
         ])
         
-        // 5. RestartButton: 다시 시작하기 버튼
         NSLayoutConstraint.activate([
             restartButton.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 40),
             restartButton.leftAnchor.constraint(equalTo: containerView.leftAnchor, constant: 20),
@@ -121,7 +116,6 @@ class ExitConfirmModalViewController: UIViewController {
             restartButton.heightAnchor.constraint(equalToConstant: 56)
         ])
         
-        // 6. ContinueButton: 하단 텍스트 버튼
         NSLayoutConstraint.activate([
             continueButton.topAnchor.constraint(equalTo: restartButton.bottomAnchor, constant: 16),
             continueButton.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
