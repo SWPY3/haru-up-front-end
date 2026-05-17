@@ -14,7 +14,7 @@ struct ChatbotAnswerRequest: Encodable {
 
 // ── 응답 ──────────────────────────────────
 // POST /chatbot/start 응답
-struct ChatbotStartData: Decodable {
+struct ChatbotStartData: Codable {
     let sessionId: String
     let question: String
     let examples: [String]
@@ -22,7 +22,7 @@ struct ChatbotStartData: Decodable {
 }
 
 // POST /chatbot/answer 응답 — 진행 중 (Q2~Q5)
-struct ChatbotNextQuestionData: Decodable {
+struct ChatbotNextQuestionData: Codable {
     let sessionId: String
     let question: String
     let questionNumber: Int
@@ -30,13 +30,13 @@ struct ChatbotNextQuestionData: Decodable {
 }
 
 // POST /chatbot/answer 응답 — 완료 (Q6 답변 후)
-struct ChatbotCompleteData: Decodable {
+struct ChatbotCompleteData: Codable {
     let isCompleted: Bool
     let goalText: String
     let missions: [ChatbotMissionDto]
 }
 
-struct ChatbotMissionDto: Decodable {
+struct ChatbotMissionDto: Codable {
     let id: Int
     let missionContent: String
     let missionDescription: String?
@@ -46,7 +46,7 @@ struct ChatbotMissionDto: Decodable {
 
 // answer API는 진행 중/완료 두 가지 응답이 올 수 있어서
 // 하나의 통합 모델로 처리 (모든 필드 optional)
-struct ChatbotAnswerResultData: Decodable {
+struct ChatbotAnswerResultData: Codable {
     // 진행 중 필드
     let sessionId: String?
     let question: String?
