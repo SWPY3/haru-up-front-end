@@ -108,6 +108,7 @@ final class CurationChatViewModel {
             .take(1)
             .subscribe(onNext: { [weak self] in
                 guard let self = self else { return }
+                self.startChatbot()
             })
             .disposed(by: disposeBag)
 
@@ -131,7 +132,7 @@ final class CurationChatViewModel {
             .delay(.seconds(1), scheduler: MainScheduler.instance)
             .subscribe(onNext: { [weak self] _ in
                 guard let self = self else { return }
-                self.coordinator?.didFinishChat(answers: self.completedMissions)
+                self.coordinator?.didFinishChat(missions: self.completedMissions)
             })
             .disposed(by: disposeBag)
 
@@ -185,7 +186,7 @@ final class CurationChatViewModel {
         isLoadingRelay.accept(true)
         
         // 3. 백엔드에 답변 전송
-        cchatbotService.answer(sessionId: sessionId, answer: trimmed)
+        chatbotService.answer(sessionId: sessionId, answer: trimmed)
             .observe(on: MainScheduler.instance)
             .subscribe(
                 onSuccess: { [weak self] response in
