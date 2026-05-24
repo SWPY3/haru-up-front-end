@@ -277,11 +277,7 @@ class TodayMissionListViewController: UIViewController {
                 case .mission(let mission):
                     let cell = tableView.dequeueReusableCell(withIdentifier: TodayMissionTableViewCell.identifier, for: indexPath) as! TodayMissionTableViewCell
                     
-                    guard let difficulty = MissionDifficultyModel(rawValue: mission.difficulty) else {
-                        // TODO: 파악할 수 없는 난이도 error 대응 필요
-                        print("파악할 수 없는 난이도")
-                        return UITableViewCell()
-                    }
+                    let difficulty = MissionDifficultyModel.from(difficulty: mission.difficulty)
                     
                     let isSelected = self.currentSelectedIDs.contains(mission.memberMissionId)
                     let isLimitReached = self.currentSelectedIDs.count >= 5
