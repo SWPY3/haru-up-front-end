@@ -40,7 +40,16 @@ final class MissionTableViewCell: UITableViewCell {
         let label = UILabel()
         label.textColor = .black
         label.numberOfLines = 0
-        
+
+        return label
+    }()
+
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .neutral700
+        label.numberOfLines = 0
+        label.isHidden = true
+
         return label
     }()
     
@@ -107,12 +116,12 @@ final class MissionTableViewCell: UITableViewCell {
             missionStackView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 20),
             missionStackView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -20),
             missionStackView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 20),
-            missionStackView.trailingAnchor.constraint(equalTo: settingButton.leadingAnchor, constant: -40)
+            missionStackView.trailingAnchor.constraint(equalTo: settingButton.leadingAnchor, constant: -20)
         ])
     }
     
     private func configureMission() {
-        [missionLabel, badgeStackView].forEach {
+        [missionLabel, descriptionLabel, badgeStackView].forEach {
             missionStackView.addArrangedSubview($0)
         }
         
@@ -138,13 +147,22 @@ final class MissionTableViewCell: UITableViewCell {
         missionLabel.setStyle(Typography.subtitle2, text: mission.title)
         difficultyBadge.configure(difficulty: mission.difficulty)
         expBadge.configure(exp: mission.exp)
-        
+
+        if let desc = mission.description, !desc.isEmpty {
+            descriptionLabel.setStyle(Typography.body4, text: desc)
+            descriptionLabel.textColor = .neutral700
+            descriptionLabel.isHidden = false
+        } else {
+            descriptionLabel.isHidden = true
+        }
+
         applyComplete(mission.isCompleted)
     }
     
     private func applyComplete(_ complete: Bool) {
         self.missionLabel.setStrikethrough(complete)
         self.missionLabel.textColor = complete ? .neutral300 : .black
+        self.descriptionLabel.textColor = complete ? .neutral200 : .neutral700
         self.settingButton.isEnabled = !complete
     }
 }

@@ -20,6 +20,7 @@ struct HomeMemberInfo {
 struct Mission: Hashable {
     let id: Int
     let title: String
+    let description: String?
     let difficulty: MissionDifficultyModel
     let exp: Int
     let isCompleted: Bool

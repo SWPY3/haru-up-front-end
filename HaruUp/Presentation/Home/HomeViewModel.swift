@@ -126,7 +126,7 @@ final class HomeViewModel {
                             nickname: data?.nickname ?? "하루",
                             totalExp: data?.totalExp ?? 1000,
                             maxExp: data?.maxExp ?? 1000,
-                            currentExp: data?.currentExp ?? 500,
+                            currentExp: data?.currentExp ?? 0,
                             interest: interest ?? ""
                         )
                     }
@@ -236,6 +236,7 @@ final class HomeViewModel {
                     Mission(
                         id: mission.id,
                         title: mission.missionContent,
+                        description: mission.missionDescription,
                         difficulty: MissionDifficultyModel.from(difficulty: mission.difficulty),
                         exp: mission.expEarned,
                         isCompleted: mission.missionStatus == "COMPLETED"

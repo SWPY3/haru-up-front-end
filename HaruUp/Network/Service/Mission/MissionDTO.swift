@@ -171,6 +171,7 @@ enum MemberMission {
         let expEarned: Int
         let targetDate: String
         let missionContent: String
+        let missionDescription: String? // 챗봇 생성 미션의 구체적 실행 방법
         let difficulty: Int
         let fullPath: [String]?        // 챗봇 생성 미션은 null
         let directFullPath: [String]?  // 챗봇 생성 미션은 null
