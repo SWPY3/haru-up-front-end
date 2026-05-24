@@ -208,7 +208,8 @@ final class HomeViewModel {
     }
     
     private func loadSelectedMissions() -> Observable<[Mission]> {
-        return resolveMemberInterestId()
+        // 챗봇으로 생성된 미션은 백엔드에서 GOAL_BASED_INTEREST_ID = 0 으로 저장됨
+        return Single.just(0)
             .asObservable()
             .do(
                 onSubscribe: { [weak self] in self?.loadingRelay.accept(true) },
