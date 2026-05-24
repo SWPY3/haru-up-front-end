@@ -48,13 +48,6 @@ enum ChatDisplayItem {
     case suggestionChips([String])
 }
 
-// MARK: - Question Data
-
-struct ChatQuestion {
-    let text: String
-    let suggestions: [String]
-    let subtitleText: String?
-}
 
 // MARK: - ViewModel
 
@@ -69,6 +62,7 @@ final class CurationChatViewModel {
     struct Output {
         let displayItems: Driver<[ChatDisplayItem]>
         let isCompleted: Driver<Bool>
+        let isLoading: Driver<Bool>
         let characterName: Driver<String>
         let characterImageName: Driver<String>
         let prefillText: Driver<String>
@@ -79,48 +73,18 @@ final class CurationChatViewModel {
 
     private let characterId: Int
     private let messagesRelay = BehaviorRelay<[ChatMessage]>(value: [])
-    private let currentQuestionIndexRelay = BehaviorRelay<Int>(value: -1)
     private let isCompletedRelay = BehaviorRelay<Bool>(value: false)
     private let prefillTextRelay = PublishRelay<String>()
+    
+    private let chatbotService: ChatbotService
+    private var sessionId: String?
+    private var completedMissions: [ChatbotMissionDto] = []
+    private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
 
-    private let questions: [ChatQuestion] = [
-        ChatQuestion(
-            text: "어떤 목표를 이루고 싶으신가요?\n도전하고 싶은 목표를 선택하거나 직접 입력해주세요.",
-            suggestions: ["🏋 운동 습관 만들기", "📗 오픽 AL 취득", "💰 주식 투자 시작", "🏃 체중 5kg 감량", "🚭 금연하기"],
-            subtitleText: nil
-        ),
-        ChatQuestion(
-            text: "관심이 생기게 된 계기가 무엇인가요?",
-            suggestions: [],
-            subtitleText: "(AI가 생성한 질문)"
-        ),
-        ChatQuestion(
-            text: "해당 관심사에 대한 실력은 1~10단계 중에서 어느 단계인가요?",
-            suggestions: [],
-            subtitleText: "(AI가 생성한 질문)"
-        ),
-        ChatQuestion(
-            text: "이루고자 하는 목표 기간이 있나요?",
-            suggestions: ["1개월", "3개월", "6개월", "1년"],
-            subtitleText: "(AI가 생성한 질문)"
-        ),
-        ChatQuestion(
-            text: "하루에 투자가 가능한 시간은 얼마인가요?",
-            suggestions: ["30분", "1시간", "2시간", "3시간 이상"],
-            subtitleText: "(AI가 생성한 질문)"
-        ),
-        ChatQuestion(
-            text: "추가 질문이 있으면 작성해주세요!",
-            suggestions: [],
-            subtitleText: nil
-        )
-    ]
-
-    private(set) var answers: [String] = []
-
-    init(coordinator: CurationChatCoordinator, characterId: Int) {
+    init(coordinator: CurationChatCoordinator, characterId: Int, chatbotService: ChatbotService) {
         self.coordinator = coordinator
         self.characterId = characterId
+        self.chatbotService = chatbotService
     }
 
     func transform(input: Input) -> Output {
@@ -144,8 +108,7 @@ final class CurationChatViewModel {
             .take(1)
             .subscribe(onNext: { [weak self] in
                 guard let self = self else { return }
-                
-                self.showNextQuestion()
+                self.startChatbot()
             })
             .disposed(by: disposeBag)
 
@@ -169,7 +132,7 @@ final class CurationChatViewModel {
             .delay(.seconds(1), scheduler: MainScheduler.instance)
             .subscribe(onNext: { [weak self] _ in
                 guard let self = self else { return }
-                self.coordinator?.didFinishChat(answers: self.answers)
+                self.coordinator?.didFinishChat(missions: self.completedMissions)
             })
             .disposed(by: disposeBag)
 
@@ -195,6 +158,7 @@ final class CurationChatViewModel {
         return Output(
             displayItems: displayItems,
             isCompleted: isCompletedRelay.asDriver(),
+            isLoading: isLoadingRelay.asDriver(),
             characterName: Driver.just(characterName),
             characterImageName: Driver.just(characterImageName),
             prefillText: prefillTextRelay.asDriver(onErrorJustReturn: "")
@@ -204,57 +168,88 @@ final class CurationChatViewModel {
     // 처음부터 다시 시작하기 로직
     func restartChat() {
         messagesRelay.accept([])
-        answers = []
-        currentQuestionIndexRelay.accept(-1)
+        sessionId = nil
+        completedMissions = []
         isCompletedRelay.accept(false)
-        showNextQuestion()
-        }
+        startChatbot()   // ← API 다시 호출
+    }
 
     // MARK: - Private
     private func handleUserAnswer(_ answer: String) {
         let trimmed = answer.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty, let sessionId = sessionId else { return }
 
-        var msgs = messagesRelay.value
-        msgs.append(ChatMessage(type: .user, text: trimmed))
-        messagesRelay.accept(msgs)
+        // 1. 사용자 메시지 화면에 추가
+        appendMessage(ChatMessage(type: .user, text: trimmed))
+        
+        // 2. 로딩 시작
+        isLoadingRelay.accept(true)
+        
+        // 3. 백엔드에 답변 전송
+        chatbotService.answer(sessionId: sessionId, answer: trimmed)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { [weak self] response in
+                    self?.isLoadingRelay.accept(false)
+                    self?.handleAnswerResponse(response.data)
+                },
+                onFailure: { [weak self] error in
+                    self?.isLoadingRelay.accept(false)
+                    self?.appendMessage(ChatMessage(type: .bot, text: "오류가 발생했어요. 다시 시도해주세요."))
+                }
+            )
+            .disposed(by: disposeBag)
+    }
+    
+    private func startChatbot() {
+        isLoadingRelay.accept(true)
 
-        answers.append(trimmed)
+        chatbotService.start()
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { [weak self] response in
+                    guard let self = self, let data = response.data else { return }
+                    self.isLoadingRelay.accept(false)
+                    self.sessionId = data.sessionId
 
-        let currentIdx = currentQuestionIndexRelay.value
-
-        if currentIdx < questions.count - 1 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
-                self?.showNextQuestion()
-            }
-        } else {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
-                guard let self = self else { return }
-                var msgs = self.messagesRelay.value
-                msgs.append(ChatMessage(
-                    type: .bot,
-                    text: "감사합니다! 답변을 바탕으로 맞춤 커리큘럼을 준비할게요."
-                ))
-                self.messagesRelay.accept(msgs)
-                self.isCompletedRelay.accept(true)
-            }
+                    // 첫 질문 + 예시 칩 표시
+                    self.appendMessage(ChatMessage(
+                        type: .bot,
+                        text: data.question,
+                        suggestions: data.examples
+                    ))
+                },
+                onFailure: { [weak self] _ in
+                    self?.isLoadingRelay.accept(false)
+                    self?.appendMessage(ChatMessage(type: .bot, text: "연결에 실패했어요. 다시 시도해주세요."))
+                }
+            )
+            .disposed(by: disposeBag)
+    }
+    
+    private func handleAnswerResponse(_ data: ChatbotAnswerResultData?) {
+        guard let data = data else { return }
+        
+        if data.isCompleted == true {
+            // 완료 → 미션 저장 후 화면 전환
+            completedMissions = data.missions ?? []
+            appendMessage(ChatMessage(type: .bot, text: "좋아요! 답변을 바탕으로 맞춤 미션을 준비했어요!!!🎉"))
+            isCompletedRelay.accept(true)
+        }
+        else {
+            // 진행 중 → 다음 질문 표시
+            guard let question = data.question else { return }
+            let isLast = data.isLast ?? false
+            
+            appendMessage(ChatMessage(type: .bot, text: question,
+                                      subtitleText: isLast ? "마지막 질문이에요!" : nil))
         }
     }
-
-    private func showNextQuestion() {
-        let nextIndex = currentQuestionIndexRelay.value + 1
-        guard nextIndex < questions.count else { return }
-
-        currentQuestionIndexRelay.accept(nextIndex)
-
-        let question = questions[nextIndex]
+    
+    
+    private func appendMessage(_ message: ChatMessage) {
         var msgs = messagesRelay.value
-        msgs.append(ChatMessage(
-            type: .bot,
-            text: question.text,
-            suggestions: question.suggestions,
-            subtitleText: question.subtitleText
-        ))
+        msgs.append(message)
         messagesRelay.accept(msgs)
     }
 }

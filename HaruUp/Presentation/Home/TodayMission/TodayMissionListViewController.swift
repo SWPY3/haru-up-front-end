@@ -277,17 +277,13 @@ class TodayMissionListViewController: UIViewController {
                 case .mission(let mission):
                     let cell = tableView.dequeueReusableCell(withIdentifier: TodayMissionTableViewCell.identifier, for: indexPath) as! TodayMissionTableViewCell
                     
-                    guard let difficulty = MissionDifficultyModel(rawValue: mission.difficulty) else {
-                        // TODO: 파악할 수 없는 난이도 error 대응 필요
-                        print("파악할 수 없는 난이도")
-                        return UITableViewCell()
-                    }
+                    let difficulty = MissionDifficultyModel.from(difficulty: mission.difficulty)
                     
                     let isSelected = self.currentSelectedIDs.contains(mission.memberMissionId)
                     let isLimitReached = self.currentSelectedIDs.count >= 5
                     let shouldDisable = isLimitReached && !isSelected // 꽉 찼는데 선택 안 된 애들
                     
-                    let missionData = Mission(id:mission.memberMissionId, title: mission.content, difficulty: difficulty, exp: mission.expEarned, isCompleted: isSelected) // isCompleted를 미션을 선택한 상태여부로 사용. 해당페이지는 미션을 추천하는 페이지이기 때문에 영향이 없다.
+                    let missionData = Mission(id: mission.memberMissionId, title: mission.content, description: nil, difficulty: difficulty, exp: mission.expEarned, isCompleted: isSelected) // isCompleted를 미션을 선택한 상태여부로 사용. 해당페이지는 미션을 추천하는 페이지이기 때문에 영향이 없다.
                     
                     cell.configure(mission: missionData)
                     

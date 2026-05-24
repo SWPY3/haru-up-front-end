@@ -21,36 +21,19 @@ final class CurationChatCoordinator: Coordinator {
 
     func start() {
         let characterId = curationData.characterId ?? 1
-        let viewModel = CurationChatViewModel(coordinator: self, characterId: characterId)
+        let viewModel = CurationChatViewModel(
+            coordinator: self,
+            characterId: characterId,
+            chatbotService: ChatbotService()
+        )
+        
         let viewController = CurationChatViewController(viewModel: viewModel)
         navigationController.pushViewController(viewController, animated: true)
     }
-
-    func didFinishChat(answers: [String]) {
-        // answers 순서:
-        // [0] 관심사
-        // [1] 관심이 생기게 된 계기
-        // [2] 실력 단계 (1~10)
-        // [3] 목표 기간
-        // [4] 투자 가능 시간
-        // [5] 추가 질문
-
-        // 다음 플로우로 이동 (NicknameSelect 등 기존 플로우 연결)
-        let nicknameSelectCoordinator = NicknameSelectCoordinator(
-            navigationController: navigationController,
-            curationData: curationData
-        )
-
-        nicknameSelectCoordinator.onFinish = { [weak self, weak nicknameSelectCoordinator] curationData in
-            if let coordinator = nicknameSelectCoordinator,
-               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
-                self?.childCoordinators.remove(at: index)
-            }
-
-            self?.onFinish?(curationData)
-        }
-
-        childCoordinators.append(nicknameSelectCoordinator)
-        nicknameSelectCoordinator.start()
+    
+    func didFinishChat(missions: [ChatbotMissionDto]) {
+        TokenStorageService.shared.saveOnboardingCompleted(true)
+        onFinish?(curationData)
     }
+    
 }

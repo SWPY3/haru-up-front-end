@@ -80,7 +80,7 @@ final class HistoryViewModel {
                         return response.data.map { dto in
                             HistoryModel.Mission(
                                 title: dto.missionContent,
-                                difficulty: MissionDifficultyModel(rawValue: dto.difficulty) ?? .low,
+                                difficulty: MissionDifficultyModel.from(difficulty: dto.difficulty),
                                 exp: dto.expEarned
                             )
                         }

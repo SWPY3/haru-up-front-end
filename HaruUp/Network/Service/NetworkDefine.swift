@@ -12,8 +12,23 @@ enum NetworkDefine {
 //        #if DEBUG
 //        static let baseURL = "http://223.130.141.179:8082/"
 //        #else
-        static let baseURL = "https://haru.jinuk.dev/"
+//        static let baseURL = "https://haru.jinuk.dev/"
+        static let baseURL = "https://haru-up-back-end-production.up.railway.app/"
 //        #endif
+    }
+    
+    enum ChatbotAPI {
+        case start
+        case answer  
+
+        var path: String {
+            switch self {
+            case .start:  return "api/member/curation/chatbot/start"
+            case .answer: return "api/member/curation/chatbot/answer"
+            }
+        }
+
+        var url: String { return APIEnvironment.baseURL + self.path }
     }
     
     enum AuthAPI {

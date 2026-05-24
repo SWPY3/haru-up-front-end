@@ -212,7 +212,7 @@ final class AppCoordinator: Coordinator {
                 self?.childCoordinators.remove(at: index)
                 print("🗑️ CharacterSelectCoordinator 제거됨 (남은 자식: \(self?.childCoordinators.count ?? 0))")
             }
-            self?.showLoadingFlow()
+            self?.showMainTabFlow()
         }
         
         childCoordinators.append(characterSelectCoordinator)

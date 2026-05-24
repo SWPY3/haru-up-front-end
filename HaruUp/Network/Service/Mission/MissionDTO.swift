@@ -154,7 +154,7 @@ enum MemberMission {
     struct FetchMissionRequestDTO: Encodable {
         let missionStatus: String // ACTIVE, INACTIVE, COMPLETED
         let targetDate: String // yyyy-MM-dd
-        let memberInterestId: Int
+        let memberInterestId: Int? // nil이면 백엔드에서 전체 미션 반환
     }
     
     struct FetchMissionResponseDTO: Decodable {
@@ -171,9 +171,10 @@ enum MemberMission {
         let expEarned: Int
         let targetDate: String
         let missionContent: String
+        let missionDescription: String? // 챗봇 생성 미션의 구체적 실행 방법
         let difficulty: Int
-        let fullPath: [String]
-        let directFullPath: [String]
+        let fullPath: [String]?        // 챗봇 생성 미션은 null
+        let directFullPath: [String]?  // 챗봇 생성 미션은 null
     }
     
     // MARK: 미션 상태
