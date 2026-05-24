@@ -19,7 +19,7 @@ protocol MissionServiceProtocol {
     // 미션 선택 완료
     func selectMissions(missionIDs: [Int]) -> Single<MemberMission.SelectMissionResponseDTO>
     // 미션 목록 표시
-    func fetchMissionList(memberInterestId: Int, targetDate: String, status: [MemberMission.MissionStatusType]) -> Single<MemberMission.FetchMissionResponseDTO>
+    func fetchMissionList(memberInterestId: Int?, targetDate: String, status: [MemberMission.MissionStatusType]) -> Single<MemberMission.FetchMissionResponseDTO>
     // 미션 완료 및 삭제
     func setMissionStatus(id: Int, status: String) -> Single<MemberMission.MissionStatusResponseDTO>
     // 미션 달성 일정
@@ -92,7 +92,7 @@ final class MissionService: Service, MissionServiceProtocol {
         return request(url, method: .post, header: headers, body: body)
     }
     
-    func fetchMissionList(memberInterestId: Int, targetDate: String, status: [MemberMission.MissionStatusType]) -> Single<MemberMission.FetchMissionResponseDTO> {
+    func fetchMissionList(memberInterestId: Int?, targetDate: String, status: [MemberMission.MissionStatusType]) -> Single<MemberMission.FetchMissionResponseDTO> {
         
         let url: String = NetworkDefine.MissionAPI.list.url
         

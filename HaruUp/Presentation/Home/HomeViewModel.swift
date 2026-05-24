@@ -208,24 +208,23 @@ final class HomeViewModel {
     }
     
     private func loadSelectedMissions() -> Observable<[Mission]> {
-        // 챗봇으로 생성된 미션은 백엔드에서 GOAL_BASED_INTEREST_ID = 0 으로 저장됨
-        return Single.just(0)
-            .asObservable()
+        return Observable.just(())
             .do(
                 onSubscribe: { [weak self] in self?.loadingRelay.accept(true) },
                 onDispose:   { [weak self] in self?.loadingRelay.accept(false) }
             )
-            .flatMap { [weak self] id -> Observable<MemberMission.FetchMissionResponseDTO> in
+            .flatMap { [weak self] _ -> Observable<MemberMission.FetchMissionResponseDTO> in
                 guard let self = self else { return .empty() }
-                
+
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy-MM-dd"
                 let todayString = formatter.string(from: Date())
-                
+
                 let status: [MemberMission.MissionStatusType] = [.completed, .active]
-                
+
+                // memberInterestId를 nil로 전달 → 백엔드에서 오늘 전체 미션 반환
                 return self.missionService.fetchMissionList(
-                    memberInterestId: id,
+                    memberInterestId: nil,
                     targetDate: todayString,
                     status: status
                 ).asObservable()
@@ -237,7 +236,7 @@ final class HomeViewModel {
                     Mission(
                         id: mission.id,
                         title: mission.missionContent,
-                        difficulty: MissionDifficultyModel(rawValue: mission.difficulty) ?? .low,
+                        difficulty: MissionDifficultyModel.from(difficulty: mission.difficulty),
                         exp: mission.expEarned,
                         isCompleted: mission.missionStatus == "COMPLETED"
                     )
