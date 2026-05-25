@@ -210,29 +210,29 @@ final class MyPageViewModel {
     
     // 로그아웃 실행
     func performLogout() -> Single<Void> {
-        guard let refreshToken = tokenStorage.getRefreshToken() else {
-            return Single.error(NSError(domain: "MyPageViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "리프레시 토큰을 찾을 수 없습니다."]))
+        let refreshToken = tokenStorage.getRefreshToken()
+        guard refreshToken != nil || tokenStorage.getAccessToken() != nil else {
+            return Single.error(NSError(domain: "MyPageViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "인증 토큰을 찾을 수 없습니다."]))
         }
-        
-        return authAPI.logout(refreshToken: refreshToken)
+
+        return authAPI.logout(refreshToken: refreshToken ?? "")
             .map { response in
-                print("response : \(response)")
                 if response.success {
                     self.tokenStorage.clearForLogout()
                 } else {
                     throw NSError(domain: "MyPageViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: response.message ?? "로그아웃에 실패했습니다."])
-                    
                 }
             }
     }
-    
+
     // 탈퇴 실행
     func performWithdraw() -> Single<Void> {
-        guard let refreshToken = tokenStorage.getRefreshToken() else {
-            return Single.error(NSError(domain: "MyPageViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "리프레시 토큰을 찾을 수 없습니다."]))
+        let refreshToken = tokenStorage.getRefreshToken()
+        guard refreshToken != nil || tokenStorage.getAccessToken() != nil else {
+            return Single.error(NSError(domain: "MyPageViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "인증 토큰을 찾을 수 없습니다."]))
         }
-        
-        return authAPI.withdraw(refreshToken: refreshToken)
+
+        return authAPI.withdraw(refreshToken: refreshToken ?? "")
             .map { response in
                 if response.success {
                     self.tokenStorage.clearForWithdraw()
