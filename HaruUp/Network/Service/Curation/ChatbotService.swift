@@ -31,4 +31,10 @@ final class ChatbotService: Service {
         let body = ChatbotAnswerRequest(sessionId: sessionId, answer: answer)
         return request(NetworkDefine.ChatbotAPI.answer.url, method: .post, header: authHeader(), body: body)
     }
+
+    // 챗봇 온보딩 완료 후 캐릭터 + 닉네임 저장
+    func chatbotSetup(characterId: Int, nickname: String) -> Single<GenericResponse<String>> {
+        let body = ChatbotSetupRequest(characterId: characterId, nickname: nickname)
+        return request(NetworkDefine.ChatbotAPI.chatbotSetup.url, method: .post, header: authHeader(), body: body)
+    }
 }

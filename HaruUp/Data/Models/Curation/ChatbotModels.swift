@@ -12,6 +12,12 @@ struct ChatbotAnswerRequest: Encodable {
     let answer: String
 }
 
+// POST /api/member/curation/chatbot-setup 에 보낼 body
+struct ChatbotSetupRequest: Encodable {
+    let characterId: Int
+    let nickname: String
+}
+
 // ── 응답 ──────────────────────────────────
 // POST /chatbot/start 응답
 struct ChatbotStartData: Codable {

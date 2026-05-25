@@ -31,7 +31,8 @@ final class CurationChatCoordinator: Coordinator {
         navigationController.pushViewController(viewController, animated: true)
     }
     
-    func didFinishChat(missions: [ChatbotMissionDto]) {
+    func didFinishChat(missions: [ChatbotMissionDto], nickname: String) {
+        curationData.nickname = nickname
         TokenStorageService.shared.saveOnboardingCompleted(true)
         onFinish?(curationData)
     }

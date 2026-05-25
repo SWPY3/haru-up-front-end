@@ -19,12 +19,14 @@ enum NetworkDefine {
     
     enum ChatbotAPI {
         case start
-        case answer  
+        case answer
+        case chatbotSetup
 
         var path: String {
             switch self {
-            case .start:  return "api/member/curation/chatbot/start"
-            case .answer: return "api/member/curation/chatbot/answer"
+            case .start:        return "api/member/curation/chatbot/start"
+            case .answer:       return "api/member/curation/chatbot/answer"
+            case .chatbotSetup: return "api/member/curation/chatbot-setup"
             }
         }
 

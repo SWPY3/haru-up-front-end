@@ -21,6 +21,7 @@ final class AppCoordinator: Coordinator {
     private let tokenStorage = TokenStorageService.shared
     private var curationData = CurationData()
     private let disposeBag = DisposeBag()
+    private let chatbotService = ChatbotService()
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -186,33 +187,35 @@ final class AppCoordinator: Coordinator {
                                                                     curationData: curationData)
         
         characterSelectCoordinator.onFinish = { [weak self, weak characterSelectCoordinator] curationData in
-            print("📦 ===== 최종 수집된 데이터 ===== 📦")
-            print("캐릭터 ID: \(curationData.characterId ?? -1)")
-            print("닉네임: \(curationData.nickname ?? "없음")")
-            print("직업: \(curationData.job?.jobName ?? "없음")")
-            print("세부 직무: \(curationData.jobDetail?.jobDetailName ?? "없음")")
-            print("성별: \(curationData.gender ?? "없음")")
-            print("생년월일: \(curationData.birthDate ?? "없음")")
-            print("관심사: \(curationData.interest?.name ?? "없음")")
-            print("세부 관심사: \(curationData.interestDetail?.name ?? "없음")")
-            print("목표: \(curationData.goal?.name ?? "없음")")
-            print("📦 ========================== 📦")
-            
-            self?.tokenStorage.saveCurationData(curationData)
-//            TokenStorageService.shared.saveCurationData(curationData)
-            print("✅ 큐레이션 데이터 저장 완료")
-            
-            // 온보딩 완료!!
-            self?.tokenStorage.saveOnboardingCompleted(true)
-            print("✅온보딩 완료!! - onboardingCompleted: \(TokenStorageService.shared.isOnboardingCompleted)")
+            guard let self = self else { return }
 
-            
+            self.tokenStorage.saveCurationData(curationData)
+            self.tokenStorage.saveOnboardingCompleted(true)
+
             if let coordinator = characterSelectCoordinator,
-               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
-                self?.childCoordinators.remove(at: index)
-                print("🗑️ CharacterSelectCoordinator 제거됨 (남은 자식: \(self?.childCoordinators.count ?? 0))")
+               let index = self.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self.childCoordinators.remove(at: index)
             }
-            self?.showMainTabFlow()
+
+            // 캐릭터 ID와 닉네임만 서버에 등록 (챗봇 플로우: 관심사/직업 불필요)
+            guard let characterId = curationData.characterId,
+                  let nickname = curationData.nickname else {
+                self.showMainTabFlow()
+                return
+            }
+
+            self.chatbotService.chatbotSetup(characterId: characterId, nickname: nickname)
+                .observe(on: MainScheduler.instance)
+                .subscribe(
+                    onSuccess: { [weak self] _ in
+                        self?.showMainTabFlow()
+                    },
+                    onFailure: { [weak self] _ in
+                        // API 실패해도 홈으로 이동 (캐릭터는 서버에서 멱등 처리)
+                        self?.showMainTabFlow()
+                    }
+                )
+                .disposed(by: self.disposeBag)
         }
         
         childCoordinators.append(characterSelectCoordinator)
