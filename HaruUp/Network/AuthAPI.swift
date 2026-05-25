@@ -80,14 +80,20 @@ final class AuthAPI: AuthAPIProtocol {
     // 탈퇴하기
     func withdraw(refreshToken: String) -> Single<GenericResponse<EmptyResponseData>> {
         let url = NetworkDefine.AuthAPI.withdraw.url
-        
+
         var headers: HTTPHeaders = ["Content-Type": "application/json"]
-        headers["jwt-token"] = refreshToken
-        
+        if !refreshToken.isEmpty {
+            headers["jwt-token"] = refreshToken
+        }
+        // 리프레시 토큰이 없는 경우 액세스 토큰으로 인증 (백엔드 필터가 두 헤더 모두 허용)
+        if let accessToken = TokenStorageService.shared.getAccessToken() {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
+
         struct WithdrawBody: Encodable {
             let password: String
         }
-        
+
         return self.request(url, method: .post, header: headers, body: WithdrawBody(password: ""))
     }
 }
