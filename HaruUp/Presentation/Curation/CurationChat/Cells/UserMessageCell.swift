@@ -38,8 +38,10 @@ final class UserMessageCell: UITableViewCell {
 
         bubbleView.anchor(
             top: contentView.topAnchor,
+            bottom: contentView.bottomAnchor,
             right: contentView.rightAnchor,
             paddingTop: 8,
+            paddingBottom: 8,
             paddingRight: 16
         )
         bubbleView.widthAnchor.constraint(
