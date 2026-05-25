@@ -238,8 +238,16 @@ final class MissionBottomSheetViewController: UIViewController {
         output.dismiss
             .emit(onNext: { [weak self] in
                 self?.hideBottomSheet()
-                
+
                 self?.onMissionStatusChanged?()
+            })
+            .disposed(by: disposeBag)
+
+        output.errorMessage
+            .emit(onNext: { [weak self] message in
+                let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "확인", style: .default))
+                self?.present(alert, animated: true)
             })
             .disposed(by: disposeBag)
     }
