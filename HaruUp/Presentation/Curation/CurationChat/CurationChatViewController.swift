@@ -405,7 +405,8 @@ extension CurationChatViewController: UITableViewDataSource {
             cell.configure(
                 text: message.text,
                 highlightedText: message.highlightedText,
-                subtitleText: message.subtitleText
+                subtitleText: message.subtitleText,
+                isShimmering: message.isShimmering
             )
             return cell
 

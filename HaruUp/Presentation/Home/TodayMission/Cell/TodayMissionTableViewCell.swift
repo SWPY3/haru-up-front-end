@@ -51,10 +51,19 @@ final class TodayMissionTableViewCell: UITableViewCell {
         let label = UILabel()
         label.textColor = .black
         label.numberOfLines = 0
-        
+
         return label
     }()
-    
+
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .neutral700
+        label.numberOfLines = 0
+        label.isHidden = true
+
+        return label
+    }()
+
     private let badgeStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
@@ -121,7 +130,7 @@ final class TodayMissionTableViewCell: UITableViewCell {
         cardView.addSubview(hStackView)
         hStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        [missionLabel, badgeStackView].forEach {
+        [missionLabel, descriptionLabel, badgeStackView].forEach {
             hStackView.addArrangedSubview($0)
         }
         
@@ -143,11 +152,24 @@ final class TodayMissionTableViewCell: UITableViewCell {
         }
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        descriptionLabel.isHidden = true
+        descriptionLabel.text = nil
+    }
+
     func configure(mission: Mission) {
         missionLabel.setStyle(Typography.subtitle2, text: mission.title)
         difficultyBadge.configure(difficulty: mission.difficulty)
         expBadge.configure(exp: mission.exp)
-//        setSelected(mission.isCompleted, animated: false)
+
+        if let desc = mission.description, !desc.isEmpty {
+            descriptionLabel.setStyle(Typography.body4, text: desc)
+            descriptionLabel.textColor = .neutral700
+            descriptionLabel.isHidden = false
+        } else {
+            descriptionLabel.isHidden = true
+        }
     }
     
     func updateSelectionState(isSelected: Bool, isDisabled: Bool) {

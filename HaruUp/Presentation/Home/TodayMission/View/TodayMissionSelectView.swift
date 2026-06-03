@@ -42,15 +42,15 @@ final class TodayMissionSelectView: UIView {
         let label = UILabel()
         label.setStyle(Typography.body3, text: "추가 선택 가능한 미션")
         label.textColor = .black
-        
+
         return label
     }()
     
     private let countLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.title3, text: "0개")
-        label.textColor = .cta // 0개인 경우 .neutral400
-        
+        label.setStyle(Typography.title3, text: "5개")
+        label.textColor = .cta
+
         return label
     }()
     
@@ -148,11 +148,11 @@ final class TodayMissionSelectView: UIView {
     }
     
     func updateSelectionCount(_ count: Int) {
-        let allCount: Int = 5
-        let selectableCount = allCount - count
-        let countText = "\(selectableCount)개"
-        
+        let maxCount = 5
+        let remainingCount = maxCount - count
+        let countText = "\(remainingCount)개"
+
         countLabel.setStyle(Typography.title3, text: countText)
-        countLabel.textColor = selectableCount == 0 ? .neutral400 : .cta
+        countLabel.textColor = .cta
     }
 }

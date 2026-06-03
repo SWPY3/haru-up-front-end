@@ -204,15 +204,17 @@ final class AppCoordinator: Coordinator {
                 return
             }
 
+            let missions = curationData.chatbotMissions ?? []
+
             self.chatbotService.chatbotSetup(characterId: characterId, nickname: nickname)
                 .observe(on: MainScheduler.instance)
                 .subscribe(
                     onSuccess: { [weak self] _ in
-                        self?.showMainTabFlow()
+                        self?.showMissionSelectionFlow(missions: missions)
                     },
                     onFailure: { [weak self] _ in
-                        // API 실패해도 홈으로 이동 (캐릭터는 서버에서 멱등 처리)
-                        self?.showMainTabFlow()
+                        // API 실패해도 미션 선택 화면으로 이동 (캐릭터는 서버에서 멱등 처리)
+                        self?.showMissionSelectionFlow(missions: missions)
                     }
                 )
                 .disposed(by: self.disposeBag)
@@ -223,6 +225,26 @@ final class AppCoordinator: Coordinator {
     }
     
     
+    private func showMissionSelectionFlow(missions: [ChatbotMissionDto]) {
+        let missionCoordinator = TodayMissionCoordinator(
+            navigationController: navigationController,
+            missionService: MissionService(),
+            interestsService: InterestsService.shared,
+            chatbotMissions: missions.isEmpty ? nil : missions
+        )
+
+        missionCoordinator.onFinish = { [weak self, weak missionCoordinator] in
+            if let coordinator = missionCoordinator,
+               let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
+                self?.childCoordinators.remove(at: index)
+            }
+            self?.showMainTabFlow()
+        }
+
+        childCoordinators.append(missionCoordinator)
+        missionCoordinator.start()
+    }
+
     private func showLoadingFlow() {
         let loadingCoordinator = LoadingCoordinator(navigationController: navigationController, curationData: curationData)
         

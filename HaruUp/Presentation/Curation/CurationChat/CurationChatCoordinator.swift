@@ -33,6 +33,7 @@ final class CurationChatCoordinator: Coordinator {
     
     func didFinishChat(missions: [ChatbotMissionDto], nickname: String) {
         curationData.nickname = nickname
+        curationData.chatbotMissions = missions
         TokenStorageService.shared.saveOnboardingCompleted(true)
         onFinish?(curationData)
     }

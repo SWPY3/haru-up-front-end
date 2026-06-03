@@ -19,7 +19,10 @@ class CurationData: Codable{
     var goal: InterestData?
     
     var memberInterestIds: [Int]?
-    
+
+    /// 챗봇 완료 후 받은 미션 목록 (선택 화면에 전달용, 로컬 전달 전용)
+    var chatbotMissions: [ChatbotMissionDto]?
+
     init() {}
     
     
