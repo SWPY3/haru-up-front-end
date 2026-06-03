@@ -245,18 +245,20 @@ final class TodayMissionListViewModel {
         if let saved = UserDefaultsManager.shared.selectedMemberInterestId {
             return .just(saved)
         }
-        
-        // 없을 시 서버에 요청 후 데이터 값 저장
+
+        // 없을 시 서버에 요청
         return interestsService.fetchInterests()
-            .map { [weak self] dto in
+            .map { dto -> Int in
                 guard let id = dto.interests.first?.memberInterestId else {
-                    throw NSError(domain: "Interests",
-                                  code: -1,
-                                  userInfo: [NSLocalizedDescriptionKey: "관심사가 없습니다."])
+                    // 챗봇 사용자는 관심사가 없음 → goalBased interestId(0)로 조회
+                    return 0
                 }
-                
-                UserDefaultsManager.shared.selectedMemberInterestId = id // UserDefaults 값 업데이트
+                UserDefaultsManager.shared.selectedMemberInterestId = id
                 return id
+            }
+            .catch { _ in
+                // API 오류(네트워크, 인증 등) 발생 시에도 goalBased interestId(0)로 폴백
+                return .just(0)
             }
     }
 }

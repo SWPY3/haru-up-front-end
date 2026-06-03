@@ -327,7 +327,7 @@ class TodayMissionListViewController: UIViewController {
         output.errorMessage
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] message in
-                print("미션 추천 에러: \(message)")
+                // TODO: 에러 토스트 등 UI 처리 추가 예정
             })
             .disposed(by: disposeBag)
         
@@ -340,7 +340,6 @@ class TodayMissionListViewController: UIViewController {
         
         output.selectedIDs
             .subscribe(onNext: { [weak self] ids in
-                print("😁 selected Ids : \(ids)")
                 self?.currentSelectedIDs = ids
             })
             .disposed(by: disposeBag)
