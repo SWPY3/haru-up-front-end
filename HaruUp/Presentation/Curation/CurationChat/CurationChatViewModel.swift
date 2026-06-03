@@ -24,13 +24,15 @@ struct ChatMessage {
     let highlightedText: String?
     let suggestions: [String]
     let subtitleText: String?
+    let isShimmering: Bool
 
     init(
         type: ChatMessageType,
         text: String,
         highlightedText: String? = nil,
         suggestions: [String] = [],
-        subtitleText: String? = nil
+        subtitleText: String? = nil,
+        isShimmering: Bool = false
     ) {
         self.id = UUID()
         self.type = type
@@ -38,6 +40,7 @@ struct ChatMessage {
         self.highlightedText = highlightedText
         self.suggestions = suggestions
         self.subtitleText = subtitleText
+        self.isShimmering = isShimmering
     }
 }
 
@@ -199,7 +202,8 @@ final class CurationChatViewModel {
             if isLastQuestion {
                 appendMessage(ChatMessage(
                     type: .bot,
-                    text: "\(collectedNickname)님을 위한 맞춤 미션을 만드는 중이에요! 🤖"
+                    text: "\(collectedNickname)님을 위한 맞춤 미션을 만드는 중이에요!",
+                    isShimmering: true
                 ))
             }
 

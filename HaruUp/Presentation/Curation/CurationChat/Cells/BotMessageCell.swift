@@ -31,6 +31,12 @@ final class BotMessageCell: UITableViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
+    
+    private let shimmerTextView: ShimmerTextLabel = {
+        let view = ShimmerTextLabel()
+        view.isHidden = true
+        return view
+    }()
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
@@ -48,6 +54,7 @@ final class BotMessageCell: UITableViewCell {
 
         contentView.addSubview(bubbleView)
         bubbleView.addSubview(messageLabel)
+        bubbleView.addSubview(shimmerTextView)
         contentView.addSubview(subtitleLabel)
 
         bubbleView.anchor(
@@ -70,7 +77,18 @@ final class BotMessageCell: UITableViewCell {
             paddingBottom: 12,
             paddingRight: 14
         )
-
+        
+        shimmerTextView.anchor(
+            top: bubbleView.topAnchor,
+            left: bubbleView.leftAnchor,
+            bottom: bubbleView.bottomAnchor,
+            right: bubbleView.rightAnchor,
+            paddingTop: 12,
+            paddingLeft: 14,
+            paddingBottom: 12,
+            paddingRight: 14
+        )
+        
         subtitleLabel.anchor(
             top: bubbleView.bottomAnchor,
             left: bubbleView.leftAnchor,
@@ -89,21 +107,41 @@ final class BotMessageCell: UITableViewCell {
         super.prepareForReuse()
         subtitleLabel.isHidden = true
         messageLabel.attributedText = nil
+        
+        messageLabel.isHidden = false
+        shimmerTextView.isHidden = true
+        shimmerTextView.stopShimmering()
     }
 
-    func configure(text: String, highlightedText: String? = nil, subtitleText: String? = nil) {
-        if let highlighted = highlightedText {
-            messageLabel.setStyledText(
-                Typography.body4,
-                fullText: text,
-                highlightedText: highlighted,
-                highlightedColor: .black,
-                defaultColor: .neutral800,
-                highlightedFont: Typography.body2.font
-            )
-        } else {
+    func configure(text: String, highlightedText: String? = nil, subtitleText: String? = nil, isShimmering: Bool = false) {
+        if isShimmering {
+            // bubbleView 높이 확보를 위해 messageLabel에도 텍스트 설정 (표시는 숨김)
             messageLabel.setStyle(Typography.body4, text: text)
-            messageLabel.textColor = .black
+            messageLabel.isHidden = true
+            shimmerTextView.isHidden = false
+
+            shimmerTextView.text = text
+            shimmerTextView.font = Typography.body4.font
+
+            shimmerTextView.startShimmering()
+        } else {
+            messageLabel.isHidden = false
+            shimmerTextView.isHidden = true
+            shimmerTextView.stopShimmering()
+            
+            if let highlighted = highlightedText {
+                messageLabel.setStyledText(
+                    Typography.body4,
+                    fullText: text,
+                    highlightedText: highlighted,
+                    highlightedColor: .black,
+                    defaultColor: .neutral800,
+                    highlightedFont: Typography.body2.font
+                )
+            } else {
+                messageLabel.setStyle(Typography.body4, text: text)
+                messageLabel.textColor = .black
+            }
         }
 
         if let subtitle = subtitleText {
