@@ -32,8 +32,9 @@ enum MemberMission {
         let difficulty: Int
         let expEarned: Int
         let targetDate: String
-        
-        static let empty = Self(memberMissionId: 0, missionStatus: "", content: "", directFullPath: [], difficulty: 0, expEarned: 0, targetDate: "")
+        let missionDescription: String?
+
+        static let empty = Self(memberMissionId: 0, missionStatus: "", content: "", directFullPath: [], difficulty: 0, expEarned: 0, targetDate: "", missionDescription: nil)
     }
     
     /// 여러 관심사를 입력했을 대 얻을 수 있는 미션 추천
@@ -79,11 +80,12 @@ enum MemberMission {
                 directFullPath: self.directFullPath,
                 difficulty: self.difficulty,
                 expEarned: self.expEarned,
-                targetDate: ""
+                targetDate: "",
+                missionDescription: nil
             )
         }
     }
-    
+
     /// 미션 재 요청
     struct RetryRecommendRequestDTO: Encodable {
         let memberInterestId: Int
@@ -128,11 +130,12 @@ enum MemberMission {
                 directFullPath: self.directFullPath,
                 difficulty: self.difficulty,
                 expEarned: self.expEarned,
-                targetDate: ""
+                targetDate: "",
+                missionDescription: nil
             )
         }
     }
-    
+
     // MARK: 미션 선택
     struct SelectMissionRequestDTO: Encodable {
         let memberMissionIds: [Int]

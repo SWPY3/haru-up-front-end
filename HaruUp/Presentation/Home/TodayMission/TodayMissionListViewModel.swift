@@ -61,7 +61,8 @@ final class TodayMissionListViewModel {
                 directFullPath: [],
                 difficulty: dto.difficulty,
                 expEarned: dto.expEarned,
-                targetDate: ""
+                targetDate: "",
+                missionDescription: dto.missionDescription
             )
         }
         self.selectedMissionIDRelay.accept(self.fixedMissionIDs)
