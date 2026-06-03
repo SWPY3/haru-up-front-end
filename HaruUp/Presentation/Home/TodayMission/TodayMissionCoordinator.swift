@@ -18,24 +18,31 @@ final class TodayMissionCoordinator: Coordinator {
     
     /// 이전에 선택된 미션 ID 목록 (추가 모드일 때 사용)
     private let preSelectedIDs: [Int]
-    
+
+    /// 챗봇 완료 후 직접 주입되는 미션 목록
+    private let chatbotMissions: [ChatbotMissionDto]?
+
     init(navigationController: UINavigationController,
          missionService: MissionServiceProtocol,
          interestsService: InterestsService,
-         preSelectedIDs: [Int] = []) {
-        
+         preSelectedIDs: [Int] = [],
+         chatbotMissions: [ChatbotMissionDto]? = nil) {
+
         self.navigationController = navigationController
         self.missionService = missionService
         self.interestsService = interestsService
         self.preSelectedIDs = preSelectedIDs
+        self.chatbotMissions = chatbotMissions
     }
-    
+
     func start() {
-        // 이미 선택된 ID가 있다면 (미션 추가 모드) -> Intro 생략하고 바로 리스트로
-        if !preSelectedIDs.isEmpty {
+        // 챗봇 플로우: Intro 생략하고 바로 미션 목록
+        if chatbotMissions != nil {
+            showMissionList()
+        // 추가 모드: 이미 선택된 ID가 있는 경우 Intro 생략
+        } else if !preSelectedIDs.isEmpty {
             showMissionList()
         } else {
-            // 처음 진입하는 경우 -> Intro 부터 시작
             showIntro()
         }
     }
@@ -53,11 +60,11 @@ final class TodayMissionCoordinator: Coordinator {
     }
     
     private func showMissionList() {
-        // ViewModel에 preSelectedMissionIDs 전달
         let viewModel = TodayMissionListViewModel(
             missionService: missionService,
             interestsService: interestsService,
-            preSelectedMissionIDs: preSelectedIDs // <- ViewModel에 전달
+            preSelectedMissionIDs: preSelectedIDs,
+            chatbotMissions: chatbotMissions
         )
         let viewController = TodayMissionListViewController(viewModel: viewModel)
         

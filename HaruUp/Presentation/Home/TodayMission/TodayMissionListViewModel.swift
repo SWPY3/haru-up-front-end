@@ -38,21 +38,32 @@ final class TodayMissionListViewModel {
     private let selectedMissionIDRelay = BehaviorRelay<Set<Int>>(value: [])
     
     private let disposeBag = DisposeBag()
-    
+
     // 변경 불가능한(이미 선택된) 미션 ID들을 저장할 Set
     private let fixedMissionIDs: Set<Int>
-    
-    // Init 수정: preSelectedMissionIDs 파라미터 추가
+
+    /// 챗봇 플로우: 이미 생성된 미션을 API 재호출 없이 직접 주입
+    private let chatbotMissions: [MemberMission.MissionDTO]?
+
     init(missionService: MissionServiceProtocol,
          interestsService: InterestsService,
-         preSelectedMissionIDs: [Int]) {
-        
+         preSelectedMissionIDs: [Int] = [],
+         chatbotMissions: [ChatbotMissionDto]? = nil) {
+
         self.missionService = missionService
         self.interestsService = interestsService
-        
         self.fixedMissionIDs = Set(preSelectedMissionIDs)
-        
-        print("😁 fixedMissionIDs : \(fixedMissionIDs)")
+        self.chatbotMissions = chatbotMissions?.map { dto in
+            MemberMission.MissionDTO(
+                memberMissionId: dto.id,
+                missionStatus: "READY",
+                content: dto.missionContent,
+                directFullPath: [],
+                difficulty: dto.difficulty,
+                expEarned: dto.expEarned,
+                targetDate: ""
+            )
+        }
         self.selectedMissionIDRelay.accept(self.fixedMissionIDs)
     }
     
@@ -65,34 +76,30 @@ final class TodayMissionListViewModel {
         let initialLoad = Observable.merge(input.viewDidLoad, input.refreshTap)
         
         initialLoad
-            .withUnretained(self)
-            .flatMapLatest { [weak self] _ -> Observable<[MemberMission.MissionDTO]> in // 최종 리턴 타입은 [MissionDTO]
+            .flatMapLatest { [weak self] _ -> Observable<[MemberMission.MissionDTO]> in
                 guard let self = self else { return .empty() }
-                
+
+                // 챗봇 플로우: 미션이 직접 주입된 경우 API 호출 생략
+                if let injected = self.chatbotMissions {
+                    return .just(injected)
+                }
+
                 loadingSubject.onNext(true)
-                
+
                 return self.resolveMemberInterestId()
                     .flatMap { id -> Single<[MemberMission.MissionDTO]> in
                         return self.missionService.requestRecommendedMissions(memberInterestId: id)
                             .flatMap { response -> Single<[MemberMission.MissionDTO]> in
                                 let data = response.data
                                 let missions = data.missions
-                                
                                 self.retryCountRelay.accept(data.retryCount)
-                                
                                 if !missions.isEmpty {
-                                    // 데이터가 있으면 그대로 리턴
                                     return .just(missions)
                                 } else {
-                                    // 데이터가 비어있으면 두 번째 API 호출 (다중 ID 추천)
-                                    // id를 배열 [id] 형태로 감싸서 전달
                                     return self.missionService.requestRecommendedMultipleMissions(memberInterestIds: [id])
                                         .map { multipleResponse in
                                             self.retryCountRelay.accept(multipleResponse.data.retryCount)
-                                            // MultipleMissionDTO 배열을 MissionDTO 배열로 변환 - 현재 관심사가 하나이므로 first로 구현
-                                            return multipleResponse.data.missions.first?.data.map { mission in
-                                                mission.toMissionDTO()
-                                            } ?? []
+                                            return multipleResponse.data.missions.first?.data.map { $0.toMissionDTO() } ?? []
                                         }
                                 }
                             }
@@ -102,18 +109,13 @@ final class TodayMissionListViewModel {
                         errorSubject.onNext(err.localizedDescription)
                         return .just([])
                     }
-                    .do(onDispose: {
-                        loadingSubject.onNext(false)
-                    })
+                    .do(onDispose: { loadingSubject.onNext(false) })
             }
             .subscribe(onNext: { [weak self] missions in
                 guard let self = self else { return }
-                
                 loadingSubject.onNext(false)
-                
-                let filteredMissions = missions.filter { !self.fixedMissionIDs.contains($0.memberMissionId) }
-                self.currentMissionsRelay.accept(filteredMissions)
-                
+                let filtered = missions.filter { !self.fixedMissionIDs.contains($0.memberMissionId) }
+                self.currentMissionsRelay.accept(filtered)
                 self.selectedMissionIDRelay.accept(self.fixedMissionIDs)
             })
             .disposed(by: disposeBag)
