@@ -86,6 +86,7 @@ final class CurationChatViewModel {
     private enum ChatPhase { case nickname, chatbot }
     private var currentPhase: ChatPhase = .nickname
     private var collectedNickname: String = ""
+    private var isLastQuestion: Bool = false
 
     init(coordinator: CurationChatCoordinator, characterId: Int, chatbotService: ChatbotService) {
         self.coordinator = coordinator
@@ -178,6 +179,7 @@ final class CurationChatViewModel {
         isCompletedRelay.accept(false)
         currentPhase = .nickname
         collectedNickname = ""
+        isLastQuestion = false
         showNicknameQuestion()
     }
 
@@ -192,6 +194,15 @@ final class CurationChatViewModel {
         case .chatbot:
             guard let sessionId = sessionId else { return }
             appendMessage(ChatMessage(type: .user, text: trimmed))
+
+            // 마지막 질문의 답변인 경우 미션 생성 중 메시지를 먼저 표시
+            if isLastQuestion {
+                appendMessage(ChatMessage(
+                    type: .bot,
+                    text: "\(collectedNickname)님을 위한 맞춤 미션을 만드는 중이에요! 🤖"
+                ))
+            }
+
             isLoadingRelay.accept(true)
             chatbotService.answer(sessionId: sessionId, answer: trimmed)
                 .observe(on: MainScheduler.instance)
@@ -366,7 +377,8 @@ final class CurationChatViewModel {
             // 진행 중 → 다음 질문 표시
             guard let question = data.question else { return }
             let isLast = data.isLast ?? false
-            
+            isLastQuestion = isLast   // 다음 답변이 마지막인지 기록
+
             appendMessage(ChatMessage(type: .bot, text: question,
                                       subtitleText: isLast ? "마지막 질문이에요!" : nil))
         }
