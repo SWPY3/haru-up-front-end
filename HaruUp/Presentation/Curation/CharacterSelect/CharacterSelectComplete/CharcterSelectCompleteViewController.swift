@@ -16,6 +16,8 @@ class CharacterSelectCompleteViewController: UIViewController {
     // MARK: - Properties
     private let viewModel: CharacterSelectCompleteViewModel
     private let disposeBag = DisposeBag()
+    private var animationTopConstraint: NSLayoutConstraint?
+    private var shadowBottomConstraint: NSLayoutConstraint?
     
     // MARK: - UI Components
     private let backgroundImageView: UIImageView = {
@@ -90,14 +92,15 @@ class CharacterSelectCompleteViewController: UIViewController {
         
         
         characterAnimationView.centerX(inView: view)
-        characterAnimationView.anchor(top: speechBubbleView.bottomAnchor, paddingTop: 20, width: 260, height: 260)
+        let topConstraint = characterAnimationView.topAnchor.constraint(equalTo: speechBubbleView.bottomAnchor, constant: 20)
+        topConstraint.isActive = true
+        animationTopConstraint = topConstraint
+        characterAnimationView.anchor(width: 260, height: 260)
         
         characterShadowImageView.centerX(inView: characterAnimationView)
-        characterShadowImageView.anchor(
-            bottom: characterAnimationView.bottomAnchor,
-            paddingBottom: 30
-            
-        )
+        let shadowConstraint = characterShadowImageView.bottomAnchor.constraint(equalTo: characterAnimationView.bottomAnchor, constant: -30)
+        shadowConstraint.isActive = true
+        shadowBottomConstraint = shadowConstraint
         
         nextButton.anchor(left: view.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.rightAnchor,
                           paddingLeft: 20, paddingBottom: 10, paddingRight: 20, height: 56)
@@ -113,6 +116,26 @@ class CharacterSelectCompleteViewController: UIViewController {
         // 캐릭터 애니메이션 로드
         characterAnimationView.animation = LottieAnimation.named("\(characterName)_animation")
         characterAnimationView.play()
+
+        // naru는 정사각형 비율이라 haru와 동일한 중심 위치·높이로 맞춤
+        // haru 중심 Y = top(20) + height(260)/2 = 150
+        // naru top = 150 - height(174)/2 = 63
+        let animationSize: CGFloat = output.characterId == 1 ? 260 : 174
+        let animationTopPadding: CGFloat = output.characterId == 1 ? 20 : 63
+        characterAnimationView.constraints.filter {
+            $0.firstAttribute == .width || $0.firstAttribute == .height
+        }.forEach { $0.isActive = false }
+        NSLayoutConstraint.activate([
+            characterAnimationView.widthAnchor.constraint(equalToConstant: animationSize),
+            characterAnimationView.heightAnchor.constraint(equalToConstant: animationSize)
+        ])
+        animationTopConstraint?.constant = animationTopPadding
+
+        // naru는 정사각형으로 여백 없이 꽉 채워지므로 shadow를 발 위치에 맞게 조정
+        // haru: 뷰 하단에서 위로 30pt (scaleAspectFit으로 아래 여백 있음)
+        // naru: 뷰 하단에서 위로 10pt (여백 없이 꽉 참)
+        let shadowBottomPadding: CGFloat = output.characterId == 1 ? -30 : 15
+        shadowBottomConstraint?.constant = shadowBottomPadding
         
         output.currentStep
             .drive(onNext: { [weak self] step in
