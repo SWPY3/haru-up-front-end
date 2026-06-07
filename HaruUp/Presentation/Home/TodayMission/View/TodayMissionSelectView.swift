@@ -153,6 +153,6 @@ final class TodayMissionSelectView: UIView {
         let countText = "\(remainingCount)개"
 
         countLabel.setStyle(Typography.title3, text: countText)
-        countLabel.textColor = .cta
+        countLabel.textColor = remainingCount == 0 ? .neutral400 : .cta
     }
 }
