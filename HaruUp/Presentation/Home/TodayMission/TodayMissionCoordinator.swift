@@ -42,9 +42,24 @@ final class TodayMissionCoordinator: Coordinator {
         // 추가 모드: 이미 선택된 ID가 있는 경우 Intro 생략
         } else if !preSelectedIDs.isEmpty {
             showMissionList()
+        // 오늘 이미 Intro를 본 경우 생략
+        } else if hasShownIntroToday() {
+            showMissionList()
         } else {
+            markIntroShownToday()
             showIntro()
         }
+    }
+
+    private func hasShownIntroToday() -> Bool {
+        let today = DateFormatter.yyyyMMdd.string(from: Date())
+        let lastShownDate = UserDefaults.standard.string(forKey: UserDefaultsKey.lastIntroShownDate)
+        return lastShownDate == today
+    }
+
+    private func markIntroShownToday() {
+        let today = DateFormatter.yyyyMMdd.string(from: Date())
+        UserDefaults.standard.set(today, forKey: UserDefaultsKey.lastIntroShownDate)
     }
     
     private func showIntro() {
