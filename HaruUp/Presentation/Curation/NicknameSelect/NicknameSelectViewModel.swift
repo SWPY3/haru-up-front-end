@@ -58,15 +58,6 @@ final class NicknameSelectViewModel {
             }
             .share(replay: 1)
     
-        finalValidation
-            .filter { $0 == .success }
-            .withLatestFrom(currentNickname)
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .subscribe(onNext: { [weak self] nick in
-                self?.coordinator?.showJobSelectFlow(selectedNickname: nick)
-            })
-            .disposed(by: disposeBag)
-        
         return Output(
             isLengthValid: isLengthValid,
             buttonTapValidation: finalValidation.asDriver(onErrorJustReturn: .empty)
