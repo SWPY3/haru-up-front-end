@@ -134,6 +134,7 @@ class ExitConfirmModalViewController: UIViewController {
     }
     
     @objc private func restartTapped() {
+        AnalyticsManager.shared.track(event: AppEvent.CurationChat.exitConfirmTapped)
         dismiss(animated: true) { [weak self] in
             self?.onRestartTapped?()
         }

@@ -136,6 +136,31 @@ class AgreeViewController: UIViewController {
     
     private func bind() {
         // 1. Input 생성
+        allAgreeRow.checkButtonTap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Agree.allCheckTapped) })
+            .disposed(by: disposeBag)
+        term1Row.checkButtonTap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Agree.term1CheckTapped) })
+            .disposed(by: disposeBag)
+        term2Row.checkButtonTap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Agree.term2CheckTapped) })
+            .disposed(by: disposeBag)
+        term3Row.checkButtonTap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Agree.term3CheckTapped) })
+            .disposed(by: disposeBag)
+        term1Row.arrowButtonTap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Agree.term1DetailTapped) })
+            .disposed(by: disposeBag)
+        term2Row.arrowButtonTap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Agree.term2DetailTapped) })
+            .disposed(by: disposeBag)
+        confirmButton.rx.tap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Agree.confirmTapped) })
+            .disposed(by: disposeBag)
+        backButton.rx.tap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Agree.backTapped) })
+            .disposed(by: disposeBag)
+
         let input = AgreeViewModel.Input(
             allCheckTap: allAgreeRow.checkButtonTap.asObservable(),
             term1CheckTap: term1Row.checkButtonTap.asObservable(),

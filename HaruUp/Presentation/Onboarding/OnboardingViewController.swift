@@ -187,11 +187,21 @@ class OnboardingViewController: UIViewController {
     private func bindViewModel() {
         // Input 연결
         nextButton.rx.tap
-            .do(onNext: { print("👉 next button tapped") })
+            .do(onNext: { [weak self] in
+                print("👉 next button tapped")
+                let page = self?.viewModel.currentPage.value ?? 0
+                let isLast = page == 2
+                if isLast {
+                    AnalyticsManager.shared.track(event: AppEvent.Onboarding.complete)
+                } else {
+                    AnalyticsManager.shared.track(event: AppEvent.Onboarding.nextTapped, properties: ["page": page])
+                }
+            })
                .bind(to: viewModel.nextButtonTapped)
                .disposed(by: disposeBag)
-        
+
         skipButton.rx.tap
+            .do(onNext: { AnalyticsManager.shared.track(event: AppEvent.Onboarding.skipTapped) })
             .bind(to: viewModel.skipButtonTapped)
             .disposed(by: disposeBag)
         
@@ -240,6 +250,8 @@ extension OnboardingViewController: UIScrollViewDelegate {
 
     private func updatePageFromScroll(_ scrollView: UIScrollView) {
         let page = Int(round(scrollView.contentOffset.x / scrollView.bounds.width))
+        guard page != viewModel.currentPage.value else { return }
+        AnalyticsManager.shared.track(event: AppEvent.Onboarding.swipePage, properties: ["page": page])
         viewModel.currentPage.accept(page)
     }
 }

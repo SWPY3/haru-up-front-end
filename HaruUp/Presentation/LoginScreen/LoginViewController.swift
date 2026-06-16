@@ -120,6 +120,16 @@ class LoginViewController: UIViewController {
     
     // MARK: - bind
     private func bind() {
+        kakaoLoginButton.rx.tap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Login.kakaoLoginTapped) })
+            .disposed(by: disposeBag)
+        naverLoginButton.rx.tap
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Login.naverLoginTapped) })
+            .disposed(by: disposeBag)
+        appleLoginButton.rx.controlEvent(.touchUpInside)
+            .subscribe(onNext: { AnalyticsManager.shared.track(event: AppEvent.Login.appleLoginTapped) })
+            .disposed(by: disposeBag)
+
         let input = LoginViewModel.Input(
             kakaoLoginTapped: kakaoLoginButton.rx.tap.asObservable(),
             appleLoginTapped: appleLoginButton.rx.controlEvent(.touchUpInside).asObservable(),

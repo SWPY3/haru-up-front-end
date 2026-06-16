@@ -244,6 +244,7 @@ final class CurationChatViewController: UIViewController {
         output.isCompleted
             .drive(onNext: { [weak self] completed in
                 if completed {
+                    AnalyticsManager.shared.track(event: AppEvent.CurationChat.chatCompleted)
                     self?.inputTextView.isEditable = false
                     self?.sendButton.isEnabled = false
                     self?.inputTextView.text = "완료되었습니다"
@@ -272,6 +273,7 @@ final class CurationChatViewController: UIViewController {
             // 전송 버튼 중복 클릭 방지 (0.6초 이내 연타 무시)
             .throttle(.milliseconds(600), latest: false, scheduler: MainScheduler.instance)
             .subscribe(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.CurationChat.messageSent)
                 self?.sendMessage()
             })
             .disposed(by: disposeBag)
@@ -279,6 +281,7 @@ final class CurationChatViewController: UIViewController {
         // 닫기 버튼
         closeButton.rx.tap
             .subscribe(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.CurationChat.closeTapped)
                 self?.showExitModal()
             })
             .disposed(by: disposeBag)
@@ -426,6 +429,7 @@ extension CurationChatViewController: UITableViewDataSource {
                 return UITableViewCell()
             }
             cell.configure(suggestions: suggestions) { [weak self] text in
+                AnalyticsManager.shared.track(event: AppEvent.CurationChat.suggestionChipTapped, properties: ["chip": text])
                 self?.suggestionSubject.onNext(text)
             }
             return cell
@@ -460,6 +464,7 @@ extension CurationChatViewController: UITextViewDelegate {
 
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         if text == "\n" {
+            AnalyticsManager.shared.track(event: AppEvent.CurationChat.messageSent)
             sendMessage()
             return false
         }
