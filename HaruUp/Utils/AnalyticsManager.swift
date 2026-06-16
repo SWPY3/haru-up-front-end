@@ -9,7 +9,51 @@ import Foundation
 import AmplitudeSwift
 
 enum AppEvent {
-    
+
+    // MARK: - 로그인 화면 (Login)
+    enum Login: String {
+        case kakaoLoginTapped = "[Login] Kakao Login Tapped"    // 카카오 로그인 버튼
+        case naverLoginTapped = "[Login] Naver Login Tapped"    // 네이버 로그인 버튼
+        case appleLoginTapped = "[Login] Apple Login Tapped"    // Apple 로그인 버튼
+    }
+
+    // MARK: - 이용약관 화면 (Agree)
+    enum Agree: String {
+        case backTapped = "[Agree] Back Tapped"                 // 뒤로가기 버튼
+        case allCheckTapped = "[Agree] All Check Tapped"        // 모두 동의합니다
+        case term1CheckTapped = "[Agree] Term1 Check Tapped"    // [필수] 서비스 이용약관 체크
+        case term2CheckTapped = "[Agree] Term2 Check Tapped"    // [필수] 개인정보 수집 체크
+        case term3CheckTapped = "[Agree] Term3 Check Tapped"    // [필수] 만 14세 이상 체크
+        case term1DetailTapped = "[Agree] Term1 Detail Tapped"  // 서비스 이용약관 상세보기
+        case term2DetailTapped = "[Agree] Term2 Detail Tapped"  // 개인정보 수집 상세보기
+        case confirmTapped = "[Agree] Confirm Tapped"           // 동의하기 버튼
+    }
+
+    // MARK: - 온보딩 화면 (Onboarding)
+    enum Onboarding: String {
+        case nextTapped = "[Onboarding] Next Tapped"            // 다음 버튼 (property: page)
+        case skipTapped = "[Onboarding] Skip Tapped"            // 건너뛰기 버튼
+        case swipePage = "[Onboarding] Swipe Page"              // 스와이프 페이지 전환 (property: page)
+        case complete = "[Onboarding] Complete"                 // 온보딩 완료
+    }
+
+    // MARK: - 캐릭터 선택 화면 (CharacterSelect)
+    enum CharacterSelect: String {
+        case leftArrowTapped = "[CharacterSelect] Left Arrow Tapped"        // 왼쪽 화살표 버튼
+        case rightArrowTapped = "[CharacterSelect] Right Arrow Tapped"      // 오른쪽 화살표 버튼
+        case characterImageTapped = "[CharacterSelect] Character Image Tapped" // 캐릭터 이미지 탭
+        case nextTapped = "[CharacterSelect] Next Tapped"                   // 다음 버튼 (property: character)
+    }
+
+    // MARK: - 챗봇 입력 화면 (CurationChat)
+    enum CurationChat: String {
+        case closeTapped = "[CurationChat] Close Tapped"                    // X 닫기 버튼
+        case messageSent = "[CurationChat] Message Sent"                    // 답변 전송
+        case suggestionChipTapped = "[CurationChat] Suggestion Chip Tapped" // 추천 칩 탭 (property: chip)
+        case exitConfirmTapped = "[CurationChat] Exit Confirm Tapped"       // 종료 모달 - 처음부터 다시
+        case chatCompleted = "[CurationChat] Chat Completed"                // 챗봇 대화 완료
+    }
+
     // MARK: - 미션 시작 화면 (Mission Start)
     enum MissionStart: String {
         case startTapped = "[MissionStart] Start Recommendation Tapped" // 미션 추천 시작 버튼
