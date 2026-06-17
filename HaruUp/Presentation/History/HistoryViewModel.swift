@@ -62,9 +62,10 @@ final class HistoryViewModel {
             .flatMapLatest { [weak self] (dayInfo, month) -> Observable<[HistoryModel.Mission]> in
                 guard let self = self else { return .empty() }
                 
-                guard let id = UserDefaultsManager.shared.selectedMemberInterestId else {
-                    return .empty() // TODO: 해결 필요
-                }
+//                guard let id = UserDefaultsManager.shared.selectedMemberInterestId else {
+//                    return .empty() // TODO: 해결 필요
+//                }
+                let id = 0
                 let targetDate = self.formatDate(from: month, day: dayInfo.day)
                 let status: [MemberMission.MissionStatusType] = [.completed]
                 
