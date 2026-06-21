@@ -193,20 +193,22 @@ class CharacterSelectViewController: UIViewController {
         
         tapGesture.rx.event
             .subscribe(onNext: { [weak self] _ in
+                AnalyticsManager.shared.track(event: AppEvent.CharacterSelect.characterImageTapped)
                 self?.showNextCharacter()
             })
             .disposed(by: disposeBag)
-        
-        
+
         // 화살표 버튼 액션
         leftArrowButton.rx.tap
             .subscribe(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.CharacterSelect.leftArrowTapped)
                 self?.showPreviousCharacter()
             })
             .disposed(by: disposeBag)
-        
+
         rightArrowButton.rx.tap
             .subscribe(onNext: { [weak self] in
+                AnalyticsManager.shared.track(event: AppEvent.CharacterSelect.rightArrowTapped)
                 self?.showNextCharacter()
             })
             .disposed(by: disposeBag)
@@ -270,6 +272,15 @@ class CharacterSelectViewController: UIViewController {
     
     // MARK: - Bind ViewModel
     private func bindViewModel() {
+        nextButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                guard let self = self else { return }
+                let index = self.currentCharacterIndex.value
+                let characterName = index <= self.characters.count ? self.characters[index - 1].name : ""
+                AnalyticsManager.shared.track(event: AppEvent.CharacterSelect.nextTapped, properties: ["character": characterName])
+            })
+            .disposed(by: disposeBag)
+
         let input = CharacterSelectViewModel.Input(
             characterSelected: currentCharacterIndex.asObservable(),
             nextButtonTapped: nextButton.rx.tap.asObservable()
