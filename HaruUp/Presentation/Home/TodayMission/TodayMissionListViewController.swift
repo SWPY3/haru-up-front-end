@@ -51,6 +51,18 @@ class TodayMissionListViewController: UIViewController {
         
         return tableView
     }()
+
+    private let emptyStateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "추천된 미션이 없어요.\n잠시 후 다시 시도해주세요."
+        label.textColor = .neutral600
+        label.font = .pretendard(size: 16, weight: .medium)
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.isHidden = true
+
+        return label
+    }()
     
     private let refreshButton: UIButton = {
         let button = UIButton()
@@ -176,6 +188,9 @@ class TodayMissionListViewController: UIViewController {
     private func configureTableview() {
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
+
+        view.addSubview(emptyStateLabel)
+        emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
         
         tableView.delegate = self
         
@@ -184,6 +199,11 @@ class TodayMissionListViewController: UIViewController {
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: bottomViewContainer.topAnchor),
+
+            emptyStateLabel.centerXAnchor.constraint(equalTo: tableView.centerXAnchor),
+            emptyStateLabel.centerYAnchor.constraint(equalTo: tableView.centerYAnchor),
+            emptyStateLabel.leadingAnchor.constraint(greaterThanOrEqualTo: tableView.leadingAnchor, constant: 24),
+            emptyStateLabel.trailingAnchor.constraint(lessThanOrEqualTo: tableView.trailingAnchor, constant: -24),
         ])
     }
     
@@ -301,6 +321,18 @@ class TodayMissionListViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
+
+        let loadedMissions = output.missions
+            .skip(1)
+            .share(replay: 1)
+
+        Observable.combineLatest(loadedMissions, output.isLoading)
+            .map { missions, isLoading in
+                return isLoading || !missions.isEmpty
+            }
+            .observe(on: MainScheduler.instance)
+            .bind(to: emptyStateLabel.rx.isHidden)
+            .disposed(by: disposeBag)
         
         output.retryCount
             .observe(on: MainScheduler.instance)
@@ -327,7 +359,7 @@ class TodayMissionListViewController: UIViewController {
         output.errorMessage
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] message in
-                // TODO: 에러 토스트 등 UI 처리 추가 예정
+                self?.showErrorAlert(message: message)
             })
             .disposed(by: disposeBag)
         
@@ -380,6 +412,12 @@ class TodayMissionListViewController: UIViewController {
                 }
             })
             .disposed(by: disposeBag)
+    }
+
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
     }
     
 //    @objc private func closeButtonTapped() {
