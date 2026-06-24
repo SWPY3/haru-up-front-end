@@ -205,6 +205,8 @@ final class AppCoordinator: Coordinator {
             }
 
             let missions = curationData.chatbotMissions ?? []
+            UserDefaultsManager.shared.selectedMemberInterestId = nil
+            UserDefaultsManager.shared.usesChatbotGoalMissions = true
 
             self.chatbotService.chatbotSetup(characterId: characterId, nickname: nickname)
                 .observe(on: MainScheduler.instance)
@@ -230,7 +232,7 @@ final class AppCoordinator: Coordinator {
             navigationController: navigationController,
             missionService: MissionService(),
             interestsService: InterestsService.shared,
-            chatbotMissions: missions.isEmpty ? nil : missions
+            chatbotMissions: missions
         )
 
         missionCoordinator.onFinish = { [weak self, weak missionCoordinator] in

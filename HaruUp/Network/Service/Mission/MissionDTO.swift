@@ -89,7 +89,7 @@ enum MemberMission {
     /// 미션 재 요청
     struct RetryRecommendRequestDTO: Encodable {
         let memberInterestId: Int
-        let excludeMemberMissionIds: [Int]
+        let excludeMemberMissionIds: [Int]?
     }
     
     struct RetryRecommendResponseDTO: Decodable {
