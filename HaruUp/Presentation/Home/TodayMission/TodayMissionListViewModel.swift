@@ -73,37 +73,30 @@ final class TodayMissionListViewModel {
         let errorSubject = PublishSubject<String>()
         
         /// 서버로부터 미션 조회
-        // 화면 진입 + 새로고침을 하나의 트리거
-        let initialLoad = Observable.merge(input.viewDidLoad, input.refreshTap)
-        
-        initialLoad
+        // 챗봇 완료 직후 첫 진입은 answer 응답의 missions를 그대로 표시하고 추천 API를 중복 호출하지 않는다.
+        let injectedInitialLoad = input.viewDidLoad
+            .take(1)
+            .compactMap { [weak self] _ in self?.chatbotMissions }
+
+        // 일반 진입/재진입 및 새로고침은 현재 미션 소스에 맞춰 서버에서 재조회한다.
+        let apiInitialLoad = input.viewDidLoad
+            .take(1)
+            .filter { [weak self] _ in self?.chatbotMissions == nil }
+
+        let apiLoad = Observable.merge(apiInitialLoad, input.refreshTap)
             .flatMapLatest { [weak self] _ -> Observable<[MemberMission.MissionDTO]> in
-                guard let self = self else { return .empty() }
-
-                // 챗봇 플로우: 미션이 직접 주입된 경우 API 호출 생략
-                if let injected = self.chatbotMissions {
-                    return .just(injected)
-                }
-
+                guard let self else { return .empty() }
                 loadingSubject.onNext(true)
 
-                return self.resolveMemberInterestId()
-                    .flatMap { id -> Single<[MemberMission.MissionDTO]> in
-                        return self.missionService.requestRecommendedMissions(memberInterestId: id)
-                            .flatMap { response -> Single<[MemberMission.MissionDTO]> in
-                                let data = response.data
-                                let missions = data.missions
-                                self.retryCountRelay.accept(data.retryCount)
-                                if !missions.isEmpty {
-                                    return .just(missions)
-                                } else {
-                                    return self.missionService.requestRecommendedMultipleMissions(memberInterestIds: [id])
-                                        .map { multipleResponse in
-                                            self.retryCountRelay.accept(multipleResponse.data.retryCount)
-                                            return multipleResponse.data.missions.first?.data.map { $0.toMissionDTO() } ?? []
-                                        }
-                                }
-                            }
+                return self.resolveMissionSource()
+                    .flatMap { source in
+                        self.missionService.requestRecommendedMultipleMissions(
+                            memberInterestIds: source.recommendationMemberInterestIds
+                        )
+                        .map { response in
+                            self.retryCountRelay.accept(response.data.retryCount)
+                            return Self.recommendedMissionDTOs(from: response, source: source)
+                        }
                     }
                     .asObservable()
                     .catch { err in
@@ -112,6 +105,8 @@ final class TodayMissionListViewModel {
                     }
                     .do(onDispose: { loadingSubject.onNext(false) })
             }
+
+        Observable.merge(injectedInitialLoad, apiLoad)
             .subscribe(onNext: { [weak self] missions in
                 guard let self = self else { return }
                 loadingSubject.onNext(false)
@@ -130,19 +125,22 @@ final class TodayMissionListViewModel {
                 let selectedMissions = currentMissions.filter { selectedIDs.contains($0.memberMissionId) }
                 let selectedMissionsIds = selectedMissions.map { $0.memberMissionId }
                 
-                return self.resolveMemberInterestId()
-                    .flatMap { id -> Single<MemberMission.RetryRecommendResponseDTO> in
-                        // API 호출: 선택된 미션들의 ID를 보냄
-                        self.missionService.retryRecommendMissions(memberInterestId: id, excludeMissionIDs: selectedMissionsIds)
+                return self.resolveMissionSource()
+                    .flatMap { source -> Single<(MissionSource, MemberMission.RetryRecommendResponseDTO)> in
+                        let excludeMissionIDs = source.shouldSendRetryExcludeMissionIds ? selectedMissionsIds : nil
+                        return self.missionService.retryRecommendMissions(
+                            memberInterestId: source.retryMemberInterestId,
+                            excludeMissionIDs: excludeMissionIDs
+                        )
+                        .map { (source, $0) }
                     }
                     .asObservable()
-                    .map { (response: MemberMission.RetryRecommendResponseDTO) -> [MemberMission.MissionDTO] in
+                    .map { (source, response) -> [MemberMission.MissionDTO] in
                         let data = response.data
                         
                         self.retryCountRelay.accept(data.retryCount)
                         
-                        let newRetryMissions = data.missions.first?.data ?? [] // 현재 가장 첫번째 값으로 구현
-                        let newMissions = newRetryMissions.map { $0.toMissionDTO() }
+                        let newMissions = Self.retryMissionDTOs(from: response, source: source)
                         
                         let needCount = max(0, 5 - selectedMissions.count)
                         let missionsToAdd = Array(newMissions.prefix(needCount))
@@ -240,25 +238,51 @@ final class TodayMissionListViewModel {
         )
     }
     
-    private func resolveMemberInterestId() -> Single<Int> {
-        // UserDefaults에 저장된 값 사용
+    private func resolveMissionSource() -> Single<MissionSource> {
+        if chatbotMissions != nil || UserDefaultsManager.shared.usesChatbotGoalMissions {
+            return .just(.chatbot)
+        }
+
         if let saved = UserDefaultsManager.shared.selectedMemberInterestId {
-            return .just(saved)
+            return .just(MissionSource(memberInterestIds: [saved]))
         }
 
         // 없을 시 서버에 요청
         return interestsService.fetchInterests()
-            .map { dto -> Int in
-                guard let id = dto.interests.first?.memberInterestId else {
-                    // 챗봇 사용자는 관심사가 없음 → goalBased interestId(0)로 조회
-                    return 0
+            .map { dto -> MissionSource in
+                let source = MissionSource(memberInterestIds: dto.interests.map(\.memberInterestId))
+
+                switch source {
+                case .chatbot:
+                    UserDefaultsManager.shared.usesChatbotGoalMissions = true
+                case .interest(let ids):
+                    UserDefaultsManager.shared.selectedMemberInterestId = ids.first
                 }
-                UserDefaultsManager.shared.selectedMemberInterestId = id
-                return id
+
+                return source
             }
-            .catch { _ in
-                // API 오류(네트워크, 인증 등) 발생 시에도 goalBased interestId(0)로 폴백
-                return .just(0)
+    }
+
+    private static func recommendedMissionDTOs(
+        from response: MemberMission.RecommendMultipleResponseDTO,
+        source: MissionSource
+    ) -> [MemberMission.MissionDTO] {
+        let targetIDs = Set(source.recommendationMemberInterestIds)
+
+        return response.data.missions
+            .filter { targetIDs.contains($0.memberInterestId) }
+            .flatMap { group in
+                group.data.map { $0.toMissionDTO() }
             }
+    }
+
+    private static func retryMissionDTOs(
+        from response: MemberMission.RetryRecommendResponseDTO,
+        source: MissionSource
+    ) -> [MemberMission.MissionDTO] {
+        response.data.missions
+            .first { $0.memberInterestId == source.retryMemberInterestId }?
+            .data
+            .map { $0.toMissionDTO() } ?? []
     }
 }

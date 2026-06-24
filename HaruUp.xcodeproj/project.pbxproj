@@ -15,12 +15,24 @@
 		4893D23F2ED9771B0018D43A /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23E2ED9771B0018D43A /* KakaoSDKUser */; };
 		4893D2452ED985650018D43A /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2442ED985650018D43A /* RxCocoa */; };
 		4893D2472ED985650018D43A /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2462ED985650018D43A /* RxSwift */; };
+		7A00000C2F5000000010000C /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2462ED985650018D43A /* RxSwift */; };
 		CF46F20A2F2A159800CDCCDE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = CF46F2092F2A159800CDCCDE /* FirebaseCore */; };
 		CFC7F0942F47FD0800BCF147 /* AmplitudeSwift in Frameworks */ = {isa = PBXBuildFile; productRef = CFC7F0932F47FD0800BCF147 /* AmplitudeSwift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		7A00000A2F5000000010000A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4893D1E42ED6E2AE0018D43A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4893D1EB2ED6E2AE0018D43A;
+			remoteInfo = HaruUp;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		4893D1EC2ED6E2AE0018D43A /* HaruUp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HaruUp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A0000012F50000000100001 /* HaruUpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HaruUpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -40,6 +52,11 @@
 				4893D2012ED6E2AF0018D43A /* Exceptions for "HaruUp" folder in "HaruUp" target */,
 			);
 			path = HaruUp;
+			sourceTree = "<group>";
+		};
+		7A0000022F50000000100002 /* HaruUpTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = HaruUpTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -62,6 +79,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7A0000032F50000000100003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7A00000C2F5000000010000C /* RxSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -69,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				4893D1EE2ED6E2AE0018D43A /* HaruUp */,
+				7A0000022F50000000100002 /* HaruUpTests */,
 				CF46F2082F2A159800CDCCDE /* Frameworks */,
 				4893D1ED2ED6E2AE0018D43A /* Products */,
 			);
@@ -78,6 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				4893D1EC2ED6E2AE0018D43A /* HaruUp.app */,
+				7A0000012F50000000100001 /* HaruUpTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -124,6 +151,30 @@
 			productReference = 4893D1EC2ED6E2AE0018D43A /* HaruUp.app */;
 			productType = "com.apple.product-type.application";
 		};
+		7A0000062F50000000100006 /* HaruUpTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7A0000072F50000000100007 /* Build configuration list for PBXNativeTarget "HaruUpTests" */;
+			buildPhases = (
+				7A0000042F50000000100004 /* Sources */,
+				7A0000032F50000000100003 /* Frameworks */,
+				7A0000052F50000000100005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7A00000B2F5000000010000B /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7A0000022F50000000100002 /* HaruUpTests */,
+			);
+			name = HaruUpTests;
+			packageProductDependencies = (
+				4893D2462ED985650018D43A /* RxSwift */,
+			);
+			productName = HaruUpTests;
+			productReference = 7A0000012F50000000100001 /* HaruUpTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -136,6 +187,10 @@
 				TargetAttributes = {
 					4893D1EB2ED6E2AE0018D43A = {
 						CreatedOnToolsVersion = 26.1;
+					};
+					7A0000062F50000000100006 = {
+						CreatedOnToolsVersion = 26.1;
+						TestTargetID = 4893D1EB2ED6E2AE0018D43A;
 					};
 				};
 			};
@@ -162,12 +217,20 @@
 			projectRoot = "";
 			targets = (
 				4893D1EB2ED6E2AE0018D43A /* HaruUp */,
+				7A0000062F50000000100006 /* HaruUpTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		4893D1EA2ED6E2AE0018D43A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7A0000052F50000000100005 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -184,7 +247,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7A0000042F50000000100004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7A00000B2F5000000010000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4893D1EB2ED6E2AE0018D43A /* HaruUp */;
+			targetProxy = 7A00000A2F5000000010000A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4893D2032ED6E2AF0018D43A /* Debug */ = {
@@ -376,6 +454,50 @@
 			};
 			name = Release;
 		};
+		7A0000082F50000000100008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5G6N83PM9C;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.swyp.HaruUpTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HaruUp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HaruUp";
+			};
+			name = Debug;
+		};
+		7A0000092F50000000100009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5G6N83PM9C;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.swyp.HaruUpTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HaruUp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HaruUp";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -393,6 +515,15 @@
 			buildConfigurations = (
 				4893D2032ED6E2AF0018D43A /* Debug */,
 				4893D2042ED6E2AF0018D43A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7A0000072F50000000100007 /* Build configuration list for PBXNativeTarget "HaruUpTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7A0000082F50000000100008 /* Debug */,
+				7A0000092F50000000100009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

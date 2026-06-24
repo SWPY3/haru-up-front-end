@@ -21,14 +21,25 @@ final class UserDefaultsManager {
         set {
             if let newValue {
                 defaults.set(newValue, forKey: UserDefaultsKey.selectedMemberInterestId)
+                usesChatbotGoalMissions = newValue == MissionSource.chatbotGoalInterestId
             } else {
                 defaults.removeObject(forKey: UserDefaultsKey.selectedMemberInterestId)
             }
+        }
+    }
+
+    var usesChatbotGoalMissions: Bool {
+        get {
+            defaults.bool(forKey: UserDefaultsKey.usesChatbotGoalMissions)
+        }
+        set {
+            defaults.set(newValue, forKey: UserDefaultsKey.usesChatbotGoalMissions)
         }
     }
     
     /// 선택된 관심사 초기화
     func clearSelectedMemberInterestId() {
         selectedMemberInterestId = nil
+        usesChatbotGoalMissions = false
     }
 }

@@ -10,6 +10,11 @@ import RxSwift
 import Alamofire
 
 class Service {
+    private struct APIErrorResponse: Decodable {
+        let errorMessage: String?
+        let message: String?
+    }
+
     /// JSON Body 요청
     func request<T: Decodable, B: Encodable>(_ url: String, method: Alamofire.HTTPMethod, header: HTTPHeaders, body: B) -> Single<T> {
         
@@ -20,7 +25,8 @@ class Service {
                     debugPrint(resp)
                     switch resp.result {
                     case .success(let value): single(.success(value))
-                    case .failure(let error): single(.failure(error))
+                    case .failure(let error):
+                        single(.failure(self.apiError(from: resp.data, statusCode: resp.response?.statusCode, fallback: error)))
                     }
                 }
             return Disposables.create { req.cancel() }
@@ -49,7 +55,7 @@ class Service {
                        let body = String(data: data, encoding: .utf8) {
                         print("Server error body:", body)
                     }
-                    single(.failure(error))
+                    single(.failure(self.apiError(from: resp.data, statusCode: resp.response?.statusCode, fallback: error)))
                 }
             }
 
@@ -66,10 +72,26 @@ class Service {
                     debugPrint(resp)
                     switch resp.result {
                     case .success(let value): single(.success(value))
-                    case .failure(let error): single(.failure(error))
+                    case .failure(let error):
+                        single(.failure(self.apiError(from: resp.data, statusCode: resp.response?.statusCode, fallback: error)))
                     }
                 }
             return Disposables.create { req.cancel() }
         }
+    }
+
+    private func apiError(from data: Data?, statusCode: Int?, fallback: Error) -> Error {
+        guard let data,
+              let response = try? JSONDecoder().decode(APIErrorResponse.self, from: data),
+              let message = response.errorMessage ?? response.message,
+              !message.isEmpty else {
+            return fallback
+        }
+
+        return NSError(
+            domain: "HaruUpAPIError",
+            code: statusCode ?? -1,
+            userInfo: [NSLocalizedDescriptionKey: message]
+        )
     }
 }

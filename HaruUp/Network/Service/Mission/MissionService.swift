@@ -15,7 +15,7 @@ protocol MissionServiceProtocol {
     // 다양한 관심사로 미션 추천
     func requestRecommendedMultipleMissions(memberInterestIds: [Int]) -> Single<MemberMission.RecommendMultipleResponseDTO>
     // 미션 재추천
-    func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]) -> Single<MemberMission.RetryRecommendResponseDTO>
+    func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]?) -> Single<MemberMission.RetryRecommendResponseDTO>
     // 미션 선택 완료
     func selectMissions(missionIDs: [Int]) -> Single<MemberMission.SelectMissionResponseDTO>
     // 미션 목록 표시
@@ -62,7 +62,7 @@ final class MissionService: Service, MissionServiceProtocol {
         return request(url, method: .post, header: headers, body: body)
     }
     
-    func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]) -> Single<MemberMission.RetryRecommendResponseDTO> {
+    func retryRecommendMissions(memberInterestId: Int, excludeMissionIDs: [Int]?) -> Single<MemberMission.RetryRecommendResponseDTO> {
         let url: String = NetworkDefine.MissionAPI.retry.url
         
         var headers: HTTPHeaders = ["Content-Type": "application/json"]
