@@ -70,7 +70,10 @@ final class CurationChatViewModel {
         let characterName: Driver<String>
         let characterImageName: Driver<String>
         let prefillText: Driver<String>
+        let currentStep: Driver<Int>
     }
+
+    static let totalSteps = 7
 
     private weak var coordinator: CurationChatCoordinator?
     private let disposeBag = DisposeBag()
@@ -84,6 +87,7 @@ final class CurationChatViewModel {
     private var sessionId: String?
     private var completedMissions: [ChatbotMissionDto] = []
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
+    private let currentStepRelay = BehaviorRelay<Int>(value: 1)
 
     // MARK: - Chat Phase
     private enum ChatPhase { case nickname, chatbot }
@@ -170,7 +174,8 @@ final class CurationChatViewModel {
             isLoading: isLoadingRelay.asDriver(),
             characterName: Driver.just(characterName),
             characterImageName: Driver.just(characterImageName),
-            prefillText: prefillTextRelay.asDriver(onErrorJustReturn: "")
+            prefillText: prefillTextRelay.asDriver(onErrorJustReturn: ""),
+            currentStep: currentStepRelay.asDriver()
         )
     }
     
@@ -183,6 +188,7 @@ final class CurationChatViewModel {
         currentPhase = .nickname
         collectedNickname = ""
         isLastQuestion = false
+        currentStepRelay.accept(1)
         showNicknameQuestion()
     }
 
@@ -352,6 +358,7 @@ final class CurationChatViewModel {
                     guard let self = self, let data = response.data else { return }
                     self.isLoadingRelay.accept(false)
                     self.sessionId = data.sessionId
+                    self.currentStepRelay.accept(data.questionNumber + 1)
 
                     // 첫 질문 + 예시 칩 표시
                     self.appendMessage(ChatMessage(
@@ -381,7 +388,11 @@ final class CurationChatViewModel {
             // 진행 중 → 다음 질문 표시
             guard let question = data.question else { return }
             let isLast = data.isLast ?? false
-            isLastQuestion = isLast   // 다음 답변이 마지막인지 기록
+            isLastQuestion = isLast
+
+            if let questionNumber = data.questionNumber {
+                currentStepRelay.accept(questionNumber + 1)
+            }
 
             appendMessage(ChatMessage(type: .bot, text: question,
                                       subtitleText: isLast ? "마지막 질문이에요!" : nil))
