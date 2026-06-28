@@ -31,7 +31,8 @@ class CharacterSelectViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.title2, text: "앞으로 함께 성장할\n메이트를 선택해주세요!")
+        let style = FontStyle(font: Typography.title2.font, lineHeight: 1.38)
+        label.setStyle(style, text: "앞으로 함께 성장할\n메이트를 선택해주세요!")
         label.textAlignment = .center
         label.numberOfLines = 0
         label.textColor = .black
