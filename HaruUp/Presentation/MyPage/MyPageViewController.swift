@@ -188,9 +188,12 @@ class MyPageViewController: UIViewController {
             menuStackView.addArrangedSubview($0)
         }
         
+        jobLabel.isHidden = true
+        goalCardView.isHidden = true
+        editInterestBtn.isHidden = true
         setupConstraints()
     }
-    
+
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -212,11 +215,11 @@ class MyPageViewController: UIViewController {
             profileImageView.widthAnchor.constraint(equalToConstant: 80),
             profileImageView.heightAnchor.constraint(equalToConstant: 80),
             
-            nicknameLabel.topAnchor.constraint(equalTo: profileImageView.topAnchor),
+            nicknameLabel.centerYAnchor.constraint(equalTo: profileImageView.centerYAnchor),
             nicknameLabel.leadingAnchor.constraint(equalTo: profileImageView.trailingAnchor, constant: 16),
             nicknameLabel.trailingAnchor.constraint(lessThanOrEqualTo: editProfileButton.leadingAnchor, constant: -8),
             
-            editProfileButton.topAnchor.constraint(equalTo: nicknameLabel.topAnchor, constant: 10),
+            editProfileButton.centerYAnchor.constraint(equalTo: profileImageView.centerYAnchor),
             editProfileButton.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
             editProfileButton.widthAnchor.constraint(equalToConstant: 36),
             editProfileButton.heightAnchor.constraint(equalToConstant: 36),
@@ -248,7 +251,7 @@ class MyPageViewController: UIViewController {
             detailTag.bottomAnchor.constraint(equalTo: goalCardView.bottomAnchor, constant: -20),
             detailTag.leadingAnchor.constraint(equalTo: interestTag.trailingAnchor, constant: 8),
             
-            menuStackView.topAnchor.constraint(equalTo: goalCardView.bottomAnchor, constant: 24),
+            menuStackView.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 24),
             menuStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             menuStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             

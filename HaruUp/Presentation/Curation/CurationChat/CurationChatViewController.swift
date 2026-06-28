@@ -33,6 +33,17 @@ final class CurationChatViewController: UIViewController {
         return btn
     }()
 
+    private let progressView: UIProgressView = {
+        let pv = UIProgressView(progressViewStyle: .default)
+        pv.trackTintColor = .neutral100
+        pv.progressTintColor = .cta
+        pv.layer.cornerRadius = 2
+        pv.clipsToBounds = true
+        pv.progress = 1.0 / Float(CurationChatViewModel.totalSteps)
+        pv.translatesAutoresizingMaskIntoConstraints = false
+        return pv
+    }()
+
     private let tableView: UITableView = {
         let tv = UITableView()
         tv.separatorStyle = .none
@@ -132,6 +143,15 @@ final class CurationChatViewController: UIViewController {
             closeButton.heightAnchor.constraint(equalToConstant: 32)
         ])
 
+        // 프로그레스바
+        view.addSubview(progressView)
+        NSLayoutConstraint.activate([
+            progressView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 12),
+            progressView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            progressView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            progressView.heightAnchor.constraint(equalToConstant: 4)
+        ])
+
         // 입력 영역
         view.addSubview(inputContainerView)
         NSLayoutConstraint.activate([
@@ -176,7 +196,7 @@ final class CurationChatViewController: UIViewController {
         // 채팅 테이블뷰
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 20),
+            tableView.topAnchor.constraint(equalTo: progressView.bottomAnchor, constant: 12),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.bottomAnchor.constraint(equalTo: inputContainerView.topAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
@@ -275,6 +295,14 @@ final class CurationChatViewController: UIViewController {
             .subscribe(onNext: { [weak self] in
                 AnalyticsManager.shared.track(event: AppEvent.CurationChat.messageSent)
                 self?.sendMessage()
+            })
+            .disposed(by: disposeBag)
+
+        // 프로그레스바 업데이트
+        output.currentStep
+            .drive(onNext: { [weak self] step in
+                let progress = Float(step) / Float(CurationChatViewModel.totalSteps)
+                self?.progressView.setProgress(progress, animated: true)
             })
             .disposed(by: disposeBag)
 

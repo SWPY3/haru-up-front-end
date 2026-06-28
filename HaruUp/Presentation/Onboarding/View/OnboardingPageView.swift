@@ -94,7 +94,8 @@ final class OnboardingPageView: UIView {
     }
     
     func configure(page: OnboardingPageModel) {
-        titleLabel.setStyledText(Typography.title2, fullText: page.title, highlightedText: page.highlightTitle, highlightedColor: .cta, defaultColor: .black)
+        let onboardingTitleStyle = FontStyle(font: Typography.title2.font, lineHeight: 1.38)
+        titleLabel.setStyledText(onboardingTitleStyle, fullText: page.title, highlightedText: page.highlightTitle, highlightedColor: .cta, defaultColor: .black)
         descriptionLabel.setStyle(Typography.body3, text: page.description)
         
         let image = page.image

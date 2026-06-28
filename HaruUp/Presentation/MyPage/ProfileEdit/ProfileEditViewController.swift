@@ -301,6 +301,11 @@ final class ProfileEditViewController: UIViewController {
         view.addSubview(jobDropdown)
         view.addSubview(detailJobDropdown)
         
+        jobTitleLabel.isHidden = true
+        jobSelectButton.isHidden = true
+        detailJobTitleLabel.isHidden = true
+        detailJobSelectButton.isHidden = true
+        detailJobWarningLabel.isHidden = true
         jobDropdown.isHidden = true
         detailJobDropdown.isHidden = true
         jobDropdown.translatesAutoresizingMaskIntoConstraints = false
