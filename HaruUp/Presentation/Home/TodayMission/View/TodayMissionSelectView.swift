@@ -40,7 +40,7 @@ final class TodayMissionSelectView: UIView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.setStyle(Typography.body3, text: "추가 선택 가능한 미션")
+        label.setStyle(Typography.body3, text: "선택 가능한 미션")
         label.textColor = .black
 
         return label
