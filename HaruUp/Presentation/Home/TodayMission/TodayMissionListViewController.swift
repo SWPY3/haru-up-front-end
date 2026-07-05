@@ -109,11 +109,7 @@ class TodayMissionListViewController: UIViewController {
         return view
     }()
     
-    private let refreshFooterView: TodayMissionRefreshFooterView = {
-        let view = TodayMissionRefreshFooterView(frame: CGRect(x: 0, y: 0, width: 0, height: 84))
-        
-        return view
-    }()
+    private let sectionHeaderView = TodayMissionSectionHeaderView()
     
     init(viewModel: TodayMissionListViewModel) {
         self.viewModel = viewModel
@@ -244,7 +240,7 @@ class TodayMissionListViewController: UIViewController {
                 return nil
             }
         
-        let trackedRefreshTap = refreshFooterView.refreshButton.rx.tap
+        let trackedRefreshTap = sectionHeaderView.refreshButton.rx.tap
             .do(onNext: { _ in
                 AnalyticsManager.shared.track(event: AppEvent.MissionList.refreshTapped)
             }).asObservable()
@@ -337,7 +333,7 @@ class TodayMissionListViewController: UIViewController {
         output.retryCount
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] count in
-                self?.refreshFooterView.updateRefreshButtonCount(count)
+                self?.sectionHeaderView.updateRefreshButtonCount(count)
             })
             .disposed(by: disposeBag)
         
@@ -352,7 +348,7 @@ class TodayMissionListViewController: UIViewController {
                 self?.refreshButton.isEnabled = !isLoading
                 self?.completeButton.isEnabled = !isLoading
                 
-                self?.tableView.tableFooterView = isLoading ? nil : self?.refreshFooterView
+                self?.tableView.tableFooterView = nil
             })
             .disposed(by: disposeBag)
         
@@ -427,8 +423,6 @@ class TodayMissionListViewController: UIViewController {
 
 extension TodayMissionListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let header = TodayMissionSectionHeaderView()
-        
-        return header
+        return sectionHeaderView
     }
 }
