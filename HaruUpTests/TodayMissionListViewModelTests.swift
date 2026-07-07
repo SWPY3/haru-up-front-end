@@ -313,6 +313,7 @@ private final class MissionServiceSpy: MissionServiceProtocol {
         MemberMission.MultipleMissionDTO(
             memberMissionId: id,
             content: "추천 미션 \(id)",
+            missionDescription: nil,
             directFullPath: [],
             difficulty: 2,
             expEarned: 10,
@@ -324,6 +325,7 @@ private final class MissionServiceSpy: MissionServiceProtocol {
         MemberMission.RetryMissionDTO(
             memberMissionId: id,
             content: "재추천 미션 \(id)",
+            missionDescription: nil,
             directFullPath: [],
             difficulty: 2,
             expEarned: 10,
