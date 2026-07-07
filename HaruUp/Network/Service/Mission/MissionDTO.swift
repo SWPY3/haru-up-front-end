@@ -62,16 +62,17 @@ enum MemberMission {
     struct MultipleMissionDTO: Decodable {
         let memberMissionId: Int
         let content: String
+        let missionDescription: String? // 챗봇 목표 기반 미션의 구체적 실행 방법 (관심사 기반 미션은 null)
         let directFullPath: [String]
         let difficulty: Int
         let expEarned: Int
         let createdType: String
-        
+
         enum CodingKeys: String, CodingKey {
             case memberMissionId = "member_mission_id"
-            case content, directFullPath, difficulty, expEarned, createdType
+            case content, missionDescription, directFullPath, difficulty, expEarned, createdType
         }
-        
+
         func toMissionDTO() -> MemberMission.MissionDTO {
             return MemberMission.MissionDTO(
                 memberMissionId: self.memberMissionId,
@@ -81,7 +82,7 @@ enum MemberMission {
                 difficulty: self.difficulty,
                 expEarned: self.expEarned,
                 targetDate: "",
-                missionDescription: nil
+                missionDescription: self.missionDescription
             )
         }
     }
@@ -112,16 +113,17 @@ enum MemberMission {
     struct RetryMissionDTO: Decodable {
         let memberMissionId: Int
         let content: String
+        let missionDescription: String? // 챗봇 목표 기반 미션의 구체적 실행 방법 (관심사 기반 미션은 null)
         let directFullPath: [String]
         let difficulty: Int
         let expEarned: Int
         let createdType: String
-        
+
         enum CodingKeys: String, CodingKey {
             case memberMissionId = "member_mission_id"
-            case content, directFullPath, difficulty, expEarned, createdType
+            case content, missionDescription, directFullPath, difficulty, expEarned, createdType
         }
-        
+
         func toMissionDTO() -> MemberMission.MissionDTO {
             return MemberMission.MissionDTO(
                 memberMissionId: self.memberMissionId,
@@ -131,7 +133,7 @@ enum MemberMission {
                 difficulty: self.difficulty,
                 expEarned: self.expEarned,
                 targetDate: "",
-                missionDescription: nil
+                missionDescription: self.missionDescription
             )
         }
     }
