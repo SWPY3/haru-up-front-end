@@ -16,11 +16,9 @@ enum MissionDifficultyModel: Int, CaseIterable {
     
     var title: String {
         switch self {
-        case .veryHigh: return "최상"
-        case .high: return "상"
-        case .mediumHigh: return "중상"
-        case .medium: return "중"
-        case .low: return "하"
+        case .veryHigh, .high: return "고급"
+        case .mediumHigh, .medium: return "중급"
+        case .low: return "초급"
         }
     }
     
@@ -45,7 +43,7 @@ enum MissionDifficultyModel: Int, CaseIterable {
     }
 
     /// 백엔드 difficulty 값(1~5)을 iOS 모델로 변환
-    /// 챗봇 미션은 1/2/3 스케일 사용 → 3은 "상"으로 처리
+    /// 챗봇 미션은 1/2/3 스케일 사용 → 3은 "고급"으로 처리
     static func from(difficulty: Int) -> MissionDifficultyModel {
         switch difficulty {
         case 1:  return .low
