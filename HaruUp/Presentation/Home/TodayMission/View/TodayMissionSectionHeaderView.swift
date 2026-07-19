@@ -50,7 +50,7 @@ final class TodayMissionSectionHeaderView: UIView {
     private let filterStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.spacing = 8
+        stackView.spacing = 4
         stackView.alignment = .fill
         stackView.distribution = .fill
         return stackView
@@ -86,7 +86,7 @@ final class TodayMissionSectionHeaderView: UIView {
             subtitleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             subtitleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
 
-            filterStackView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 16),
+            filterStackView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 18),
             filterStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             filterStackView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -20),
             filterStackView.heightAnchor.constraint(equalToConstant: 36),
@@ -103,6 +103,8 @@ final class TodayMissionSectionHeaderView: UIView {
             filterButtons.append(button)
             filterStackView.addArrangedSubview(button)
 
+            button.widthAnchor.constraint(equalToConstant: 57).isActive = true
+
             button.rx.tap
                 .map { filter }
                 .bind(to: selectedFilterRelay)
@@ -118,8 +120,10 @@ final class TodayMissionSectionHeaderView: UIView {
 
     private func makeFilterButton() -> UIButton {
         var config = UIButton.Configuration.plain()
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
-        config.background.cornerRadius = 18
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0)
+        config.background.cornerRadius = 32
+        config.background.strokeColor = .neutral50
+        config.background.strokeWidth = 1
 
         return UIButton(configuration: config)
     }
@@ -136,6 +140,7 @@ final class TodayMissionSectionHeaderView: UIView {
 
             config.attributedTitle = AttributedString(filter.title, attributes: titleContainer)
             config.background.backgroundColor = isSelected ? .black : .white
+            config.background.strokeColor = isSelected ? .neutral1000 : .neutral50
             button.configuration = config
         }
     }
