@@ -55,3 +55,29 @@ enum MissionDifficultyModel: Int, CaseIterable {
         }
     }
 }
+
+/// AI 추천미션 리스트 상단의 난이도 필터
+enum MissionDifficultyFilter: CaseIterable {
+    case all
+    case beginner
+    case intermediate
+    case advanced
+
+    var title: String {
+        switch self {
+        case .all: return "전체"
+        case .beginner: return "초급"
+        case .intermediate: return "중급"
+        case .advanced: return "고급"
+        }
+    }
+
+    func matches(_ difficulty: MissionDifficultyModel) -> Bool {
+        switch self {
+        case .all: return true
+        case .beginner: return difficulty == .low
+        case .intermediate: return difficulty == .medium || difficulty == .mediumHigh
+        case .advanced: return difficulty == .high || difficulty == .veryHigh
+        }
+    }
+}
