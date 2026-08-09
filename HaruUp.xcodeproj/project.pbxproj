@@ -15,6 +15,7 @@
 		4893D23F2ED9771B0018D43A /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D23E2ED9771B0018D43A /* KakaoSDKUser */; };
 		4893D2452ED985650018D43A /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2442ED985650018D43A /* RxCocoa */; };
 		4893D2472ED985650018D43A /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2462ED985650018D43A /* RxSwift */; };
+		489DC0A73028759300C80F20 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 489DC0A63028759300C80F20 /* GoogleMobileAds */; };
 		7A00000C2F5000000010000C /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4893D2462ED985650018D43A /* RxSwift */; };
 		CF46F20A2F2A159800CDCCDE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = CF46F2092F2A159800CDCCDE /* FirebaseCore */; };
 		CFC7F0942F47FD0800BCF147 /* AmplitudeSwift in Frameworks */ = {isa = PBXBuildFile; productRef = CFC7F0932F47FD0800BCF147 /* AmplitudeSwift */; };
@@ -71,6 +72,7 @@
 				480A9BDE2EF9E63F00E9B443 /* Lottie in Frameworks */,
 				4893D23B2ED9771B0018D43A /* KakaoSDKAuth in Frameworks */,
 				4893D2472ED985650018D43A /* RxSwift in Frameworks */,
+				489DC0A73028759300C80F20 /* GoogleMobileAds in Frameworks */,
 				4893D2452ED985650018D43A /* RxCocoa in Frameworks */,
 				4893D23F2ED9771B0018D43A /* KakaoSDKUser in Frameworks */,
 				CF46F20A2F2A159800CDCCDE /* FirebaseCore in Frameworks */,
@@ -146,6 +148,7 @@
 				CF46F2092F2A159800CDCCDE /* FirebaseCore */,
 				48433DD02F2A38F9004AC7DB /* FirebaseMessaging */,
 				CFC7F0932F47FD0800BCF147 /* AmplitudeSwift */,
+				489DC0A63028759300C80F20 /* GoogleMobileAds */,
 			);
 			productName = HaruUp;
 			productReference = 4893D1EC2ED6E2AE0018D43A /* HaruUp.app */;
@@ -210,6 +213,7 @@
 				480A9BDC2EF9E63F00E9B443 /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				CF46F2072F2A153000CDCCDE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				CFC7F0922F47FD0800BCF147 /* XCRemoteSwiftPackageReference "Amplitude-Swift" */,
+				489DC0A0302229A600C80F20 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4893D1ED2ED6E2AE0018D43A /* Products */;
@@ -563,6 +567,14 @@
 				minimumVersion = 6.9.1;
 			};
 		};
+		489DC0A0302229A600C80F20 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.7.0;
+			};
+		};
 		CF46F2072F2A153000CDCCDE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -621,6 +633,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4893D2432ED985650018D43A /* XCRemoteSwiftPackageReference "RxSwift" */;
 			productName = RxSwift;
+		};
+		489DC0A63028759300C80F20 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 489DC0A0302229A600C80F20 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
 		};
 		CF46F2092F2A159800CDCCDE /* FirebaseCore */ = {
 			isa = XCSwiftPackageProductDependency;
