@@ -15,6 +15,7 @@ import FirebaseCore
 import FirebaseMessaging
 import UserNotifications
 import AmplitudeSwift
+import GoogleMobileAds
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -23,7 +24,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     static var amplitude: Amplitude?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        
+
+        // Google Mobile Ads SDK 초기화
+        MobileAds.shared.start()
+
         // App 최초 실행 여부
         TokenStorageService.shared.checkFirstLaunch()
         

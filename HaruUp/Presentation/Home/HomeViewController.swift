@@ -8,6 +8,7 @@
 import UIKit
 import RxSwift
 import RxCocoa
+import GoogleMobileAds
 
 class HomeViewController: UIViewController {
     
@@ -47,8 +48,17 @@ class HomeViewController: UIViewController {
     }()
     
     private let headerView = HomeHeaderView()
-    
+
     private weak var sectionHeaderView: HomeSectionHeaderView?
+
+    private lazy var bannerView: BannerView = {
+        let banner = BannerView(adSize: AdSizeBanner)
+        banner.adUnitID = AdManager.shared.bannerTestUnitID
+        banner.rootViewController = self
+        return banner
+    }()
+
+    private let bannerFooterView = UIView()
     
     // MARK: - LifeCycle
     init(viewModel: HomeViewModel) {
@@ -80,6 +90,7 @@ class HomeViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         viewDidAppearRelay.accept(())
+        loadBannerAd()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -102,26 +113,46 @@ class HomeViewController: UIViewController {
     private func configureTableView() {
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        
+
         headerView.onTapChallenge = { [weak self] in
             guard let self = self else { return }
-            
+
             self.onShowChallengeBottomSheet?(self.challengeCount, self.challengeData)
         }
-        
+
         tableView.tableHeaderView = headerView
         tableView.sectionHeaderTopPadding = 28 // Section Header와 TableView Header의 간격
-        
+
         tableView.delegate = self
-        
+
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
-        
+
+        configureBannerFooterView()
         updateTableHeaderHeight()
+    }
+
+    private func configureBannerFooterView() {
+        bannerFooterView.addSubview(bannerView)
+        bannerView.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            bannerView.centerXAnchor.constraint(equalTo: bannerFooterView.centerXAnchor),
+            bannerView.topAnchor.constraint(equalTo: bannerFooterView.topAnchor, constant: 8),
+            bannerView.bottomAnchor.constraint(equalTo: bannerFooterView.bottomAnchor, constant: -8)
+        ])
+
+        // tableFooterView는 AutoLayout이 아니라 frame으로 높이가 결정되어 직접 지정
+        bannerFooterView.frame = CGRect(x: 0, y: 0, width: 0, height: 66)
+        tableView.tableFooterView = bannerFooterView
+    }
+
+    private func loadBannerAd() {
+        bannerView.load(Request())
     }
     
     private func updateTableHeaderHeight() {

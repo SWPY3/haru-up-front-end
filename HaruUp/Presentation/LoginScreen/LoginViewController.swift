@@ -60,9 +60,17 @@ class LoginViewController: UIViewController {
     // MARK: - LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         setupView()
         bind()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        AdConsentManager.shared.requestConsentAndInitializeAds(from: self) {
+            // 로그인 화면에서는 광고를 안 띄울 거라 여기선 딱히 할 일 없음
+        }
     }
     
     func setupView() {

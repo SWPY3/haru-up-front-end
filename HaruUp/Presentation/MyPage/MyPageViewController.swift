@@ -8,6 +8,7 @@
 import UIKit
 import RxSwift
 import RxCocoa
+import GoogleMobileAds
 
 
 
@@ -139,6 +140,14 @@ class MyPageViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
+
+    private lazy var bannerView: BannerView = {
+        let banner = BannerView(adSize: AdSizeBanner)
+        banner.adUnitID = AdManager.shared.bannerTestUnitID
+        banner.rootViewController = self
+        banner.translatesAutoresizingMaskIntoConstraints = false
+        return banner
+    }()
     
     init(viewModel: MyPageViewModel) {
         self.viewModel = viewModel
@@ -159,7 +168,12 @@ class MyPageViewController: UIViewController {
         super.viewWillDisappear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
-    
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        loadBannerAd()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -175,7 +189,7 @@ class MyPageViewController: UIViewController {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        [titleLabel, profileImageView, nicknameLabel, editProfileButton, jobLabel, goalCardView, menuStackView, versionLabel].forEach {
+        [titleLabel, profileImageView, nicknameLabel, editProfileButton, jobLabel, goalCardView, menuStackView, bannerView, versionLabel].forEach {
             contentView.addSubview($0)
         }
         
@@ -192,6 +206,10 @@ class MyPageViewController: UIViewController {
         goalCardView.isHidden = true
         editInterestBtn.isHidden = true
         setupConstraints()
+    }
+
+    private func loadBannerAd() {
+        bannerView.load(Request())
     }
 
     private func setupConstraints() {
@@ -255,7 +273,10 @@ class MyPageViewController: UIViewController {
             menuStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             menuStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
-            versionLabel.topAnchor.constraint(equalTo: menuStackView.bottomAnchor, constant: 10),
+            bannerView.topAnchor.constraint(equalTo: menuStackView.bottomAnchor, constant: 15),
+            bannerView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+
+            versionLabel.topAnchor.constraint(equalTo: bannerView.bottomAnchor, constant: 15),
             versionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
             versionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -40)
         ])
