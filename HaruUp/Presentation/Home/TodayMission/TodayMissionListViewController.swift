@@ -270,10 +270,12 @@ class TodayMissionListViewController: UIViewController {
                 return keptRows + skeletonRows
             }
         
-        let missionItems = Observable.combineLatest(output.missions, output.selectedIDs)
-            .map { missions, selectedIDs -> [RecommendMissionRow] in
-                let sortedMissions = missions.sorted { $0.difficulty > $1.difficulty }
-                
+        let missionItems = Observable.combineLatest(output.missions, output.selectedIDs, sectionHeaderView.selectedFilterRelay)
+            .map { missions, selectedIDs, filter -> [RecommendMissionRow] in
+                let sortedMissions = missions
+                    .filter { filter.matches(MissionDifficultyModel.from(difficulty: $0.difficulty)) }
+                    .sorted { $0.difficulty > $1.difficulty }
+
                 return sortedMissions.map { .mission($0) }
             }
         

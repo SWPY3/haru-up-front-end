@@ -141,8 +141,9 @@ final class TodayMissionListViewModel {
                         self.retryCountRelay.accept(data.retryCount)
                         
                         let newMissions = Self.retryMissionDTOs(from: response, source: source)
-                        
-                        let needCount = max(0, 5 - selectedMissions.count)
+
+                        // 목록 크기는 서버가 내려준 추천 세트 크기를 따른다. 선택해 둔 미션은 유지하고 나머지만 새 미션으로 채운다.
+                        let needCount = max(0, newMissions.count - selectedMissions.count)
                         let missionsToAdd = Array(newMissions.prefix(needCount))
                         
                         return selectedMissions + missionsToAdd
