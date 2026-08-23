@@ -53,7 +53,7 @@ class HomeViewController: UIViewController {
 
     private lazy var bannerView: BannerView = {
         let banner = BannerView(adSize: AdSizeBanner)
-        banner.adUnitID = AdManager.shared.bannerTestUnitID
+        banner.adUnitID = AdManager.shared.bannerAdUnitID
         banner.rootViewController = self
         return banner
     }()

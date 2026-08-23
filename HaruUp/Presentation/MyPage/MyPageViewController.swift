@@ -143,7 +143,7 @@ class MyPageViewController: UIViewController {
 
     private lazy var bannerView: BannerView = {
         let banner = BannerView(adSize: AdSizeBanner)
-        banner.adUnitID = AdManager.shared.bannerTestUnitID
+        banner.adUnitID = AdManager.shared.bannerAdUnitID
         banner.rootViewController = self
         banner.translatesAutoresizingMaskIntoConstraints = false
         return banner
@@ -436,7 +436,7 @@ class MyPageViewController: UIViewController {
             .subscribe(with: self, onNext: { owner, _ in
                 AnalyticsManager.shared.track(event: AppEvent.MyPage.privacyPolicyTapped)
                 
-                guard let url = URL(string: "https://melodic-roar-3e1.notion.site/2e0849f596f380969043ee98e361c7bf") else { return }
+                guard let url = URL(string: "https://delightful-reply-8f4.notion.site/3c5829a940ae80528102f0ab06b285e8") else { return }
                 if UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 }
