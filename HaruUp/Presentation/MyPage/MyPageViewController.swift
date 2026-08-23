@@ -400,7 +400,7 @@ class MyPageViewController: UIViewController {
             .subscribe(with: self, onNext: { owner, _ in
                 AnalyticsManager.shared.track(event: AppEvent.MyPage.leaveFeedbackTapped)
                 
-                guard let url = URL(string: "https://forms.gle/qC5jrp4FL89CcdoA6") else { return }
+                guard let url = URL(string: "https://docs.google.com/forms/d/e/1FAIpQLScWwqt7_pedkfinoJ5Xtd2TG-IU5xdluYFRm7i1wvqsEaJgKQ/viewform") else { return }
                 if UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 }
@@ -412,7 +412,7 @@ class MyPageViewController: UIViewController {
             .subscribe(with: self, onNext: { owner, _ in
                 AnalyticsManager.shared.track(event: AppEvent.MyPage.contactUsTapped)
             
-                guard let url = URL(string: "https://forms.gle/MP4LuXLJDd13vo5W9") else { return }
+                guard let url = URL(string: "https://docs.google.com/forms/d/e/1FAIpQLSckyb5mJ1f6EMVjoY3WhTaJnJ_6ZAFBkqwYKQxgc2JyHDhuxQ/viewform") else { return }
                 if UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 }
