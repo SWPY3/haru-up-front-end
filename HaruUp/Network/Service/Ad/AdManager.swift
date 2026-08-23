@@ -11,5 +11,5 @@ final class AdManager {
     static let shared = AdManager()
     private init() {}
 
-    let bannerTestUnitID = "ca-app-pub-3940256099942544/2934735716"
+    let bannerAdUnitID = "ca-app-pub-1764976097996466/8385888876"
 }
