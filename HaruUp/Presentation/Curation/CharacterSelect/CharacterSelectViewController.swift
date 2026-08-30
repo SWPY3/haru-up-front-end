@@ -17,10 +17,20 @@ class CharacterSelectViewController: UIViewController {
     
     private let currentCharacterIndex = BehaviorRelay<Int>(value: 1)
     
+    /// 이미지는 앱에 번들된 에셋이라 앱이 들고 있고, 이름은 서버에서 받아 덮어쓴다.
+    /// 서버 이름을 못 받았을 때만 여기 적힌 이름을 그대로 쓴다.
     private let characters: [(name: String, image: String)] = [
         (name: "하루", image: "haru_level1"),
         (name: "나루", image: "naru_level1")
     ]
+
+    /// characterId → 서버가 내려준 이름
+    private var serverCharacterNames: [Int: String] = [:]
+
+    /// 화면에 표시할 캐릭터 이름. 서버 값이 있으면 그것을 쓴다.
+    private func displayName(at index: Int) -> String {
+        serverCharacterNames[index] ?? characters[index - 1].name
+    }
     
     private let backgroundImageView: UIImageView = {
         let iv = UIImageView()
@@ -259,7 +269,7 @@ class CharacterSelectViewController: UIViewController {
             self?.characterImageView.image = UIImage(named: character.image)
         }
         
-        characterNameLabel.text = character.name
+        characterNameLabel.text = displayName(at: index)
         
         // 화살표 버튼 활성화/비활성화
         leftArrowButton.isEnabled = index > 1
@@ -277,7 +287,7 @@ class CharacterSelectViewController: UIViewController {
             .subscribe(onNext: { [weak self] in
                 guard let self = self else { return }
                 let index = self.currentCharacterIndex.value
-                let characterName = index <= self.characters.count ? self.characters[index - 1].name : ""
+                let characterName = index <= self.characters.count ? self.displayName(at: index) : ""
                 AnalyticsManager.shared.track(event: AppEvent.CharacterSelect.nextTapped, properties: ["character": characterName])
             })
             .disposed(by: disposeBag)
@@ -291,6 +301,15 @@ class CharacterSelectViewController: UIViewController {
         output.isValid
             .drive(onNext: { [weak self] isValid in
                 self?.nextButton.isEnabled = isValid
+            })
+            .disposed(by: disposeBag)
+
+        // 서버에서 캐릭터 이름을 받으면 현재 표시 중인 캐릭터에 바로 반영한다
+        output.characterNames
+            .drive(onNext: { [weak self] names in
+                guard let self = self, !names.isEmpty else { return }
+                self.serverCharacterNames = names
+                self.characterNameLabel.text = self.displayName(at: self.currentCharacterIndex.value)
             })
             .disposed(by: disposeBag)
     }

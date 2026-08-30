@@ -30,17 +30,19 @@ final class CharacterSelectCompleteCoordinator: Coordinator {
     }
     
     
+    /// 챗봇으로 바로 넘어가지 않고 AI 성격 선택을 먼저 거친다.
+    /// 성격 선택이 끝나면 그 코디네이터가 이어서 챗봇을 시작한다.
     func showCurationChatFlow(selectedCharacter: Int) {
         curationData.characterId = selectedCharacter
         print("📦 저장된 데이터 - 캐릭터: \(selectedCharacter)")
 
-        let curationChatCoordinator = CurationChatCoordinator(
+        let personalitySelectCoordinator = PersonalitySelectCoordinator(
             navigationController: navigationController,
             curationData: curationData
         )
 
-        curationChatCoordinator.onFinish = { [weak self, weak curationChatCoordinator] curationData in
-            if let coordinator = curationChatCoordinator,
+        personalitySelectCoordinator.onFinish = { [weak self, weak personalitySelectCoordinator] curationData in
+            if let coordinator = personalitySelectCoordinator,
                let index = self?.childCoordinators.firstIndex(where: { $0 === coordinator }) {
                 self?.childCoordinators.remove(at: index)
             }
@@ -48,8 +50,8 @@ final class CharacterSelectCompleteCoordinator: Coordinator {
             self?.onFinish?(curationData)
         }
 
-        childCoordinators.append(curationChatCoordinator)
-        curationChatCoordinator.start()
+        childCoordinators.append(personalitySelectCoordinator)
+        personalitySelectCoordinator.start()
     }
     
 }
