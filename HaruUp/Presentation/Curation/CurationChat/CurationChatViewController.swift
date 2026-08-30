@@ -39,7 +39,8 @@ final class CurationChatViewController: UIViewController {
         pv.progressTintColor = .cta
         pv.layer.cornerRadius = 2
         pv.clipsToBounds = true
-        pv.progress = 1.0 / Float(CurationChatViewModel.totalSteps)
+        // 실제 값은 ViewModel 이 내려준다. 첫 프레임에 0으로 보이지 않게만 잡아 둔다.
+        pv.progress = 0.15
         pv.translatesAutoresizingMaskIntoConstraints = false
         return pv
     }()
@@ -101,6 +102,20 @@ final class CurationChatViewController: UIViewController {
 
     private var inputContainerBottomConstraint: NSLayoutConstraint?
     private var inputTextViewHeightConstraint: NSLayoutConstraint?
+
+    /// 입력창 안내 문구. 서버가 첫 질문에 예시를 내려주면 그 값으로 바뀐다.
+    private var currentPlaceholder = "답변을 입력해주세요"
+
+    /// 입력창이 안내 문구를 보여주는 중인지 (사용자가 실제로 입력한 상태와 구분)
+    private var isShowingPlaceholder: Bool {
+        inputTextView.textColor == .neutral300
+    }
+
+    /// 입력창을 안내 문구 상태로 되돌린다.
+    private func resetInputToPlaceholder() {
+        inputTextView.text = currentPlaceholder
+        inputTextView.textColor = .neutral300
+    }
     
     // MARK: - Init
     init(viewModel: CurationChatViewModel) {
@@ -299,10 +314,22 @@ final class CurationChatViewController: UIViewController {
             .disposed(by: disposeBag)
 
         // 프로그레스바 업데이트
-        output.currentStep
-            .drive(onNext: { [weak self] step in
-                let progress = Float(step) / Float(CurationChatViewModel.totalSteps)
+        // 질문 개수가 대화마다 달라 ViewModel 이 비율을 직접 계산해 내려준다.
+        output.progress
+            .drive(onNext: { [weak self] progress in
                 self?.progressView.setProgress(progress, animated: true)
+            })
+            .disposed(by: disposeBag)
+
+        // 입력창 안내 문구 (서버가 첫 질문에 예시를 내려준다)
+        output.inputPlaceholder
+            .drive(onNext: { [weak self] placeholder in
+                guard let self = self else { return }
+                // 사용자가 이미 입력 중이면 건드리지 않는다
+                self.currentPlaceholder = placeholder
+                // 사용자가 이미 입력 중이면 건드리지 않는다
+                guard self.isShowingPlaceholder else { return }
+                self.resetInputToPlaceholder()
             })
             .disposed(by: disposeBag)
 
@@ -318,15 +345,14 @@ final class CurationChatViewController: UIViewController {
     private func sendMessage() {
         let text = inputTextView.text ?? ""
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              text != "답변을 입력해주세요" else {
+              text != currentPlaceholder else {
             return
         }
         
         sendButton.isEnabled = false
         
         sendSubject.onNext(text.trimmingCharacters(in: .whitespacesAndNewlines))
-        inputTextView.text = "답변을 입력해주세요"
-        inputTextView.textColor = .neutral300
+        resetInputToPlaceholder()
         
         sendButton.setImage(.iconButtonGray, for: .normal)
         inputTextView.resignFirstResponder()
@@ -343,8 +369,7 @@ final class CurationChatViewController: UIViewController {
         modalVC.modalTransitionStyle = .crossDissolve
         modalVC.onRestartTapped = { [weak self] in
             self?.viewModel.restartChat()
-            self?.inputTextView.text = "답변을 입력해주세요"
-            self?.inputTextView.textColor = .neutral300
+            self?.resetInputToPlaceholder()
             self?.sendButton.setImage(.iconButtonGray, for: .normal)
             self?.view.endEditing(true)
         }
@@ -437,7 +462,8 @@ extension CurationChatViewController: UITableViewDataSource {
                 text: message.text,
                 highlightedText: message.highlightedText,
                 subtitleText: message.subtitleText,
-                isShimmering: message.isShimmering
+                isShimmering: message.isShimmering,
+                isError: message.isError
             )
             return cell
 
@@ -476,7 +502,7 @@ extension CurationChatViewController: UITextViewDelegate {
 
     func textViewDidEndEditing(_ textView: UITextView) {
         if textView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            textView.text = "답변을 입력해주세요"
+            textView.text = currentPlaceholder
             textView.textColor = .neutral300
             sendButton.setImage(.iconButtonGray, for: .normal)
         }

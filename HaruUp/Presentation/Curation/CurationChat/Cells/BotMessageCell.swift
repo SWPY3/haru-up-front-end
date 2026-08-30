@@ -113,7 +113,15 @@ final class BotMessageCell: UITableViewCell {
         shimmerTextView.stopShimmering()
     }
 
-    func configure(text: String, highlightedText: String? = nil, subtitleText: String? = nil, isShimmering: Bool = false) {
+    /// - Parameter isError: 목표를 하나만 입력해달라는 안내처럼 사용자가 고쳐야 하는 메시지.
+    ///   눈에 띄어야 하므로 강조 색으로 표시한다.
+    func configure(
+        text: String,
+        highlightedText: String? = nil,
+        subtitleText: String? = nil,
+        isShimmering: Bool = false,
+        isError: Bool = false
+    ) {
         if isShimmering {
             // bubbleView 높이 확보를 위해 messageLabel에도 텍스트 설정 (표시는 숨김)
             messageLabel.setStyle(Typography.body4, text: text)
@@ -134,13 +142,13 @@ final class BotMessageCell: UITableViewCell {
                     Typography.body4,
                     fullText: text,
                     highlightedText: highlighted,
-                    highlightedColor: .black,
+                    highlightedColor: isError ? .secondaryRed200 : .black,
                     defaultColor: .neutral800,
                     highlightedFont: Typography.body2.font
                 )
             } else {
                 messageLabel.setStyle(Typography.body4, text: text)
-                messageLabel.textColor = .black
+                messageLabel.textColor = isError ? .secondaryRed200 : .black
             }
         }
 

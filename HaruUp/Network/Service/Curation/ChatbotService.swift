@@ -37,4 +37,15 @@ final class ChatbotService: Service {
         let body = ChatbotSetupRequest(characterId: characterId, nickname: nickname)
         return request(NetworkDefine.ChatbotAPI.chatbotSetup.url, method: .post, header: authHeader(), body: body)
     }
+
+    // 선택 가능한 AI 성격 목록
+    func personalityList() -> Single<GenericResponse<[PersonalityData]>> {
+        return request(NetworkDefine.CharacterAPI.personalityList.url, method: .get, header: authHeader())
+    }
+
+    // AI 성격 선택 (캐릭터 선택 이후, 챗봇 시작 전)
+    func selectPersonality(_ code: String) -> Single<GenericResponse<String>> {
+        let body = SelectPersonalityRequest(personality: code)
+        return request(NetworkDefine.CharacterAPI.selectPersonality.url, method: .post, header: authHeader(), body: body)
+    }
 }

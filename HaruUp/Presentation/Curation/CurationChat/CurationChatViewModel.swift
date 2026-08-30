@@ -25,6 +25,8 @@ struct ChatMessage {
     let suggestions: [String]
     let subtitleText: String?
     let isShimmering: Bool
+    /// 사용자가 고쳐서 다시 입력해야 하는 안내인지 (목표를 하나만 입력해달라는 경우 등)
+    let isError: Bool
 
     init(
         type: ChatMessageType,
@@ -32,7 +34,8 @@ struct ChatMessage {
         highlightedText: String? = nil,
         suggestions: [String] = [],
         subtitleText: String? = nil,
-        isShimmering: Bool = false
+        isShimmering: Bool = false,
+        isError: Bool = false
     ) {
         self.id = UUID()
         self.type = type
@@ -41,6 +44,7 @@ struct ChatMessage {
         self.suggestions = suggestions
         self.subtitleText = subtitleText
         self.isShimmering = isShimmering
+        self.isError = isError
     }
 }
 
@@ -70,10 +74,19 @@ final class CurationChatViewModel {
         let characterName: Driver<String>
         let characterImageName: Driver<String>
         let prefillText: Driver<String>
-        let currentStep: Driver<Int>
+        /// 0.0 ~ 1.0. 질문 개수가 대화마다 달라져 단계 수로는 표현할 수 없다.
+        let progress: Driver<Float>
+        /// 입력창에 표시할 안내 문구 (서버가 첫 질문에 내려준다)
+        let inputPlaceholder: Driver<String>
     }
 
-    static let totalSteps = 7
+    /// 진행률 계산에 쓰는 기준 단계 수 (닉네임 1 + 목표 1 + 꼬리질문 5).
+    /// 서버가 꼬리질문을 3~8개 사이에서 조절하므로 실제 총 개수는 대화가 끝나야 알 수 있다.
+    /// 그래서 이 값은 어디까지나 기준이고, 대화가 길어지면 분모를 늘려 진행률이 역행하지 않게 한다.
+    private static let baselineTotalSteps = 7
+
+    /// 완료 전에는 진행률을 이 값 이상으로 올리지 않는다. 다 찼는데 질문이 더 나오는 상황을 막는다.
+    private static let maxProgressBeforeComplete: Float = 0.95
 
     private weak var coordinator: CurationChatCoordinator?
     private let disposeBag = DisposeBag()
@@ -87,13 +100,18 @@ final class CurationChatViewModel {
     private var sessionId: String?
     private var completedMissions: [ChatbotMissionDto] = []
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
-    private let currentStepRelay = BehaviorRelay<Int>(value: 1)
+    private let progressRelay = BehaviorRelay<Float>(value: 1.0 / Float(baselineTotalSteps))
+    private let inputPlaceholderRelay = BehaviorRelay<String>(value: "답변을 입력해주세요")
 
     // MARK: - Chat Phase
     private enum ChatPhase { case nickname, chatbot }
     private var currentPhase: ChatPhase = .nickname
     private var collectedNickname: String = ""
     private var isLastQuestion: Bool = false
+
+    /// 마무리 확인("이대로 마무리할까요?")을 띄워 두고 사용자의 예/아니오를 기다리는 중인지.
+    /// 이 상태에서 보낸 답변은 꼬리질문 답변이 아니라 마무리 여부 선택이다.
+    private var awaitingFinishConfirmation: Bool = false
 
     init(coordinator: CurationChatCoordinator, characterId: Int, chatbotService: ChatbotService) {
         self.coordinator = coordinator
@@ -175,7 +193,8 @@ final class CurationChatViewModel {
             characterName: Driver.just(characterName),
             characterImageName: Driver.just(characterImageName),
             prefillText: prefillTextRelay.asDriver(onErrorJustReturn: ""),
-            currentStep: currentStepRelay.asDriver()
+            progress: progressRelay.asDriver(),
+            inputPlaceholder: inputPlaceholderRelay.asDriver()
         )
     }
     
@@ -188,8 +207,35 @@ final class CurationChatViewModel {
         currentPhase = .nickname
         collectedNickname = ""
         isLastQuestion = false
-        currentStepRelay.accept(1)
+        awaitingFinishConfirmation = false
+        progressRelay.accept(1.0 / Float(Self.baselineTotalSteps))
+        inputPlaceholderRelay.accept("답변을 입력해주세요")
         showNicknameQuestion()
+    }
+
+    /// 마무리 확인 답변이 긍정인지 판단한다.
+    ///
+    /// 판정 자체는 서버가 하고, 앱은 "미션 생성 중" 표시를 미리 띄울지 정하는 데만 쓴다.
+    /// 그래서 틀려도 화면 연출만 달라지고 대화 흐름에는 영향이 없다.
+    /// 부정을 먼저 걸러야 "아니요, 미션 만들어주세요" 같은 답을 긍정으로 잘못 읽지 않는다.
+    private func isAffirmative(_ answer: String) -> Bool {
+        let negatives = ["아니", "아뇨", "싫", "더 ", "계속", "나중"]
+        if negatives.contains(where: { answer.contains($0) }) { return false }
+
+        let affirmatives = ["네", "예", "응", "좋", "만들", "마무리", "끝", "그만", "충분", "시작"]
+        return affirmatives.contains(where: { answer.contains($0) })
+    }
+
+    /// 대화 단계에 맞춰 진행률을 갱신한다.
+    ///
+    /// 꼬리질문 개수가 대화마다 달라 총 단계 수를 미리 알 수 없다.
+    /// 그래서 기준값을 쓰되, 대화가 그보다 길어지면 분모를 함께 늘려
+    /// 진행률이 뒤로 가거나 100%에 먼저 도달하는 일이 없게 한다.
+    private func updateProgress(questionNumber: Int) {
+        let currentStep = questionNumber + 1                    // 닉네임 단계를 한 칸으로 친다
+        let total = max(currentStep + 1, Self.baselineTotalSteps)
+        let ratio = Float(currentStep) / Float(total)
+        progressRelay.accept(min(ratio, Self.maxProgressBeforeComplete))
     }
 
     // MARK: - Private
@@ -204,8 +250,9 @@ final class CurationChatViewModel {
             guard let sessionId = sessionId else { return }
             appendMessage(ChatMessage(type: .user, text: trimmed))
 
-            // 마지막 질문의 답변인 경우 미션 생성 중 메시지를 먼저 표시
-            if isLastQuestion {
+            // 미션 생성으로 이어지는 답변이면 생성 중 메시지를 먼저 표시한다.
+            // 마지막 질문의 답변이거나, 마무리 확인에 "예"라고 답한 경우다.
+            if isLastQuestion || (awaitingFinishConfirmation && isAffirmative(trimmed)) {
                 appendMessage(ChatMessage(
                     type: .bot,
                     text: "\(collectedNickname)님을 위한 맞춤 미션을 만드는 중이에요!",
@@ -358,9 +405,14 @@ final class CurationChatViewModel {
                     guard let self = self, let data = response.data else { return }
                     self.isLoadingRelay.accept(false)
                     self.sessionId = data.sessionId
-                    self.currentStepRelay.accept(data.questionNumber + 1)
+                    self.updateProgress(questionNumber: data.questionNumber)
 
-                    // 첫 질문 + 예시 칩 표시
+                    // 첫 질문에는 선택지가 없다. 사용자가 예시를 그대로 고르면
+                    // 목표가 구체화되지 않아 서버가 placeholder 로만 예시를 내려준다.
+                    if let placeholder = data.placeholder, !placeholder.isEmpty {
+                        self.inputPlaceholderRelay.accept(placeholder)
+                    }
+
                     self.appendMessage(ChatMessage(
                         type: .bot,
                         text: data.question,
@@ -377,26 +429,80 @@ final class CurationChatViewModel {
     
     private func handleAnswerResponse(_ data: ChatbotAnswerResultData?) {
         guard let data = data else { return }
-        
-        if data.isCompleted == true {
-            // 완료 → 미션 저장 후 화면 전환
-            completedMissions = data.missions ?? []
-            appendMessage(ChatMessage(type: .bot, text: "좋아요! 답변을 바탕으로 맞춤 미션을 준비했어요!!!🎉"))
-            isCompletedRelay.accept(true)
-        }
-        else {
-            // 진행 중 → 다음 질문 표시
-            guard let question = data.question else { return }
-            let isLast = data.isLast ?? false
-            isLastQuestion = isLast
 
-            if let questionNumber = data.questionNumber {
-                currentStepRelay.accept(questionNumber + 1)
-            }
-
-            appendMessage(ChatMessage(type: .bot, text: question,
-                                      subtitleText: isLast ? "마지막 질문이에요!" : nil))
+        switch data.kind {
+        case .completed:
+            handleCompleted(data)
+        case .goalRejected:
+            handleGoalRejected(data)
+        case .finishConfirm:
+            handleFinishConfirm(data)
+        case .nextQuestion:
+            handleNextQuestion(data)
+        case .unknown:
+            // 앱이 모르는 응답이 와도 대화가 멈춘 것처럼 보이지 않게 안내한다.
+            appendMessage(ChatMessage(type: .bot, text: "예상하지 못한 응답을 받았어요. 다시 시도해주세요."))
         }
+    }
+
+    /// 대화 종료 — 미션 생성 완료
+    private func handleCompleted(_ data: ChatbotAnswerResultData) {
+        awaitingFinishConfirmation = false
+        completedMissions = data.missions ?? []
+        progressRelay.accept(1.0)
+        appendMessage(ChatMessage(type: .bot, text: "좋아요! 답변을 바탕으로 맞춤 미션을 준비했어요!!!🎉"))
+        isCompletedRelay.accept(true)
+    }
+
+    /// 목표를 2개 이상 입력한 경우 — 질문을 진행하지 않고 다시 입력받는다.
+    /// 세션은 그대로라 같은 sessionId 로 목표만 다시 보내면 된다.
+    private func handleGoalRejected(_ data: ChatbotAnswerResultData) {
+        let message = data.message ?? "목표를 하나만 입력해주세요!"
+        let detected = data.detectedGoals ?? []
+        let subtitle = detected.isEmpty ? nil : "입력하신 목표: \(detected.joined(separator: ", "))"
+
+        appendMessage(ChatMessage(
+            type: .bot,
+            text: message,
+            highlightedText: message,
+            subtitleText: subtitle,
+            isError: true
+        ))
+    }
+
+    /// 정보가 충분히 모였을 때 — 요약을 보여주고 마무리할지 묻는다.
+    private func handleFinishConfirm(_ data: ChatbotAnswerResultData) {
+        awaitingFinishConfirmation = true
+        isLastQuestion = false
+
+        if let summary = data.summary, !summary.isEmpty {
+            appendMessage(ChatMessage(type: .bot, text: summary))
+        }
+
+        appendMessage(ChatMessage(
+            type: .bot,
+            text: data.question ?? "이대로 마무리할까요?",
+            suggestions: data.examples ?? []
+        ))
+    }
+
+    /// 다음 질문 표시 (AI 꼬리질문 또는 투자 가능 시간 고정 질문)
+    private func handleNextQuestion(_ data: ChatbotAnswerResultData) {
+        guard let question = data.question else { return }
+
+        awaitingFinishConfirmation = false
+        isLastQuestion = data.isLast ?? false
+
+        if let questionNumber = data.questionNumber {
+            updateProgress(questionNumber: questionNumber)
+        }
+
+        appendMessage(ChatMessage(
+            type: .bot,
+            text: question,
+            suggestions: data.examples ?? [],
+            subtitleText: isLastQuestion ? "마지막 질문이에요!" : nil
+        ))
     }
     
     
