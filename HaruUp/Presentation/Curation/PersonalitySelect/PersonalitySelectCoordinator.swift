@@ -21,7 +21,7 @@ final class PersonalitySelectCoordinator: Coordinator {
     }
 
     func start() {
-        let viewModel = PersonalitySelectViewModel(coordinator: self, chatbotService: ChatbotService())
+        let viewModel = PersonalitySelectViewModel(coordinator: self, characterService: CharacterService())
         let viewController = PersonalitySelectViewController(viewModel: viewModel)
 
         navigationController.pushViewController(viewController, animated: true)

@@ -31,16 +31,16 @@ final class PersonalitySelectViewModel {
     ]
 
     private weak var coordinator: PersonalitySelectCoordinator?
-    private let chatbotService: ChatbotService
+    private let characterService: CharacterService
     private let disposeBag = DisposeBag()
 
     private let personalitiesRelay = BehaviorRelay<[PersonalityData]>(value: [])
     private let selectedIndexRelay = BehaviorRelay<Int?>(value: nil)
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
 
-    init(coordinator: PersonalitySelectCoordinator, chatbotService: ChatbotService) {
+    init(coordinator: PersonalitySelectCoordinator, characterService: CharacterService) {
         self.coordinator = coordinator
-        self.chatbotService = chatbotService
+        self.characterService = characterService
     }
 
     func transform(input: Input) -> Output {
@@ -76,7 +76,7 @@ final class PersonalitySelectViewModel {
     private func loadPersonalities() {
         isLoadingRelay.accept(true)
 
-        chatbotService.personalityList()
+        characterService.personalityList()
             .observe(on: MainScheduler.instance)
             .subscribe(
                 onSuccess: { [weak self] response in
@@ -103,7 +103,7 @@ final class PersonalitySelectViewModel {
         let code = personalities[index].code
         isLoadingRelay.accept(true)
 
-        chatbotService.selectPersonality(code)
+        characterService.selectPersonality(code)
             .observe(on: MainScheduler.instance)
             .subscribe(
                 onSuccess: { [weak self] _ in

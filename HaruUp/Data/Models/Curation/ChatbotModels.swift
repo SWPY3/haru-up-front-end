@@ -23,6 +23,14 @@ struct SelectPersonalityRequest: Encodable {
     let personality: String
 }
 
+// ── 캐릭터 ────────────────────────────────
+// GET /api/character/list 응답 항목 (배열로 그대로 내려온다)
+struct CharacterData: Codable {
+    let id: Int
+    let name: String?
+    let description: String?
+}
+
 // ── 성격 ──────────────────────────────────
 // GET /api/character/personality/list 응답 항목
 struct PersonalityData: Codable {

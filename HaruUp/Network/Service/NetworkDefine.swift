@@ -35,11 +35,13 @@ enum NetworkDefine {
 
     /// 캐릭터 성격 (큐레이션 꼬리질문 말투에 반영)
     enum CharacterAPI {
+        case list
         case personalityList
         case selectPersonality
 
         var path: String {
             switch self {
+            case .list:              return "api/character/list"
             case .personalityList:   return "api/character/personality/list"
             case .selectPersonality: return "api/character/personality"
             }
