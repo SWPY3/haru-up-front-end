@@ -71,7 +71,6 @@ final class CurationChatViewModel {
         let displayItems: Driver<[ChatDisplayItem]>
         let isCompleted: Driver<Bool>
         let isLoading: Driver<Bool>
-        let characterName: Driver<String>
         let characterImageName: Driver<String>
         let prefillText: Driver<String>
         /// 0.0 ~ 1.0. 질문 개수가 대화마다 달라져 단계 수로는 표현할 수 없다.
@@ -120,19 +119,12 @@ final class CurationChatViewModel {
     }
 
     func transform(input: Input) -> Output {
-        let characterName: String
+        // 이미지는 앱에 번들된 에셋이라 characterId 로 고른다.
+        // 캐릭터 이름은 서버가 첫 질문 문구에 넣어 보내주므로 앱이 따로 들고 있지 않는다.
         let characterImageName: String
-
         switch characterId {
-        case 1:
-            characterName = "하루"
-            characterImageName = "character_haru_profile"
-        case 2:
-            characterName = "나루"
-            characterImageName = "character_naru_profile"
-        default:
-            characterName = "하루"
-            characterImageName = "character_haru_profile"
+        case 2:  characterImageName = "character_naru_profile"
+        default: characterImageName = "character_haru_profile"
         }
 
         // 화면 표시 시 닉네임 질문 먼저 표시
@@ -190,7 +182,6 @@ final class CurationChatViewModel {
             displayItems: displayItems,
             isCompleted: isCompletedRelay.asDriver(),
             isLoading: isLoadingRelay.asDriver(),
-            characterName: Driver.just(characterName),
             characterImageName: Driver.just(characterImageName),
             prefillText: prefillTextRelay.asDriver(onErrorJustReturn: ""),
             progress: progressRelay.asDriver(),
