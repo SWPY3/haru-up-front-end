@@ -250,8 +250,9 @@ final class CurationChatViewModel {
             guard let sessionId = sessionId else { return }
             appendMessage(ChatMessage(type: .user, text: trimmed))
 
-            // 미션 생성으로 이어지는 답변이면 생성 중 메시지를 먼저 표시한다.
-            // 마지막 질문의 답변이거나, 마무리 확인에 "예"라고 답한 경우다.
+            // 미션 생성으로 이어질 답변이면 생성 중 메시지를 먼저 표시한다.
+            // 마무리를 골라도 시간 투자가 필요한 목표면 질문이 한 번 더 오므로,
+            // 완료가 아닌 응답이 오면 이 메시지를 지운다. (removePendingShimmer)
             if isLastQuestion || (awaitingFinishConfirmation && isAffirmative(trimmed)) {
                 appendMessage(ChatMessage(
                     type: .bot,
@@ -457,6 +458,7 @@ final class CurationChatViewModel {
     /// 목표를 2개 이상 입력한 경우 — 질문을 진행하지 않고 다시 입력받는다.
     /// 세션은 그대로라 같은 sessionId 로 목표만 다시 보내면 된다.
     private func handleGoalRejected(_ data: ChatbotAnswerResultData) {
+        removePendingShimmer()
         let message = data.message ?? "목표를 하나만 입력해주세요!"
         let detected = data.detectedGoals ?? []
         let subtitle = detected.isEmpty ? nil : "입력하신 목표: \(detected.joined(separator: ", "))"
@@ -472,6 +474,7 @@ final class CurationChatViewModel {
 
     /// 정보가 충분히 모였을 때 — 요약을 보여주고 마무리할지 묻는다.
     private func handleFinishConfirm(_ data: ChatbotAnswerResultData) {
+        removePendingShimmer()
         awaitingFinishConfirmation = true
         isLastQuestion = false
 
@@ -488,6 +491,7 @@ final class CurationChatViewModel {
 
     /// 다음 질문 표시 (AI 꼬리질문 또는 투자 가능 시간 고정 질문)
     private func handleNextQuestion(_ data: ChatbotAnswerResultData) {
+        removePendingShimmer()
         guard let question = data.question else { return }
 
         awaitingFinishConfirmation = false
@@ -506,6 +510,17 @@ final class CurationChatViewModel {
     }
     
     
+    /// 미션 생성 중 메시지를 걷어낸다.
+    ///
+    /// 마무리를 골라도 시간 투자가 필요한 목표면 질문이 한 번 더 온다.
+    /// 그때 "만드는 중" 문구가 남아 있으면 사용자가 끝난 줄 알았다가 질문을 다시 받게 된다.
+    private func removePendingShimmer() {
+        var msgs = messagesRelay.value
+        guard msgs.last?.isShimmering == true else { return }
+        msgs.removeLast()
+        messagesRelay.accept(msgs)
+    }
+
     private func appendMessage(_ message: ChatMessage) {
         var msgs = messagesRelay.value
         msgs.append(message)
